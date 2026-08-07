@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KRP Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #10151f;
+    --panel-2: #151b28;
+    --border: #232b3a;
+    --amber: #e0a94a;
+    --amber-dim: #e0a94a55;
+    --text: #dfe4ee;
+    --text-dim: #8993a8;
+    --ok: #4ade80;
+    --err: #f87171;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    background-image:
+      linear-gradient(rgba(224,169,74,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(224,169,74,0.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+    min-height: 100vh;
+  }
+  a { color: var(--amber); }
+  .center-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 18px;
+    padding: 20px;
+    text-align: center;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  h1 { font-size: 22px; margin: 0; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--amber);
+    color: #14100a;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn.secondary {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.small { padding: 8px 14px; font-size: 13px; }
+  .error-box {
+    border: 1px solid var(--err);
+    color: var(--err);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    max-width: 420px;
+  }
+  header.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header.topbar .brand {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+    color: var(--amber);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .user-chip img { width: 26px; height: 26px; border-radius: 50%; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  .guild-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .guild-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color .15s;
+  }
+  .guild-card:hover { border-color: var(--amber-dim); }
+  .guild-card img, .guild-card .fallback-icon {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    background: var(--panel-2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--amber);
+  }
+  .guild-card .meta { min-width: 0; }
+  .guild-card .name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .guild-card .sub { font-size: 12px; color: var(--text-dim); }
+
+  .layout { display: grid; grid-template-columns: 250px 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .stats-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .stats-panel h2 { margin: 0 0 12px; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+  .stats-panel h2 img { width: 30px; height: 30px; border-radius: 50%; }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 18px; }
+  .stat { min-width: 90px; }
+  .stat .n { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--amber); font-weight: 600; }
+  .stat .l { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
+  .progress-bar {
+    height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-top: 10px;
+  }
+  .progress-bar .fill { height: 100%; background: var(--amber); }
+
+  nav.categories {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  nav.categories button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    padding: 11px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  nav.categories button:last-child { border-bottom: none; }
+  nav.categories button:hover { background: var(--panel-2); color: var(--text); }
+  nav.categories button.active { background: var(--panel-2); color: var(--amber); font-weight: 600; }
+
+  .content-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .content-panel h2 { margin: 0 0 4px; font-size: 17px; }
+  .field {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .field:first-of-type { border-top: none; margin-top: 14px; padding-top: 0; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .field .desc { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+  select, input[type=text], textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  select:focus, input:focus, textarea:focus { outline: 1px solid var(--amber); border-color: var(--amber); }
+  .role-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .role-chip {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-dim);
+  }
+  .role-chip.active { border-color: var(--amber); color: var(--amber); background: #e0a94a1a; }
+  .field-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .save-status { font-size: 12px; color: var(--text-dim); }
+  .save-status.ok { color: var(--ok); }
+  .save-status.err { color: var(--err); }
+  .loading { color: var(--text-dim); padding: 40px; text-align: center; font-size: 14px; }
+  .hint { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ---------------------------------------------------------------------
+// KONFIGURATION: hier deine Discord-Application-Client-ID eintragen.
+// ---------------------------------------------------------------------
+const DISCORD_CLIENT_ID = "DEINE_CLIENT_ID_HIER";
+
+const app = document.getElementById('app');
+const state = { user: null, guilds: [], currentGuild: null, schema: null, config: null, channels: [], roles: [], stats: null, activeCategory: null };
+
+function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+
+function redirectUri() {
+  return `${location.origin}/api/callback`;
+}
+
+function loginUrl() {
+  const params = new URLSearchParams({
+    client_id: DISCORD_CLIENT_ID,
+    redirect_uri: redirectUri(),
+    response_type: 'code',
+    scope: 'identify guilds',
+  });
+  return `https://discord.com/oauth2/authorize?${params.toString()}`;
+}
+
+async function api(resource, { guild, method = 'GET', body } = {}) {
+  const params = new URLSearchParams({ resource });
+  if (guild) params.set('guild', guild);
+  const res = await fetch(`/api/bot?${params.toString()}`, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Fehler (${res.status})`);
+  return data;
+}
+
+function avatarUrl(user) {
+  if (!user.avatar) return null;
+  return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
+}
+function guildIconUrl(g) {
+  if (!g.icon) return null;
+  if (g.icon.startsWith('http')) return g.icon;
+  return `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`;
+}
+
+// ------------------------------- Views --------------------------------
+
+function renderLoginScreen() {
+  const params = new URLSearchParams(location.search);
+  const showError = params.get('login_error');
+  app.innerHTML = '';
+  app.appendChild(el(`
+    <div class="center-screen">
+      <div class="logo">KRP · SYSTEM</div>
+      <h1>Düsseldorf RP Dashboard</h1>
+      <p style="color:var(--text-dim); max-width:360px;">Melde dich mit Discord an, um die Server zu verwalten, auf denen du Admin- oder Owner-Rechte hast.</p>
+      ${showError ? '<div class="error-box">Login fehlgeschlagen. Bitte erneut versuchen.</div>' : ''}
+      <a class="btn" href="${loginUrl()}">Mit Discord anmelden</a>
+    </div>
+  `));
+}
+
+function renderTopbar(container) {
+  const bar = el(`
+    <header class="topbar">
+      <div class="brand" id="brand-home">KRP · DASHBOARD</div>
+      <div class="user-chip">
+        ${avatarUrl(state.user) ? `<img src="${avatarUrl(state.user)}" />` : ''}
+        <span>${state.user.name}</span>
+        <button class="btn secondary small" id="logout-btn">Abmelden</button>
+      </div>
+    </header>
+  `);
+  bar.querySelector('#brand-home').onclick = () => { state.currentGuild = null; renderGuildPicker(); };
+  bar.querySelector('#logout-btn').onclick = async () => {
+    await api('logout');
+    location.reload();
+  };
+  container.appendChild(bar);
+}
+
+async function renderGuildPicker() {
+  app.innerHTML = '';
+  renderTopbar(app);
+  const main = el('<main></main>');
+  main.appendChild(el('<h1>Deine Server</h1>'));
+  main.appendChild(el('<p style="color:var(--text-dim)">Nur Server, auf denen der Bot ist UND du Verwaltungsrechte hast, werden hier angezeigt.</p>'));
+  const grid = el('<div class="guild-grid"></div>');
+  main.appendChild(grid);
+  app.appendChild(main);
+
+  grid.innerHTML = '<div class="loading">Lade Server …</div>';
+  try {
+    const { guilds } = await api('guilds');
+    state.guilds = guilds;
+    grid.innerHTML = '';
+    if (guilds.length === 0) {
+      grid.appendChild(el('<div class="loading">Keine passenden Server gefunden. Ist der Bot schon auf deinem Server?</div>'));
+      return;
+    }
+    for (const g of guilds) {
+      const icon = guildIconUrl(g);
+      const card = el(`
+        <div class="guild-card">
+          ${icon ? `<img src="${icon}" />` : `<div class="fallback-icon">${g.name.slice(0,1).toUpperCase()}</div>`}
+          <div class="meta">
+            <div class="name">${g.name}</div>
+            <div class="sub">${g.member_count ?? '?'} Mitglieder</div>
+          </div>
+        </div>
+      `);
+      card.onclick = () => openGuild(g.id);
+      grid.appendChild(card);
+    }
+  } catch (e) {
+    grid.innerHTML = `<div class="error-box">${e.message}</div>`;
+  }
+}
+
+async function openGuild(guildId) {
+  state.currentGuild = guildId;
+  state.activeCategory = null;
+  await renderGuildDashboard();
+}
+
+async function renderGuildDashboard() {
+  app.innerHTML = '';
+  renderTopbar(app);
+  const main = el('<main></main>');
+  main.appendChild(el('<div class="loading">Lade Server-Daten …</div>'));
+  app.appendChild(main);
+
+  try {
+    const [schemaRes, configRes, channelsRes, rolesRes, statsRes] = await Promise.all([
+      api('schema', { guild: state.currentGuild }),
+      api('config', { guild: state.currentGuild }),
+      api('channels', { guild: state.currentGuild }),
+      api('roles', { guild: state.currentGuild }),
+      api('stats', { guild: state.currentGuild }),
+    ]);
+    state.schema = schemaRes.categories;
+    state.config = configRes.config;
+    state.channels = channelsRes.channels;
+    state.roles = rolesRes.roles;
+    state.stats = statsRes;
+    state.activeCategory = state.schema[0]?.id ?? null;
+    drawDashboard(main);
+  } catch (e) {
+    main.innerHTML = `<div class="error-box">${e.message}</div>`;
+  }
+}
+
+function drawDashboard(main) {
+  main.innerHTML = '';
+  const s = state.stats;
+  const pct = s.config_gesamt ? Math.round((s.config_gesetzt / s.config_gesamt) * 100) : 0;
+
+  main.appendChild(el(`
+    <div class="stats-panel">
+      <h2>${s.icon ? `<img src="${s.icon}" />` : ''} ${s.name}</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="n">${s.member_count}</div><div class="l">Mitglieder</div></div>
+        <div class="stat"><div class="n">${s.channel_count}</div><div class="l">Channels</div></div>
+        <div class="stat"><div class="n">${s.role_count}</div><div class="l">Rollen</div></div>
+        <div class="stat"><div class="n">${s.dienstnummern_vergeben}</div><div class="l">Dienstnummern</div></div>
+        <div class="stat"><div class="n">${s.config_gesetzt}/${s.config_gesamt}</div><div class="l">Konfiguriert</div></div>
+      </div>
+      <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
+    </div>
+  `));
+
+  const layout = el('<div class="layout"></div>');
+  const nav = el('<nav class="categories"></nav>');
+  for (const kat of state.schema) {
+    const btn = el(`<button>${kat.label}</button>`);
+    if (kat.id === state.activeCategory) btn.classList.add('active');
+    btn.onclick = () => { state.activeCategory = kat.id; drawDashboard(main); };
+    nav.appendChild(btn);
+  }
+  layout.appendChild(nav);
+
+  const contentWrap = el('<div></div>');
+  const kategorie = state.schema.find((k) => k.id === state.activeCategory);
+  contentWrap.appendChild(renderCategoryPanel(kategorie));
+  layout.appendChild(contentWrap);
+
+  main.appendChild(layout);
+}
+
+function channelOptions(kind) {
+  const typMap = { channel: 'channel', category: 'category', forum: 'forum' };
+  const typ = typMap[kind];
+  return state.channels
+    .filter((c) => c.type === typ)
+    .sort((a, b) => a.position - b.position);
+}
+
+function renderCategoryPanel(kategorie) {
+  const panel = el(`
+    <div class="content-panel">
+      <h2>${kategorie.label}</h2>
+    </div>
+  `);
+
+  for (const item of kategorie.items) {
+    panel.appendChild(renderSelectField(item));
+  }
+  for (const item of kategorie.text_items) {
+    panel.appendChild(renderTextField(item));
+  }
+  if (kategorie.items.length === 0 && kategorie.text_items.length === 0) {
+    panel.appendChild(el('<div class="hint">Für diesen Bereich gibt es nichts einzustellen.</div>'));
+  }
+  return panel;
+}
+
+function statusEl() {
+  return el('<span class="save-status"></span>');
+}
+function setStatus(node, text, kind) {
+  node.textContent = text;
+  node.className = 'save-status' + (kind ? ' ' + kind : '');
+}
+
+async function saveConfig(key, value, statusNode) {
+  setStatus(statusNode, 'Speichere …');
+  try {
+    const res = await api('config', { guild: state.currentGuild, method: 'POST', body: { key, value } });
+    state.config = res.config;
+    setStatus(statusNode, 'Gespeichert ✓', 'ok');
+    setTimeout(() => setStatus(statusNode, ''), 2000);
+  } catch (e) {
+    setStatus(statusNode, e.message, 'err');
+  }
+}
+
+function renderSelectField(item) {
+  const wrap = el(`
+    <div class="field">
+      <label>${item.label}</label>
+    </div>
+  `);
+
+  if (item.kind === 'role_list') {
+    const current = new Set((state.config[item.key] || []).map(String));
+    const list = el('<div class="role-list"></div>');
+    for (const r of state.roles) {
+      const chip = el(`<div class="role-chip${current.has(r.id) ? ' active' : ''}">${r.name}</div>`);
+      chip.onclick = () => {
+        if (current.has(r.id)) current.delete(r.id); else current.add(r.id);
+        chip.classList.toggle('active');
+        saveConfig(item.key, Array.from(current), status);
+      };
+      list.appendChild(chip);
+    }
+    wrap.appendChild(list);
+    const status = statusEl();
+    wrap.appendChild(status);
+    return wrap;
+  }
+
+  const select = el('<select></select>');
+  select.appendChild(el(`<option value="">— nicht gesetzt —</option>`));
+  const options = item.kind === 'role' ? state.roles : channelOptions(item.kind);
+  const currentVal = state.config[item.key] ? String(state.config[item.key]) : '';
+  for (const o of options) {
+    const opt = el(`<option value="${o.id}">${o.name}</option>`);
+    if (o.id === currentVal) opt.selected = true;
+    select.appendChild(opt);
+  }
+  const status = statusEl();
+  select.onchange = () => saveConfig(item.key, select.value || null, status);
+  wrap.appendChild(select);
+  wrap.appendChild(status);
+  return wrap;
+}
+
+function renderTextField(item) {
+  const wrap = el(`
+    <div class="field">
+      <label>${item.label}</label>
+      <div class="desc">${item.beschreibung}</div>
+    </div>
+  `);
+  const currentVal = state.config[item.key] ?? '';
+  const input = item.long_text ? el('<textarea></textarea>') : el('<input type="text" />');
+  input.value = currentVal;
+  const status = statusEl();
+  let timer = null;
+  input.oninput = () => {
+    clearTimeout(timer);
+    setStatus(status, 'Tippen …');
+    timer = setTimeout(() => saveConfig(item.key, input.value, status), 700);
+  };
+  wrap.appendChild(input);
+  wrap.appendChild(status);
+  return wrap;
+}
+
+// ------------------------------- Boot ----------------------------------
+
+async function boot() {
+  app.innerHTML = '<div class="loading">Lade …</div>';
+  try {
+    const me = await api('me');
+    state.user = me.user;
+    renderGuildPicker();
+  } catch {
+    renderLoginScreen();
+  }
+}
+boot();
+</script>
+</body>
+</html>
