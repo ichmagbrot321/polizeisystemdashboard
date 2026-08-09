@@ -205,15 +205,14 @@
   .invite-card + .invite-card { margin-top: 8px; }
 
   /* ---------------------------- Layout ----------------------------- */
-  .layout { display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start; }
-  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+  .layout { display: flex; flex-direction: column; gap: 16px; }
 
   .stats-panel {
     background: linear-gradient(160deg, var(--panel-2), var(--panel));
     border: 1px solid var(--border-soft);
     border-radius: var(--radius);
     padding: 18px;
-    margin-bottom: 18px;
+    margin-bottom: 4px;
   }
   .stats-panel h2 { margin: 0 0 14px; font-size: 15.5px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
   .stats-panel h2 img { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); }
@@ -227,32 +226,39 @@
   .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-strong)); }
 
   nav.categories {
+    position: sticky;
+    top: 58px;
+    z-index: 4;
     background: var(--panel);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius);
-    overflow: hidden;
     padding: 6px;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    scrollbar-width: thin;
+    backdrop-filter: blur(6px);
   }
   nav.categories button {
     position: relative;
     display: block;
-    width: 100%;
+    flex-shrink: 0;
     text-align: left;
     background: none;
     border: none;
     color: var(--text-dim);
-    padding: 10px 12px 10px 16px;
+    padding: 9px 14px;
     font-size: 13px;
     cursor: pointer;
     border-radius: var(--radius-sm);
-    margin-bottom: 2px;
+    white-space: nowrap;
+    transition: background .12s, color .12s;
   }
   nav.categories button:hover { background: var(--panel-2); color: var(--text); }
   nav.categories button.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
-  nav.categories button.active::before {
-    content: ""; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
-    width: 3px; height: 60%; border-radius: 3px; background: var(--accent);
-  }
+  nav.categories button.owner-btn { color: #ff8a3d; }
+  nav.categories button.owner-btn.active { background: rgba(255,138,61,0.14); color: #ff8a3d; }
 
   .content-panel {
     background: var(--panel);
@@ -319,6 +325,65 @@
   .entry-row[data-typ="verwarnung"] { border-left-color: var(--warn); }
   .entry-row[data-typ="suspendierung"] { border-left-color: #ff8a3d; }
   .entry-row[data-typ="sonstiges"] { border-left-color: var(--text-faint); }
+
+  /* ------------------------ Bürgerakten-Avatare ---------------------- */
+  .avatar-sm { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; background: var(--panel-2); }
+  .avatar-lg { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; background: var(--panel-2); }
+  .row-with-avatar { display: flex; align-items: center; gap: 12px; }
+
+  /* ------------------------ Roblox-Live-Suche ------------------------ */
+  .roblox-suggest {
+    position: relative;
+  }
+  .roblox-suggest-list {
+    position: absolute;
+    left: 0; right: 0; top: calc(100% + 4px);
+    background: var(--panel-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 8;
+    box-shadow: 0 16px 40px -12px rgba(0,0,0,0.6);
+  }
+  .roblox-suggest-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .roblox-suggest-item:hover { background: var(--panel-2); }
+  .roblox-suggest-item img { width: 28px; height: 28px; border-radius: 6px; }
+
+  /* --------------------------- Support-Fälle -------------------------- */
+  .owner-panel {
+    background: linear-gradient(160deg, rgba(255,138,61,0.10), var(--panel));
+    border: 1px solid rgba(255,138,61,0.35);
+    box-shadow: 0 0 0 1px rgba(255,138,61,0.06), 0 20px 60px -24px rgba(255,138,61,0.35);
+  }
+  .owner-panel h2 { display: flex; align-items: center; gap: 10px; }
+  .owner-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 3px 9px; border-radius: 20px; text-transform: uppercase;
+    background: rgba(255,138,61,0.14); color: #ff8a3d;
+    border: 1px solid rgba(255,138,61,0.35);
+  }
+  .support-case {
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 12px;
+    background: var(--panel-2);
+  }
+  .support-case .titel { font-weight: 700; font-size: 14px; }
+  .support-case .meta { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+  .support-case .beschreibung { margin-top: 8px; font-size: 13px; color: var(--text-dim); white-space: pre-wrap; }
+  .status-select {
+    background: var(--panel-3); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 10px; border-radius: var(--radius-sm); font-size: 12px; font-family: inherit;
+  }
 </style>
 </head>
 <body>
@@ -328,7 +393,8 @@
 // ---------------------------------------------------------------------
 // KONFIGURATION: hier deine Discord-Application-Client-ID eintragen.
 // ---------------------------------------------------------------------
-const DISCORD_CLIENT_ID = "1528709772784963645";
+const DISCORD_CLIENT_ID = "DEINE_CLIENT_ID_HIER";
+const OWNER_USER_ID = "1523178659182284954";
 
 const app = document.getElementById('app');
 const state = { user: null, guilds: [], currentGuild: null, tier: null, schema: null, config: null, channels: [], roles: [], stats: null, activeCategory: null };
@@ -567,6 +633,13 @@ function drawDashboard(main) {
     navButton('📁 Meine Akte', 'personalakte_eigene');
   }
   navButton('🧑 Bürgerakten', 'buergerakten');
+  if (state.user.id === OWNER_USER_ID) {
+    const btn = el('<button>🔒 Support-Fälle</button>');
+    btn.classList.add('owner-btn');
+    if (state.activeCategory === 'support') btn.classList.add('active');
+    btn.onclick = () => { state.activeCategory = 'support'; drawDashboard(main); };
+    nav.appendChild(btn);
+  }
   layout.appendChild(nav);
 
   const contentWrap = el('<div></div>');
@@ -591,6 +664,9 @@ function drawDashboard(main) {
   } else if (state.activeCategory && state.activeCategory.startsWith('buergerakte:')) {
     contentWrap.innerHTML = '<div class="loading">Lade Bürgerakte …</div>';
     renderBuergerakteDetail(contentWrap, state.activeCategory.split(':')[1]);
+  } else if (state.activeCategory === 'support') {
+    contentWrap.innerHTML = '<div class="loading">Lade Support-Fälle …</div>';
+    renderSupportFaelle(contentWrap);
   } else {
     const kategorie = state.schema?.find((k) => k.id === state.activeCategory);
     if (kategorie) contentWrap.appendChild(renderCategoryPanel(kategorie));
@@ -701,33 +777,114 @@ async function renderPersonalakteDetail(container, userId) {
     const panel = el(`<div class="content-panel"><h2>📁 ${akte.name}</h2>${akte.dienstnummer ? `<div class="hint">Dienstnummer #${akte.dienstnummer}</div>` : ''}</div>`);
 
     if (kannHandeln) {
-      const form = el(`
-        <div class="field">
-          <label>Kündigen</label>
-          <div class="desc">Trägt eine Kündigung ein, entfernt die Mitglieds-/Warn-Rollen und vergibt die Suspendierungs-Rolle.</div>
-          <textarea placeholder="Grund der Kündigung" style="min-height:70px;"></textarea>
+      const aktionen = el('<div class="field" style="display:flex; flex-direction:column; gap:16px;"></div>');
+      aktionen.appendChild(el('<label>Maßnahmen</label>'));
+
+      // Verwarnen
+      const verwarnenBox = el(`
+        <div>
+          <textarea placeholder="Grund der Verwarnung" style="min-height:56px;"></textarea>
+          <div class="field-actions">
+            <button class="btn secondary small" style="border-color:var(--warn); color:var(--warn);">Verwarnen</button>
+            <span class="save-status"></span>
+          </div>
+        </div>
+      `);
+      const vTextarea = verwarnenBox.querySelector('textarea');
+      const vStatus = verwarnenBox.querySelector('.save-status');
+      verwarnenBox.querySelector('button').onclick = async () => {
+        const grund = vTextarea.value.trim();
+        if (!grund) { setStatus(vStatus, 'Grund fehlt', 'err'); return; }
+        setStatus(vStatus, 'Speichere …');
+        try {
+          const res = await api('personalakte_verwarnen', { guild: state.currentGuild, target: userId, method: 'POST', body: { grund } });
+          setStatus(vStatus, res.kuendigung ? '3. Verwarnung — automatisch gekündigt ✓' : 'Verwarnt ✓', 'ok');
+          setTimeout(() => renderPersonalakteDetail(container, userId), 800);
+        } catch (e) {
+          setStatus(vStatus, e.message, 'err');
+        }
+      };
+      aktionen.appendChild(verwarnenBox);
+
+      // Suspendieren
+      const suspendierenBox = el(`
+        <div>
+          <input type="text" placeholder="Dauer (z. B. 3d, 1w) — leer = unbefristet" style="margin-bottom:8px;" />
+          <textarea placeholder="Grund der Suspendierung" style="min-height:56px;"></textarea>
+          <div class="field-actions">
+            <button class="btn secondary small" style="border-color:#ff8a3d; color:#ff8a3d;">Suspendieren</button>
+            <span class="save-status"></span>
+          </div>
+        </div>
+      `);
+      const sDauer = suspendierenBox.querySelector('input');
+      const sTextarea = suspendierenBox.querySelector('textarea');
+      const sStatus = suspendierenBox.querySelector('.save-status');
+      suspendierenBox.querySelector('button').onclick = async () => {
+        const grund = sTextarea.value.trim();
+        if (!grund) { setStatus(sStatus, 'Grund fehlt', 'err'); return; }
+        setStatus(sStatus, 'Speichere …');
+        try {
+          await api('personalakte_suspendieren', { guild: state.currentGuild, target: userId, method: 'POST', body: { grund, dauer: sDauer.value.trim() } });
+          setStatus(sStatus, 'Suspendiert ✓', 'ok');
+          setTimeout(() => renderPersonalakteDetail(container, userId), 700);
+        } catch (e) {
+          setStatus(sStatus, e.message, 'err');
+        }
+      };
+      aktionen.appendChild(suspendierenBox);
+
+      // Kündigen
+      const kuendigenBox = el(`
+        <div>
+          <textarea placeholder="Grund der Kündigung" style="min-height:56px;"></textarea>
+          <div class="desc">Entfernt die Mitglieds-/Warn-Rollen und vergibt die Suspendierungs-Rolle.</div>
           <div class="field-actions">
             <button class="btn danger small">Kündigen</button>
             <span class="save-status"></span>
           </div>
         </div>
       `);
-      const textarea = form.querySelector('textarea');
-      const status = form.querySelector('.save-status');
-      form.querySelector('button').onclick = async () => {
-        const grund = textarea.value.trim();
-        if (!grund) { setStatus(status, 'Grund fehlt', 'err'); return; }
+      const kTextarea = kuendigenBox.querySelector('textarea');
+      const kStatus = kuendigenBox.querySelector('.save-status');
+      kuendigenBox.querySelector('button').onclick = async () => {
+        const grund = kTextarea.value.trim();
+        if (!grund) { setStatus(kStatus, 'Grund fehlt', 'err'); return; }
         if (!confirm(`${akte.name} wirklich kündigen?`)) return;
-        setStatus(status, 'Speichere …');
+        setStatus(kStatus, 'Speichere …');
         try {
           await api('personalakte_kuendigen', { guild: state.currentGuild, target: userId, method: 'POST', body: { grund } });
-          setStatus(status, 'Gekündigt ✓', 'ok');
+          setStatus(kStatus, 'Gekündigt ✓', 'ok');
           setTimeout(() => renderPersonalakteDetail(container, userId), 700);
         } catch (e) {
-          setStatus(status, e.message, 'err');
+          setStatus(kStatus, e.message, 'err');
         }
       };
-      panel.appendChild(form);
+      aktionen.appendChild(kuendigenBox);
+
+      // Suspendierung aufheben
+      if (akte.suspendiert) {
+        const aufhebenBox = el(`
+          <div class="field-actions">
+            <button class="btn secondary small">Suspendierung aufheben</button>
+            <span class="save-status"></span>
+          </div>
+        `);
+        const aStatus = aufhebenBox.querySelector('.save-status');
+        aufhebenBox.querySelector('button').onclick = async () => {
+          setStatus(aStatus, 'Speichere …');
+          try {
+            await api('personalakte_suspendierung_aufheben', { guild: state.currentGuild, target: userId, method: 'POST', body: {} });
+            setStatus(aStatus, 'Aufgehoben ✓', 'ok');
+            setTimeout(() => renderPersonalakteDetail(container, userId), 700);
+          } catch (e) {
+            setStatus(aStatus, e.message, 'err');
+          }
+        };
+        aktionen.appendChild(aufhebenBox);
+      }
+
+      panel.appendChild(aktionen);
     }
 
     if (akte.eintraege.length === 0) {
@@ -797,8 +954,11 @@ async function renderBuergerakten(container) {
       <div id="ba-liste"></div>
       <div class="field" style="margin-top:22px;">
         <label>Neue Bürgerakte / Eintrag hinzufügen</label>
-        <div class="desc">Existiert noch keine Akte für diesen Namen, wird automatisch eine neue angelegt.</div>
-        <input type="text" placeholder="Roblox-Name" id="ba-name" style="margin-bottom:8px;" />
+        <div class="desc">Tippe den Roblox-Namen — Vorschläge mit Foto erscheinen automatisch. Existiert noch keine Akte, wird sie beim Speichern automatisch angelegt.</div>
+        <div class="roblox-suggest" style="margin-bottom:8px;">
+          <input type="text" placeholder="Roblox-Name" id="ba-name" autocomplete="off" />
+          <div class="roblox-suggest-list" id="ba-suggest" style="display:none;"></div>
+        </div>
         <textarea placeholder="Eintrag (z. B. Vorfall, Notiz) — optional" id="ba-text" style="min-height:80px;"></textarea>
         <div class="field-actions">
           <button class="btn small" id="ba-anlegen">Speichern</button>
@@ -820,8 +980,11 @@ async function renderBuergerakten(container) {
       }
       for (const b of buergerakten) {
         const row = el(`
-          <div class="field" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-weight:600;">${b.roblox_name}</div>
+          <div class="field row-with-avatar" style="cursor:pointer; justify-content:space-between;">
+            <div class="row-with-avatar">
+              ${b.avatar_url ? `<img class="avatar-sm" src="${b.avatar_url}" />` : '<div class="avatar-sm"></div>'}
+              <div style="font-weight:600;">${b.roblox_name}</div>
+            </div>
             <div class="hint">${b.eintraege_anzahl} Eintra${b.eintraege_anzahl === 1 ? 'g' : 'ege'} →</div>
           </div>
         `);
@@ -842,17 +1005,65 @@ async function renderBuergerakten(container) {
     timer = setTimeout(() => suchen(ev.target.value), 400);
   };
 
+  // Live-Roblox-Suche mit Foto-Vorschlägen beim Anlegen einer neuen Akte
+  const naimeInput = panel.querySelector('#ba-name');
+  const suggestBox = panel.querySelector('#ba-suggest');
+  let ausgewaehlteRobloxId = null;
+  let suggestTimer = null;
+  naimeInput.oninput = () => {
+    ausgewaehlteRobloxId = null;
+    clearTimeout(suggestTimer);
+    const q = naimeInput.value.trim();
+    if (q.length < 3) { suggestBox.style.display = 'none'; return; }
+    suggestTimer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ resource: 'roblox-suche', guild: state.currentGuild, search: q });
+        const res = await fetch(`/api/bot?${params.toString()}`);
+        const data = await res.json();
+        const ergebnisse = data.ergebnisse || [];
+        suggestBox.innerHTML = '';
+        if (ergebnisse.length === 0) { suggestBox.style.display = 'none'; return; }
+        for (const r of ergebnisse) {
+          const item = el(`
+            <div class="roblox-suggest-item">
+              ${r.avatar_url ? `<img src="${r.avatar_url}" />` : ''}
+              <div><strong>${r.name}</strong>${r.display_name && r.display_name !== r.name ? ` <span class="hint" style="margin:0;">(${r.display_name})</span>` : ''}</div>
+            </div>
+          `);
+          item.onclick = () => {
+            naimeInput.value = r.name;
+            ausgewaehlteRobloxId = r.roblox_user_id;
+            suggestBox.style.display = 'none';
+          };
+          suggestBox.appendChild(item);
+        }
+        suggestBox.style.display = 'block';
+      } catch {
+        suggestBox.style.display = 'none';
+      }
+    }, 350);
+  };
+  document.addEventListener('click', (ev) => {
+    if (!panel.contains(ev.target)) return;
+    if (ev.target !== naimeInput) suggestBox.style.display = 'none';
+  });
+
   const status = panel.querySelector('#ba-status');
   panel.querySelector('#ba-anlegen').onclick = async () => {
-    const roblox_name = panel.querySelector('#ba-name').value.trim();
+    const roblox_name = naimeInput.value.trim();
     const text = panel.querySelector('#ba-text').value.trim();
     if (!roblox_name) { setStatus(status, 'Roblox-Name fehlt', 'err'); return; }
     setStatus(status, 'Speichere …');
     try {
-      const res = await api('buergerakten', { guild: state.currentGuild, method: 'POST', body: { roblox_name, text } });
+      await api('buergerakten', {
+        guild: state.currentGuild,
+        method: 'POST',
+        body: { roblox_name, roblox_user_id: ausgewaehlteRobloxId, text },
+      });
       setStatus(status, 'Gespeichert ✓', 'ok');
-      panel.querySelector('#ba-name').value = '';
+      naimeInput.value = '';
       panel.querySelector('#ba-text').value = '';
+      ausgewaehlteRobloxId = null;
       suchen('');
     } catch (e) {
       setStatus(status, e.message, 'err');
