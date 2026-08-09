@@ -20,6 +20,10 @@ const crypto = require('crypto');
 const MANAGE_GUILD = 0x20;
 const ADMINISTRATOR = 0x8;
 
+// Timeout für Aufrufe an den Bot-Host — ohne das hängt die Funktion bis zum
+// Vercel-Timeout, wenn der Host nicht antwortet (statt schnell zu scheitern).
+const BOT_FETCH_TIMEOUT_MS = 8000;
+
 function sign(payload) {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const sig = crypto
@@ -29,10 +33,28 @@ function sign(payload) {
   return `${data}.${sig}`;
 }
 
+// Wirft jetzt einen sprechenden Fehler statt eines rohen "fetch failed",
+// damit man im Vercel-Log sofort sieht: welcher Pfad, welcher Grund.
 async function botFetch(path) {
-  const res = await fetch(`${process.env.BOT_API_URL}${path}`, {
-    headers: { 'X-API-Key': process.env.BOT_API_KEY },
-  });
+  if (!process.env.BOT_API_URL) {
+    throw new Error(`BOT_API_URL ist nicht gesetzt (Aufruf: ${path})`);
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BOT_FETCH_TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch(`${process.env.BOT_API_URL}${path}`, {
+      headers: { 'X-API-Key': process.env.BOT_API_KEY || '' },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    throw new Error(
+      `Bot-API unter ${process.env.BOT_API_URL}${path} nicht erreichbar (${err.cause?.code || err.message}). ` +
+        `Prüfe BOT_API_URL, ob der Bot läuft und ob Port ${new URL(process.env.BOT_API_URL).port || '(Standard)'} beim Hoster freigegeben ist.`
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) return null;
   return res.json().catch(() => null);
 }
@@ -55,18 +77,25 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: process.env.DISCORD_CLIENT_ID,
-        client_secret: process.env.DISCORD_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: process.env.DISCORD_REDIRECT_URI,
-      }),
-    });
+    let tokenRes;
+    try {
+      tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.DISCORD_CLIENT_ID,
+          client_secret: process.env.DISCORD_CLIENT_SECRET,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: process.env.DISCORD_REDIRECT_URI,
+        }),
+      });
+    } catch (err) {
+      throw new Error(`Token-Tausch mit Discord fehlgeschlagen (Netzwerk): ${err.message}`);
+    }
     if (!tokenRes.ok) {
+      const body = await tokenRes.text().catch(() => '');
+      console.error('[callback] Discord-Token-Tausch abgelehnt:', tokenRes.status, body);
       res.statusCode = 302;
       res.setHeader('Location', '/?login_error=1');
       res.end();
@@ -138,6 +167,7 @@ module.exports = async (req, res) => {
     res.setHeader('Location', '/');
     res.end();
   } catch (err) {
+    console.error('[callback] Login fehlgeschlagen:', err);
     res.statusCode = 500;
     res.end('Fehler beim Login: ' + err.message);
   }
