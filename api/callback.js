@@ -2,21 +2,27 @@
 //
 // Discord leitet den Browser nach dem Login hierher um: /api/callback?code=...
 // Diese Funktion tauscht den Code gegen ein Access-Token, holt den
-// eingeloggten User und seine Server, filtert auf Server wo er
-// "Server verwalten" (oder Administrator/Owner) ist, und speichert das
-// Ergebnis in einem signierten, httpOnly-Cookie. Danach geht's zurück zur
-// Startseite.
+// eingeloggten User, seine Discord-Server UND (für jeden Server, auf dem der
+// Bot schon ist) seine Zugriffsstufe im Polizei-System (Admin / Staff /
+// Dienstaufsicht / Beamter, rollenbasiert über die Bot-API). Nur Server, wo
+// mindestens eine dieser Stufen zutrifft, landen im Dashboard. Das Ergebnis
+// wird in einem signierten, httpOnly-Cookie gespeichert.
 //
 // Benötigte Umgebungsvariablen auf Vercel:
 //   DISCORD_CLIENT_ID
 //   DISCORD_CLIENT_SECRET
 //   DISCORD_REDIRECT_URI   -> exakt https://DEINE-DOMAIN.vercel.app/api/callback
 //   SESSION_SECRET         -> ein langer zufälliger String, frei erfunden
+//   BOT_API_URL, BOT_API_KEY
 
 const crypto = require('crypto');
 
 const MANAGE_GUILD = 0x20;
 const ADMINISTRATOR = 0x8;
+
+// Timeout für Aufrufe an den Bot-Host — ohne das hängt die Funktion bis zum
+// Vercel-Timeout, wenn der Host nicht antwortet (statt schnell zu scheitern).
+const BOT_FETCH_TIMEOUT_MS = 8000;
 
 function sign(payload) {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -25,6 +31,32 @@ function sign(payload) {
     .update(data)
     .digest('base64url');
   return `${data}.${sig}`;
+}
+
+// Wirft jetzt einen sprechenden Fehler statt eines rohen "fetch failed",
+// damit man im Vercel-Log sofort sieht: welcher Pfad, welcher Grund.
+async function botFetch(path) {
+  if (!process.env.BOT_API_URL) {
+    throw new Error(`BOT_API_URL ist nicht gesetzt (Aufruf: ${path})`);
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BOT_FETCH_TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch(`${process.env.BOT_API_URL}${path}`, {
+      headers: { 'X-API-Key': process.env.BOT_API_KEY || '' },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    throw new Error(
+      `Bot-API unter ${process.env.BOT_API_URL}${path} nicht erreichbar (${err.cause?.code || err.message}). ` +
+        `Prüfe BOT_API_URL, ob der Bot läuft und ob Port ${new URL(process.env.BOT_API_URL).port || '(Standard)'} beim Hoster freigegeben ist.`
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!res.ok) return null;
+  return res.json().catch(() => null);
 }
 
 module.exports = async (req, res) => {
@@ -45,18 +77,25 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: process.env.DISCORD_CLIENT_ID,
-        client_secret: process.env.DISCORD_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: process.env.DISCORD_REDIRECT_URI,
-      }),
-    });
+    let tokenRes;
+    try {
+      tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.DISCORD_CLIENT_ID,
+          client_secret: process.env.DISCORD_CLIENT_SECRET,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: process.env.DISCORD_REDIRECT_URI,
+        }),
+      });
+    } catch (err) {
+      throw new Error(`Token-Tausch mit Discord fehlgeschlagen (Netzwerk): ${err.message}`);
+    }
     if (!tokenRes.ok) {
+      const body = await tokenRes.text().catch(() => '');
+      console.error('[callback] Discord-Token-Tausch abgelehnt:', tokenRes.status, body);
       res.statusCode = 302;
       res.setHeader('Location', '/?login_error=1');
       res.end();
@@ -75,17 +114,47 @@ module.exports = async (req, res) => {
     const user = await userRes.json();
     const guilds = await guildsRes.json();
 
-    const verwaltbar = (Array.isArray(guilds) ? guilds : [])
-      .filter(
-        (g) =>
-          g.owner === true ||
-          (parseInt(g.permissions, 10) & (MANAGE_GUILD | ADMINISTRATOR)) !== 0
-      )
+    // Discord-Admin-Server (für "Server ohne Bot" / Bot einladen — reine Discord-Berechtigung, unabhängig vom Polizei-System)
+    const discordAdminGuilds = (Array.isArray(guilds) ? guilds : [])
+      .filter((g) => g.owner === true || (parseInt(g.permissions, 10) & (MANAGE_GUILD | ADMINISTRATOR)) !== 0)
       .map((g) => ({ id: g.id, name: g.name, icon: g.icon }));
+
+    // Server, auf denen der Bot schon ist — Grundlage für die Rollen-Zugriffsprüfung.
+    const botGuildsData = await botFetch('/api/guilds');
+    const botGuilds = botGuildsData ? botGuildsData.guilds || [] : [];
+    const botGuildIds = new Set(botGuilds.map((g) => g.id));
+
+    // Für jeden Server, auf dem der Bot ist UND der User Mitglied ist: Zugriffsstufe abfragen.
+    const eigeneBotGuilds = (Array.isArray(guilds) ? guilds : []).filter((g) => botGuildIds.has(g.id));
+    const accessResults = await Promise.all(
+      eigeneBotGuilds.map((g) => botFetch(`/api/guilds/${g.id}/access/${user.id}`))
+    );
+    const managed = [];
+    eigeneBotGuilds.forEach((g, i) => {
+      const access = accessResults[i];
+      if (!access) return;
+      const { is_admin, is_staff, is_dienstaufsicht, is_officer, dienstnummer } = access;
+      if (!is_admin && !is_staff && !is_dienstaufsicht && !is_officer) return;
+      const live = botGuilds.find((bg) => bg.id === g.id);
+      managed.push({
+        id: g.id,
+        name: (live && live.name) || g.name,
+        icon: (live && live.icon) || null,
+        member_count: live ? live.member_count : null,
+        admin: !!is_admin,
+        staff: !!is_staff,
+        dienstaufsicht: !!is_dienstaufsicht,
+        officer: !!is_officer,
+        dienstnummer: dienstnummer || null,
+      });
+    });
+
+    const unmanaged = discordAdminGuilds.filter((g) => !botGuildIds.has(g.id));
 
     const session = {
       u: { id: user.id, name: user.username, avatar: user.avatar },
-      g: verwaltbar,
+      g: managed,
+      un: unmanaged,
       exp: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 Tage
     };
     const cookieValue = sign(session);
@@ -98,6 +167,7 @@ module.exports = async (req, res) => {
     res.setHeader('Location', '/');
     res.end();
   } catch (err) {
+    console.error('[callback] Login fehlgeschlagen:', err);
     res.statusCode = 500;
     res.end('Fehler beim Login: ' + err.message);
   }
