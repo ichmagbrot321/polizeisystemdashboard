@@ -1,151 +1,213 @@
 // api/bot.js
 //
-// Einziger Endpunkt zwischen dem Dashboard (Browser) und der Bot-API auf
-// Infynix. Prüft bei jeder Anfrage das Session-Cookie und ob der User für
-// den angefragten Server überhaupt "Server verwalten"-Rechte hat, bevor
-// irgendwas an den Bot weitergereicht wird — der Bot-API-Key bleibt dabei
-// immer server-seitig und wird nie an den Browser ausgeliefert.
+// Generischer Proxy zwischen dem Dashboard-Frontend und der Bot-HTTP-API.
+// Liest die signierte Session-Cookie (gesetzt von api/callback.js), prüft sie,
+// und leitet Anfragen anhand des "resource"-Parameters an den passenden Pfad
+// der Bot-API weiter — inklusive automatischem Einfügen von actor_id aus der
+// Session (der Client kann sich NICHT als jemand anderes ausgeben).
 //
-// Aufruf vom Frontend:
-//   GET  /api/bot?resource=me
-//   GET  /api/bot?resource=logout
-//   GET  /api/bot?resource=guilds
-//   GET  /api/bot?resource=schema&guild=ID
-//   GET  /api/bot?resource=config&guild=ID
-//   GET  /api/bot?resource=channels&guild=ID
-//   GET  /api/bot?resource=roles&guild=ID
-//   GET  /api/bot?resource=stats&guild=ID
-//   POST /api/bot?resource=config&guild=ID   Body: {"key": "...", "value": ...}
+// "me", "guilds" und "logout" werden direkt aus der Session beantwortet, ohne
+// den Bot zu kontaktieren.
 //
-// Benötigte Umgebungsvariablen auf Vercel:
-//   SESSION_SECRET   -> derselbe Wert wie in api/callback.js
-//   BOT_API_URL      -> z. B. http://server.infynix.de:40002
-//   BOT_API_KEY      -> derselbe Wert wie DASHBOARD_API_KEY auf dem Bot-Host
+// Neue Ressourcen hinzufügen: einfach einen neuen Eintrag in RESOURCE_MAP
+// ergänzen — an dieser Datei muss sonst nichts geändert werden.
+//
+// Benötigte Umgebungsvariablen (dieselben wie in api/callback.js):
+//   SESSION_SECRET, BOT_API_URL, BOT_API_KEY
 
 const crypto = require('crypto');
 
-const ERLAUBTE_RESSOURCEN = ['schema', 'config', 'channels', 'roles', 'stats'];
+// Muss mit BOT_ENTWICKLER_ID / BOT_OWNER_ID / admin_lock.ADMIN_USER_ID im Bot übereinstimmen.
+const ADMIN_USER_ID = '1523178659182284954';
 
-function parseCookies(req) {
-  const header = req.headers.cookie || '';
+// ---------------------------------------------------------------------------
+// Session verifizieren (Gegenstück zu sign() in api/callback.js)
+// ---------------------------------------------------------------------------
+
+function verifySession(cookieValue) {
+  if (!cookieValue) return null;
+  const parts = cookieValue.split('.');
+  if (parts.length !== 2) return null;
+  const [data, sig] = parts;
+  let expected;
+  try {
+    expected = crypto.createHmac('sha256', process.env.SESSION_SECRET).update(data).digest('base64url');
+  } catch {
+    return null;
+  }
+  const sigBuf = Buffer.from(sig);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null;
+  let payload;
+  try {
+    payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+  } catch {
+    return null;
+  }
+  if (!payload.exp || Date.now() > payload.exp) return null;
+  return payload;
+}
+
+function parseCookies(header) {
   const out = {};
-  header.split(';').forEach((teil) => {
-    const idx = teil.indexOf('=');
+  (header || '').split(';').forEach((part) => {
+    const idx = part.indexOf('=');
     if (idx === -1) return;
-    out[teil.slice(0, idx).trim()] = decodeURIComponent(teil.slice(idx + 1).trim());
+    const key = part.slice(0, idx).trim();
+    const val = part.slice(idx + 1).trim();
+    if (key) out[key] = decodeURIComponent(val);
   });
   return out;
 }
 
-function verify(cookieValue) {
-  if (!cookieValue) return null;
-  const punkt = cookieValue.lastIndexOf('.');
-  if (punkt === -1) return null;
-  const data = cookieValue.slice(0, punkt);
-  const sig = cookieValue.slice(punkt + 1);
-  const erwartet = crypto
-    .createHmac('sha256', process.env.SESSION_SECRET)
-    .update(data)
-    .digest('base64url');
-  if (
-    erwartet.length !== sig.length ||
-    !crypto.timingSafeEqual(Buffer.from(erwartet), Buffer.from(sig))
-  ) {
-    return null;
-  }
-  try {
-    const session = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
-    if (!session.exp || session.exp < Date.now()) return null;
-    return session;
-  } catch {
-    return null;
-  }
-}
+// ---------------------------------------------------------------------------
+// Ressourcen-Zuordnung: resource-Name -> { method?, global?, path(guild, target, query) }
+// method fehlt = die HTTP-Methode der eingehenden Anfrage wird 1:1 durchgereicht
+// (für Ressourcen, die sowohl GET als auch POST unterstützen, z. B. config).
+// global: true = Ressource ist NICHT an einen Server gebunden (Support-Fälle,
+// Admin-Sperrsystem) und nur für ADMIN_USER_ID sichtbar.
+// ---------------------------------------------------------------------------
 
-async function botFetch(path, options = {}) {
-  const res = await fetch(`${process.env.BOT_API_URL}${path}`, {
-    ...options,
-    headers: { ...(options.headers || {}), 'X-API-Key': process.env.BOT_API_KEY },
-  });
-  const body = await res.json().catch(() => ({ error: 'Ungültige Antwort vom Bot' }));
-  return { status: res.status, body };
-}
+const RESOURCE_MAP = {
+  // -- Pro-Server-Ressourcen (dashboard_api.py, DashboardAPI-Cog) --
+  schema: { method: 'GET', path: (g) => `/api/guilds/${g}/schema` },
+  config: { path: (g) => `/api/guilds/${g}/config` },
+  channels: { method: 'GET', path: (g) => `/api/guilds/${g}/channels` },
+  roles: { method: 'GET', path: (g) => `/api/guilds/${g}/roles` },
+  stats: { method: 'GET', path: (g) => `/api/guilds/${g}/stats` },
+  bewerbungsfragen: { path: (g) => `/api/guilds/${g}/bewerbungsfragen` },
+  personalakten: { method: 'GET', path: (g) => `/api/guilds/${g}/personalakten` },
+  personalakte: { method: 'GET', path: (g, t) => `/api/guilds/${g}/personalakte/${t}` },
+  personalakte_kuendigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/kuendigen` },
+  personalakte_verwarnen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/verwarnen` },
+  personalakte_suspendieren: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/suspendieren` },
+  personalakte_suspendierung_aufheben: {
+    method: 'POST',
+    path: (g, t) => `/api/guilds/${g}/personalakte/${t}/suspendierung-aufheben`,
+  },
+  personalakte_widerruf: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/widerruf` },
+  personalakte_loeschen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/loeschen` },
+  buergerakten: { path: (g) => `/api/guilds/${g}/buergerakten` },
+  buergerakte: { method: 'GET', path: (g, _t, q) => `/api/guilds/${g}/buergerakte/${q.roblox_id}` },
 
-async function readBody(req) {
-  let raw = '';
-  for await (const chunk of req) raw += chunk;
-  return raw;
+  // -- Globale, nur für ADMIN_USER_ID sichtbare Ressourcen --
+  support_cases: { method: 'GET', global: true, path: () => `/api/support/cases` },
+  support_case_status: { method: 'POST', global: true, path: (_g, t) => `/api/support/cases/${t}/status` },
+  admin_guilds: { method: 'GET', global: true, path: () => `/api/admin/guilds` },
+  admin_lock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/lock` },
+  admin_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/unlock` },
+  admin_unlock_owner: { method: 'POST', global: true, path: (_g, t) => `/api/admin/owners/${t}/unlock` },
+};
+
+// ---------------------------------------------------------------------------
+// Handler
+// ---------------------------------------------------------------------------
+
+function sendJson(res, status, obj) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(obj));
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-
   const url = new URL(req.url, `https://${req.headers.host}`);
   const resource = url.searchParams.get('resource');
-  const guildId = url.searchParams.get('guild');
-  const session = verify(parseCookies(req).dash_session);
+  const cookies = parseCookies(req.headers.cookie);
+  const session = verifySession(cookies.dash_session);
 
-  if (resource === 'logout') {
-    res.setHeader(
-      'Set-Cookie',
-      'dash_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'
-    );
-    res.statusCode = 200;
-    res.end(JSON.stringify({ ok: true }));
-    return;
-  }
-
-  if (!session) {
-    res.statusCode = 401;
-    res.end(JSON.stringify({ error: 'Nicht angemeldet' }));
-    return;
-  }
-
+  // -- Lokal beantwortete Ressourcen (kein Bot-Kontakt nötig) --
   if (resource === 'me') {
-    res.statusCode = 200;
-    res.end(JSON.stringify({ loggedIn: true, user: session.u, guilds: session.g }));
-    return;
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
+    return sendJson(res, 200, { user: session.u });
   }
-
   if (resource === 'guilds') {
-    const { status, body } = await botFetch('/api/guilds');
-    if (status !== 200) {
-      res.statusCode = status;
-      res.end(JSON.stringify(body));
-      return;
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
+    return sendJson(res, 200, { managed: session.g, unmanaged: session.un });
+  }
+  if (resource === 'logout') {
+    res.setHeader('Set-Cookie', 'dash_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
+  if (!resource) return sendJson(res, 400, { error: "Parameter 'resource' fehlt" });
+
+  const mapping = RESOURCE_MAP[resource];
+  if (!mapping) return sendJson(res, 404, { error: `Unbekannte Ressource: ${resource}` });
+
+  if (mapping.global) {
+    if (session.u.id !== ADMIN_USER_ID) return sendJson(res, 403, { error: 'Keine Berechtigung' });
+  } else {
+    const guild = url.searchParams.get('guild');
+    if (!guild) return sendJson(res, 400, { error: "Parameter 'guild' fehlt" });
+    const hatZugriff = Array.isArray(session.g) && session.g.some((g) => g.id === guild);
+    // Der Bot-Owner darf auf jeden Server zugreifen (spiegelt ist_bot_owner() im Bot).
+    if (!hatZugriff && session.u.id !== ADMIN_USER_ID) {
+      return sendJson(res, 403, { error: 'Kein Zugriff auf diesen Server' });
     }
-    const erlaubteIds = new Set(session.g.map((g) => g.id));
-    const gemeinsam = (body.guilds || []).filter((g) => erlaubteIds.has(g.id));
-    res.statusCode = 200;
-    res.end(JSON.stringify({ guilds: gemeinsam }));
-    return;
   }
 
-  if (!guildId || !session.g.some((g) => g.id === guildId)) {
-    res.statusCode = 403;
-    res.end(JSON.stringify({ error: 'Kein Zugriff auf diesen Server' }));
-    return;
+  const guild = url.searchParams.get('guild');
+  const target = url.searchParams.get('target');
+  const query = Object.fromEntries(url.searchParams);
+  const method = mapping.method || req.method;
+
+  let botPath;
+  try {
+    botPath = mapping.path(guild, target, query);
+  } catch (err) {
+    return sendJson(res, 400, { error: `Ungültige Parameter für '${resource}': ${err.message}` });
   }
 
-  if (!ERLAUBTE_RESSOURCEN.includes(resource)) {
-    res.statusCode = 400;
-    res.end(JSON.stringify({ error: 'Unbekannte Ressource' }));
-    return;
+  // Zusätzliche Query-Parameter (z. B. 'search') unverändert durchreichen —
+  // resource/guild/target sind reine Routing-Parameter des Proxys.
+  const extra = new URLSearchParams();
+  for (const [key, value] of url.searchParams) {
+    if (['resource', 'guild', 'target'].includes(key)) continue;
+    extra.set(key, value);
+  }
+  const qs = extra.toString();
+  const fullPath = qs ? `${botPath}?${qs}` : botPath;
+
+  if (!process.env.BOT_API_URL) {
+    return sendJson(res, 500, { error: 'BOT_API_URL ist auf dem Server nicht gesetzt.' });
   }
 
-  if (req.method === 'POST' && resource === 'config') {
-    const raw = await readBody(req);
-    const { status, body } = await botFetch(`/api/guilds/${guildId}/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: raw,
+  let body;
+  if (method === 'POST') {
+    let raw = '';
+    for await (const chunk of req) raw += chunk;
+    let parsed = {};
+    if (raw) {
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        return sendJson(res, 400, { error: 'Ungültiger JSON-Body' });
+      }
+    }
+    // actor_id kommt IMMER aus der geprüften Session, nie vom Client — verhindert Spoofing.
+    parsed.actor_id = session.u.id;
+    body = JSON.stringify(parsed);
+  }
+
+  let botRes;
+  try {
+    botRes = await fetch(`${process.env.BOT_API_URL}${fullPath}`, {
+      method,
+      headers: {
+        'X-API-Key': process.env.BOT_API_KEY || '',
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body,
     });
-    res.statusCode = status;
-    res.end(JSON.stringify(body));
-    return;
+  } catch (err) {
+    return sendJson(res, 502, {
+      error: `Bot-API unter ${process.env.BOT_API_URL}${fullPath} nicht erreichbar (${err.cause?.code || err.message}).`,
+    });
   }
 
-  const { status, body } = await botFetch(`/api/guilds/${guildId}/${resource}`);
-  res.statusCode = status;
-  res.end(JSON.stringify(body));
+  const text = await botRes.text();
+  res.statusCode = botRes.status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(text);
 };
