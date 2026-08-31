@@ -9,8 +9,20 @@
 // "me", "guilds" und "logout" werden direkt aus der Session beantwortet, ohne
 // den Bot zu kontaktieren.
 //
-// Neue Ressourcen hinzufügen: einfach einen neuen Eintrag in RESOURCE_MAP
-// ergänzen — an dieser Datei muss sonst nichts geändert werden.
+// NEU:
+//   - Globale Security-/Admin-Ressourcen für Server-Sperre (bereits vorhanden),
+//     zusätzlich User-Sperre, IP-Sperre und Support-Fall-Verwaltung — alle nur
+//     für ADMIN_USER_ID sichtbar (siehe global:true unten).
+//   - buergerakten/buergerakte reichen jetzt optionale Roblox-Felder
+//     (roblox_user_id, roblox_avatar_url) durch, die vom Frontend über den
+//     separaten /api/roblox-Proxy ermittelt wurden.
+//
+// WICHTIG: Wer im Bot tatsächlich "Verwarnen/Suspendieren/Kündigen" darf
+// (aktuell nur admin/staff), wird SERVERSEITIG im Bot geprüft, nicht hier.
+// Dieser Proxy reicht nur durch. Um "normale Polizisten" dafür freizuschalten,
+// muss die Berechtigung im Bot (dashboard_api.py-Cog, /api/guilds/.../personalakte/...)
+// angepasst werden — das Frontend zeigt die Buttons bereits an, wenn
+// access.is_officer_kann_handeln (oder eine ähnliche neue Flag) vom Bot kommt.
 //
 // Benötigte Umgebungsvariablen (dieselben wie in api/callback.js):
 //   SESSION_SECRET, BOT_API_URL, BOT_API_KEY
@@ -92,11 +104,21 @@ const RESOURCE_MAP = {
 
   // -- Globale, nur für ADMIN_USER_ID sichtbare Ressourcen --
   support_cases: { method: 'GET', global: true, path: () => `/api/support/cases` },
+  support_case: { method: 'GET', global: true, path: (_g, t) => `/api/support/cases/${t}` },
   support_case_status: { method: 'POST', global: true, path: (_g, t) => `/api/support/cases/${t}/status` },
+  support_case_reply: { method: 'POST', global: true, path: (_g, t) => `/api/support/cases/${t}/reply` },
   admin_guilds: { method: 'GET', global: true, path: () => `/api/admin/guilds` },
   admin_lock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/lock` },
   admin_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/unlock` },
   admin_unlock_owner: { method: 'POST', global: true, path: (_g, t) => `/api/admin/owners/${t}/unlock` },
+
+  // -- NEU: User-/IP-Sperrsystem (siehe Hinweis oben zu api/callback.js) --
+  security_locks: { method: 'GET', global: true, path: () => `/api/security/locks` },
+  security_lock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${t}/lock` },
+  security_unlock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${t}/unlock` },
+  security_lock_ip: { method: 'POST', global: true, path: () => `/api/security/ip/lock` },
+  security_unlock_ip: { method: 'POST', global: true, path: (_g, t) => `/api/security/ip/${t}/unlock` },
+  security_seen: { method: 'GET', global: true, path: (_g, t) => `/api/security/seen/${t}` },
 };
 
 // ---------------------------------------------------------------------------
@@ -109,6 +131,12 @@ function sendJson(res, status, obj) {
   res.end(JSON.stringify(obj));
 }
 
+function getClientIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  if (fwd) return fwd.split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
 module.exports = async (req, res) => {
   const url = new URL(req.url, `https://${req.headers.host}`);
   const resource = url.searchParams.get('resource');
@@ -118,7 +146,7 @@ module.exports = async (req, res) => {
   // -- Lokal beantwortete Ressourcen (kein Bot-Kontakt nötig) --
   if (resource === 'me') {
     if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
-    return sendJson(res, 200, { user: session.u });
+    return sendJson(res, 200, { user: session.u, isAdmin: !!session.isAdmin });
   }
   if (resource === 'guilds') {
     if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
@@ -136,6 +164,8 @@ module.exports = async (req, res) => {
   if (!mapping) return sendJson(res, 404, { error: `Unbekannte Ressource: ${resource}` });
 
   if (mapping.global) {
+    // Doppelte Prüfung mit Absicht: sowohl das Session-Flag (schnell) als auch
+    // der direkte ID-Vergleich (falls eine alte Session noch kein isAdmin-Feld hat).
     if (session.u.id !== ADMIN_USER_ID) return sendJson(res, 403, { error: 'Keine Berechtigung' });
   } else {
     const guild = url.searchParams.get('guild');
@@ -187,6 +217,12 @@ module.exports = async (req, res) => {
     }
     // actor_id kommt IMMER aus der geprüften Session, nie vom Client — verhindert Spoofing.
     parsed.actor_id = session.u.id;
+    // Bei Sperr-Aktionen die tatsächliche Anfrager-IP mitschicken (nicht vom
+    // Client fälschbar), damit z. B. "security_lock_ip" ohne manuelle Eingabe
+    // aus dem Support-Fall heraus funktioniert, wenn keine IP übergeben wurde.
+    if (resource.startsWith('security_') && !parsed.ip) {
+      parsed.request_ip = getClientIp(req);
+    }
     body = JSON.stringify(parsed);
   }
 
