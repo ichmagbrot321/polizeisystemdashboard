@@ -8,6 +8,26 @@
 // mindestens eine dieser Stufen zutrifft, landen im Dashboard. Das Ergebnis
 // wird in einem signierten, httpOnly-Cookie gespeichert.
 //
+// NEU (Sicherheits-Layer):
+//   - Erfasst die Client-IP und prüft sie + die Discord-User-ID gegen eine
+//     globale Sperrliste im Bot, BEVOR die Session ausgestellt wird.
+//   - Markiert die Session mit einem Best-Effort-VPN/Proxy-Hinweis (nur ein
+//     Signal für den Admin-Bereich, kein hartes Blocken — siehe Hinweis unten).
+//   - Speichert die IP in der Session, damit beim Sperren eines Users im
+//     Admin-Bereich automatisch auch dessen zuletzt bekannte IP mitgesperrt
+//     werden kann (deckt "gleiches Netzwerk/WLAN" ab, da dort ohnehin dieselbe
+//     öffentliche IP genutzt wird — NAT).
+//
+// Ehrlicher Hinweis zu VPN-Erkennung: Es gibt KEINE Methode, die eine Sperre
+// zu 100% gegen jede Art von VPN/Proxy immun macht. Die Proxy/Hosting-Flags
+// von IP-Intelligence-Diensten sind Heuristiken (Datenbank bekannter
+// Rechenzentrums-/VPN-IP-Bereiche) und können sowohl False Positives
+// (z. B. manche Firmen-/Mobilfunknetze) als auch False Negatives (neue,
+// unbekannte residential-Proxies) haben. Deshalb wird der VPN-Hinweis hier nur
+// als Warn-Badge im Admin-Bereich angezeigt, nicht automatisch als Blockgrund
+// verwendet. Die eigentliche, verlässliche Sperre ist die User-ID-Sperre
+// (Discord-Login lässt sich nicht faken) plus die IP-Sperre als Zusatzschicht.
+//
 // Benötigte Umgebungsvariablen auf Vercel:
 //   DISCORD_CLIENT_ID
 //   DISCORD_CLIENT_SECRET
@@ -20,9 +40,14 @@ const crypto = require('crypto');
 const MANAGE_GUILD = 0x20;
 const ADMINISTRATOR = 0x8;
 
+// Muss mit ADMIN_USER_ID in api/bot.js übereinstimmen.
+const ADMIN_USER_ID = '1523178659182284954';
+
 // Timeout für Aufrufe an den Bot-Host — ohne das hängt die Funktion bis zum
 // Vercel-Timeout, wenn der Host nicht antwortet (statt schnell zu scheitern).
 const BOT_FETCH_TIMEOUT_MS = 8000;
+// Timeout für die IP-Intelligence-Abfrage (Drittanbieter, darf Login nie blockieren)
+const IP_INTEL_TIMEOUT_MS = 2500;
 
 function sign(payload) {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -33,9 +58,9 @@ function sign(payload) {
   return `${data}.${sig}`;
 }
 
-// Wirft jetzt einen sprechenden Fehler statt eines rohen "fetch failed",
+// Wirft einen sprechenden Fehler statt eines rohen "fetch failed",
 // damit man im Vercel-Log sofort sieht: welcher Pfad, welcher Grund.
-async function botFetch(path) {
+async function botFetch(path, opts = {}) {
   if (!process.env.BOT_API_URL) {
     throw new Error(`BOT_API_URL ist nicht gesetzt (Aufruf: ${path})`);
   }
@@ -46,17 +71,50 @@ async function botFetch(path) {
     res = await fetch(`${process.env.BOT_API_URL}${path}`, {
       headers: { 'X-API-Key': process.env.BOT_API_KEY || '' },
       signal: controller.signal,
+      ...opts,
     });
   } catch (err) {
     throw new Error(
       `Bot-API unter ${process.env.BOT_API_URL}${path} nicht erreichbar (${err.cause?.code || err.message}). ` +
-        `Prüfe BOT_API_URL, ob der Bot läuft und ob Port ${new URL(process.env.BOT_API_URL).port || '(Standard)'} beim Hoster freigegeben ist.`
+        `Prüfe BOT_API_URL, ob der Bot läuft und ob der Port beim Hoster freigegeben ist.`
     );
   } finally {
     clearTimeout(timeout);
   }
   if (!res.ok) return null;
   return res.json().catch(() => null);
+}
+
+function getClientIp(req) {
+  // Vercel setzt x-forwarded-for; erster Eintrag ist die tatsächliche Client-IP.
+  const fwd = req.headers['x-forwarded-for'];
+  if (fwd) return fwd.split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+// Best-effort, kostenloses IP-Intelligence-Signal (kein API-Key nötig,
+// ip-api.com Free-Tier ~45 Anfragen/Minute). Darf den Login niemals blockieren
+// oder verzögern, falls der Dienst nicht antwortet — daher eigener kurzer
+// Timeout und Fehler werden verschluckt.
+async function checkIpIntel(ip) {
+  if (!ip || ip === 'unknown' || ip.startsWith('127.') || ip.startsWith('::1')) {
+    return { proxy: false, hosting: false, checked: false };
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), IP_INTEL_TIMEOUT_MS);
+  try {
+    const r = await fetch(`http://ip-api.com/json/${ip}?fields=status,proxy,hosting,countryCode,isp`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!r.ok) return { proxy: false, hosting: false, checked: false };
+    const d = await r.json();
+    if (d.status !== 'success') return { proxy: false, hosting: false, checked: false };
+    return { proxy: !!d.proxy, hosting: !!d.hosting, countryCode: d.countryCode, isp: d.isp, checked: true };
+  } catch {
+    clearTimeout(timeout);
+    return { proxy: false, hosting: false, checked: false };
+  }
 }
 
 module.exports = async (req, res) => {
@@ -114,6 +172,32 @@ module.exports = async (req, res) => {
     const user = await userRes.json();
     const guilds = await guildsRes.json();
 
+    const clientIp = getClientIp(req);
+
+    // -----------------------------------------------------------------
+    // Globale Sperrprüfung (User-ID und IP) — läuft VOR dem Ausstellen
+    // der Session. Der Bot-Owner (ADMIN_USER_ID) kann sich immer einloggen,
+    // damit er sich selbst nicht aussperren kann.
+    // -----------------------------------------------------------------
+    if (user.id !== ADMIN_USER_ID) {
+      const sperrCheck = await botFetch(
+        `/api/security/check?user_id=${encodeURIComponent(user.id)}&ip=${encodeURIComponent(clientIp)}`
+      ).catch((err) => {
+        console.error('[callback] Sperrprüfung fehlgeschlagen (fail-open, Login wird trotzdem erlaubt):', err.message);
+        return null;
+      });
+      // Fail-open bewusst: wenn der Bot down ist, soll das Dashboard nicht für
+      // ALLE ausfallen. sperrCheck === null bedeutet "Prüfung nicht möglich".
+      if (sperrCheck && sperrCheck.gesperrt) {
+        res.statusCode = 302;
+        res.setHeader('Location', `/?login_error=locked${sperrCheck.grund ? `&reason=${encodeURIComponent(sperrCheck.grund)}` : ''}`);
+        res.end();
+        return;
+      }
+    }
+
+    const ipIntel = await checkIpIntel(clientIp);
+
     // Discord-Admin-Server (für "Server ohne Bot" / Bot einladen — reine Discord-Berechtigung, unabhängig vom Polizei-System)
     const discordAdminGuilds = (Array.isArray(guilds) ? guilds : [])
       .filter((g) => g.owner === true || (parseInt(g.permissions, 10) & (MANAGE_GUILD | ADMINISTRATOR)) !== 0)
@@ -155,9 +239,27 @@ module.exports = async (req, res) => {
       u: { id: user.id, name: user.username, avatar: user.avatar },
       g: managed,
       un: unmanaged,
+      ip: clientIp,
+      vpn: !!(ipIntel.proxy || ipIntel.hosting),
+      isAdmin: user.id === ADMIN_USER_ID,
       exp: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 Tage
     };
     const cookieValue = sign(session);
+
+    // Letzte bekannte IP + VPN-Signal beim Bot hinterlegen, damit der
+    // Admin-Bereich (Support-Fälle / Sperren) sie anzeigen kann, ohne dass
+    // der Client das selbst mitschicken müsste (Spoofing-Schutz).
+    botFetch(`/api/security/seen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: user.id,
+        ip: clientIp,
+        vpn_verdacht: !!(ipIntel.proxy || ipIntel.hosting),
+        isp: ipIntel.isp || null,
+        country: ipIntel.countryCode || null,
+      }),
+    }).catch((err) => console.error('[callback] Konnte "seen"-Info nicht an Bot melden:', err.message));
 
     res.setHeader(
       'Set-Cookie',
