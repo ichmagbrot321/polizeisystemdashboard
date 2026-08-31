@@ -3,21 +3,37 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRP Dashboard</title>
+<title>Polizei System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e14;
-    --panel: #10151f;
-    --panel-2: #151b28;
-    --border: #232b3a;
-    --amber: #e0a94a;
-    --amber-dim: #e0a94a55;
-    --text: #dfe4ee;
-    --text-dim: #8993a8;
-    --ok: #4ade80;
-    --err: #f87171;
+    /* ---- Farbsystem: kühles Konsolen-Blau statt Braun/Amber ---- */
+    --bg: #080b12;
+    --bg-grid: rgba(91,140,255,0.05);
+    --panel: #0e131d;
+    --panel-2: #131a26;
+    --panel-3: #182131;
+    --border: #202a3a;
+    --border-soft: #1a222f;
+
+    --accent: #5b8cff;
+    --accent-soft: rgba(91,140,255,0.14);
+    --accent-strong: #8fb4ff;
+
+    --text: #e7ecf6;
+    --text-dim: #8b96ab;
+    --text-faint: #5b6478;
+
+    --ok: #34d399;
+    --ok-soft: rgba(52,211,153,0.14);
+    --warn: #f5a623;
+    --warn-soft: rgba(245,166,35,0.14);
+    --err: #f4586b;
+    --err-soft: rgba(244,88,107,0.14);
+
+    --radius: 10px;
+    --radius-sm: 7px;
     font-family: 'Inter', system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
@@ -26,167 +42,229 @@
     background: var(--bg);
     color: var(--text);
     background-image:
-      linear-gradient(rgba(224,169,74,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(224,169,74,0.03) 1px, transparent 1px);
-    background-size: 28px 28px;
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size: 32px 32px;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-  a { color: var(--amber); }
+  a { color: var(--accent-strong); }
+  ::selection { background: var(--accent-soft); color: var(--accent-strong); }
+
+  /* ---------------------------- Login ---------------------------- */
   .center-screen {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
     padding: 20px;
     text-align: center;
   }
+  .badge-mark {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(155deg, var(--panel-3), var(--panel));
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--accent-strong);
+    box-shadow: 0 0 0 1px rgba(91,140,255,0.06), 0 12px 30px -12px rgba(91,140,255,0.25);
+  }
   .logo {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 3px;
-    color: var(--amber);
+    color: var(--text-dim);
     text-transform: uppercase;
   }
-  h1 { font-size: 22px; margin: 0; }
+  h1 { font-size: 23px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+  .lede { color: var(--text-dim); max-width: 380px; font-size: 14px; line-height: 1.6; margin: 0; }
   .btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--amber);
-    color: #14100a;
+    background: var(--accent);
+    color: #06101f;
     border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
+    padding: 11px 20px;
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
     cursor: pointer;
     text-decoration: none;
+    transition: filter .12s, transform .12s;
   }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
   .btn.secondary {
     background: var(--panel-2);
     color: var(--text);
     border: 1px solid var(--border);
   }
-  .btn.small { padding: 8px 14px; font-size: 13px; }
+  .btn.secondary:hover { background: var(--panel-3); }
+  .btn.danger { background: var(--err); color: #1a0508; }
+  .btn.small { padding: 7px 13px; font-size: 12.5px; }
   .error-box {
-    border: 1px solid var(--err);
-    color: var(--err);
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 14px;
+    border: 1px solid rgba(244,88,107,0.35);
+    background: var(--err-soft);
+    color: #ff97a4;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
     max-width: 420px;
   }
+
+  /* --------------------------- Topbar ----------------------------- */
   header.topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--panel);
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--border-soft);
+    background: rgba(14,19,29,0.85);
+    backdrop-filter: blur(10px);
     position: sticky;
     top: 0;
     z-index: 5;
   }
   header.topbar .brand {
+    display: flex; align-items: center; gap: 10px;
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 2px;
-    color: var(--amber);
-    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
     cursor: pointer;
+    text-transform: uppercase;
   }
+  header.topbar .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
   .user-chip {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 13px;
     color: var(--text-dim);
   }
-  .user-chip img { width: 26px; height: 26px; border-radius: 50%; }
-  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  .user-chip img { width: 27px; height: 27px; border-radius: 50%; border: 1px solid var(--border); }
+  main { max-width: 1120px; margin: 0 auto; padding: 26px 18px 90px; }
+
+  /* ------------------------- Guild picker -------------------------- */
+  .page-heading { display: flex; flex-direction: column; gap: 4px; margin-bottom: 22px; }
+  .page-heading h1 { font-size: 21px; }
+  .page-heading p { color: var(--text-dim); font-size: 13.5px; margin: 0; }
+
   .guild-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 14px;
-    margin-top: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
   }
   .guild-card {
     background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 15px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: border-color .15s;
+    transition: border-color .15s, transform .15s, background .15s;
   }
-  .guild-card:hover { border-color: var(--amber-dim); }
+  .guild-card:hover { border-color: rgba(91,140,255,0.4); background: var(--panel-2); transform: translateY(-1px); }
   .guild-card img, .guild-card .fallback-icon {
-    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
-    background: var(--panel-2);
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: var(--panel-3);
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: var(--amber);
+    font-weight: 700; color: var(--accent-strong);
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid var(--border);
   }
   .guild-card .meta { min-width: 0; }
-  .guild-card .name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .guild-card .sub { font-size: 12px; color: var(--text-dim); }
+  .guild-card .name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .guild-card .sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+  .section-title {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-faint);
+    margin: 34px 0 10px;
+    font-weight: 600;
+  }
+  .invite-card {
+    background: var(--panel);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 14px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+  }
+  .invite-card .left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .invite-card .name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .invite-card + .invite-card { margin-top: 8px; }
 
-  .layout { display: grid; grid-template-columns: 250px 1fr; gap: 22px; align-items: start; }
+  /* ---------------------------- Layout ----------------------------- */
+  .layout { display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start; }
   @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
 
   .stats-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+    background: linear-gradient(160deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 18px;
     margin-bottom: 18px;
   }
-  .stats-panel h2 { margin: 0 0 12px; font-size: 16px; display: flex; align-items: center; gap: 10px; }
-  .stats-panel h2 img { width: 30px; height: 30px; border-radius: 50%; }
-  .stat-row { display: flex; flex-wrap: wrap; gap: 18px; }
-  .stat { min-width: 90px; }
-  .stat .n { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--amber); font-weight: 600; }
-  .stat .l { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
+  .stats-panel h2 { margin: 0 0 14px; font-size: 15.5px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .stats-panel h2 img { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 22px; }
+  .stat { min-width: 84px; }
+  .stat .n { font-family: 'JetBrains Mono', monospace; font-size: 19px; color: var(--accent-strong); font-weight: 600; }
+  .stat .l { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
   .progress-bar {
-    height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-top: 10px;
+    height: 5px; background: var(--panel-3); border-radius: 3px; overflow: hidden; margin-top: 14px;
   }
-  .progress-bar .fill { height: 100%; background: var(--amber); }
+  .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-strong)); }
 
   nav.categories {
     background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
     overflow: hidden;
+    padding: 6px;
   }
   nav.categories button {
+    position: relative;
     display: block;
     width: 100%;
     text-align: left;
     background: none;
     border: none;
     color: var(--text-dim);
-    padding: 11px 14px;
+    padding: 10px 12px 10px 16px;
     font-size: 13px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 2px;
   }
-  nav.categories button:last-child { border-bottom: none; }
   nav.categories button:hover { background: var(--panel-2); color: var(--text); }
-  nav.categories button.active { background: var(--panel-2); color: var(--amber); font-weight: 600; }
+  nav.categories button.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
+  nav.categories button.active::before {
+    content: ""; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 60%; border-radius: 3px; background: var(--accent);
+  }
 
   .content-panel {
     background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 22px;
   }
-  .content-panel h2 { margin: 0 0 4px; font-size: 17px; }
+  .content-panel h2 { margin: 0 0 4px; font-size: 16.5px; font-weight: 700; }
   .field {
     margin-top: 18px;
     padding-top: 16px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-soft);
   }
   .field:first-of-type { border-top: none; margin-top: 14px; padding-top: 0; }
   .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
@@ -196,13 +274,13 @@
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 9px 10px;
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 9px 11px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
     font-family: inherit;
   }
   textarea { min-height: 110px; resize: vertical; }
-  select:focus, input:focus, textarea:focus { outline: 1px solid var(--amber); border-color: var(--amber); }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .role-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
   .role-chip {
     border: 1px solid var(--border);
@@ -212,14 +290,35 @@
     cursor: pointer;
     user-select: none;
     color: var(--text-dim);
+    transition: border-color .12s, color .12s, background .12s;
   }
-  .role-chip.active { border-color: var(--amber); color: var(--amber); background: #e0a94a1a; }
-  .field-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .role-chip.active { border-color: var(--accent); color: var(--accent-strong); background: var(--accent-soft); }
+  .field-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
   .save-status { font-size: 12px; color: var(--text-dim); }
   .save-status.ok { color: var(--ok); }
   .save-status.err { color: var(--err); }
-  .loading { color: var(--text-dim); padding: 40px; text-align: center; font-size: 14px; }
+  .loading { color: var(--text-dim); padding: 40px; text-align: center; font-size: 13.5px; }
   .hint { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  /* ----------------------- Badges / status ------------------------- */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 20px; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.err { background: var(--err-soft); color: #ff97a4; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .status-dot.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+  .status-dot.err { background: var(--err); box-shadow: 0 0 6px var(--err); }
+
+  /* Farbcodierter Rand je nach Eintragsart – macht den Typ auf einen Blick erkennbar */
+  .entry-row { border-left: 3px solid var(--border); padding-left: 14px !important; margin-left: -3px; }
+  .entry-row[data-typ="kuendigung"] { border-left-color: var(--err); }
+  .entry-row[data-typ="verwarnung"] { border-left-color: var(--warn); }
+  .entry-row[data-typ="suspendierung"] { border-left-color: #ff8a3d; }
+  .entry-row[data-typ="sonstiges"] { border-left-color: var(--text-faint); }
 </style>
 </head>
 <body>
@@ -232,7 +331,7 @@
 const DISCORD_CLIENT_ID = "1528709772784963645";
 
 const app = document.getElementById('app');
-const state = { user: null, guilds: [], currentGuild: null, schema: null, config: null, channels: [], roles: [], stats: null, activeCategory: null };
+const state = { user: null, guilds: [], currentGuild: null, tier: null, schema: null, config: null, channels: [], roles: [], stats: null, activeCategory: null };
 
 function el(html) {
   const t = document.createElement('template');
@@ -254,11 +353,25 @@ function loginUrl() {
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
-async function api(resource, { guild, method = 'GET', body } = {}) {
+function inviteUrl(guildId) {
+  const params = new URLSearchParams({
+    client_id: DISCORD_CLIENT_ID,
+    scope: 'bot applications.commands',
+    permissions: '8', // Administrator — der Bot verwaltet Rollen, Kanäle, Nachrichten usw. umfassend
+    guild_id: guildId,
+    disable_guild_select: 'true',
+  });
+  return `https://discord.com/oauth2/authorize?${params.toString()}`;
+}
+
+async function api(resource, { guild, target, search, method = 'GET', body } = {}) {
   const params = new URLSearchParams({ resource });
   if (guild) params.set('guild', guild);
+  if (target) params.set('target', target);
+  if (search) params.set('search', search);
   const res = await fetch(`/api/bot?${params.toString()}`, {
     method,
+    credentials: 'include',
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -285,9 +398,10 @@ function renderLoginScreen() {
   app.innerHTML = '';
   app.appendChild(el(`
     <div class="center-screen">
-      <div class="logo">KRP · SYSTEM</div>
-      <h1>Düsseldorf RP Dashboard</h1>
-      <p style="color:var(--text-dim); max-width:360px;">Melde dich mit Discord an, um die Server zu verwalten, auf denen du Admin- oder Owner-Rechte hast.</p>
+      <div class="badge-mark">PS</div>
+      <div class="logo">Polizei System</div>
+      <h1>Dienststellen-Dashboard</h1>
+      <p class="lede">Melde dich mit Discord an, um die Server zu verwalten, auf denen du Admin- oder Teamrechte hast.</p>
       ${showError ? '<div class="error-box">Login fehlgeschlagen. Bitte erneut versuchen.</div>' : ''}
       <a class="btn" href="${loginUrl()}">Mit Discord anmelden</a>
     </div>
@@ -297,7 +411,7 @@ function renderLoginScreen() {
 function renderTopbar(container) {
   const bar = el(`
     <header class="topbar">
-      <div class="brand" id="brand-home">KRP · DASHBOARD</div>
+      <div class="brand" id="brand-home"><span class="dot"></span>Polizei System</div>
       <div class="user-chip">
         ${avatarUrl(state.user) ? `<img src="${avatarUrl(state.user)}" />` : ''}
         <span>${state.user.name}</span>
@@ -317,22 +431,27 @@ async function renderGuildPicker() {
   app.innerHTML = '';
   renderTopbar(app);
   const main = el('<main></main>');
-  main.appendChild(el('<h1>Deine Server</h1>'));
-  main.appendChild(el('<p style="color:var(--text-dim)">Nur Server, auf denen der Bot ist UND du Verwaltungsrechte hast, werden hier angezeigt.</p>'));
+  main.appendChild(el(`
+    <div class="page-heading">
+      <h1>Deine Server</h1>
+      <p>Server, auf denen der Bot läuft und du Teamrechte hast, kannst du direkt verwalten.</p>
+    </div>
+  `));
   const grid = el('<div class="guild-grid"></div>');
   main.appendChild(grid);
+  const inviteSection = el('<div></div>');
+  main.appendChild(inviteSection);
   app.appendChild(main);
 
   grid.innerHTML = '<div class="loading">Lade Server …</div>';
   try {
-    const { guilds } = await api('guilds');
-    state.guilds = guilds;
+    const { managed, unmanaged } = await api('guilds');
+    state.guilds = managed;
     grid.innerHTML = '';
-    if (guilds.length === 0) {
-      grid.appendChild(el('<div class="loading">Keine passenden Server gefunden. Ist der Bot schon auf deinem Server?</div>'));
-      return;
+    if (managed.length === 0) {
+      grid.appendChild(el('<div class="loading">Keine passenden Server gefunden.</div>'));
     }
-    for (const g of guilds) {
+    for (const g of managed) {
       const icon = guildIconUrl(g);
       const card = el(`
         <div class="guild-card">
@@ -346,6 +465,23 @@ async function renderGuildPicker() {
       card.onclick = () => openGuild(g.id);
       grid.appendChild(card);
     }
+
+    if (unmanaged.length > 0) {
+      inviteSection.appendChild(el('<div class="section-title">Deine Server ohne Bot</div>'));
+      for (const g of unmanaged) {
+        const icon = guildIconUrl(g);
+        const card = el(`
+          <div class="invite-card">
+            <div class="left">
+              ${icon ? `<img src="${icon}" style="width:36px;height:36px;border-radius:8px;" />` : `<div class="fallback-icon">${g.name.slice(0,1).toUpperCase()}</div>`}
+              <div class="name">${g.name}</div>
+            </div>
+            <a class="btn small" target="_blank" rel="noopener" href="${inviteUrl(g.id)}">Bot einladen</a>
+          </div>
+        `);
+        inviteSection.appendChild(card);
+      }
+    }
   } catch (e) {
     grid.innerHTML = `<div class="error-box">${e.message}</div>`;
   }
@@ -353,6 +489,7 @@ async function renderGuildPicker() {
 
 async function openGuild(guildId) {
   state.currentGuild = guildId;
+  state.tier = state.guilds.find((g) => g.id === guildId) || null;
   state.activeCategory = null;
   await renderGuildDashboard();
 }
@@ -364,20 +501,22 @@ async function renderGuildDashboard() {
   main.appendChild(el('<div class="loading">Lade Server-Daten …</div>'));
   app.appendChild(main);
 
+  const tier = state.tier || {};
   try {
-    const [schemaRes, configRes, channelsRes, rolesRes, statsRes] = await Promise.all([
-      api('schema', { guild: state.currentGuild }),
-      api('config', { guild: state.currentGuild }),
-      api('channels', { guild: state.currentGuild }),
-      api('roles', { guild: state.currentGuild }),
-      api('stats', { guild: state.currentGuild }),
-    ]);
-    state.schema = schemaRes.categories;
-    state.config = configRes.config;
-    state.channels = channelsRes.channels;
-    state.roles = rolesRes.roles;
-    state.stats = statsRes;
-    state.activeCategory = state.schema[0]?.id ?? null;
+    const calls = [];
+    if (tier.admin) {
+      calls.push(
+        api('schema', { guild: state.currentGuild }).then((r) => (state.schema = r.categories)),
+        api('config', { guild: state.currentGuild }).then((r) => (state.config = r.config)),
+        api('channels', { guild: state.currentGuild }).then((r) => (state.channels = r.channels)),
+        api('roles', { guild: state.currentGuild }).then((r) => (state.roles = r.roles)),
+        api('stats', { guild: state.currentGuild }).then((r) => (state.stats = r))
+      );
+    }
+    await Promise.all(calls);
+    state.activeCategory = tier.admin ? (state.schema[0]?.id ?? null) : 'personalakte_eigene';
+    if (!tier.admin && (tier.staff || tier.dienstaufsicht)) state.activeCategory = 'personalakten';
+    else if (!tier.admin && tier.officer) state.activeCategory = 'personalakte_eigene';
     drawDashboard(main);
   } catch (e) {
     main.innerHTML = `<div class="error-box">${e.message}</div>`;
@@ -386,39 +525,126 @@ async function renderGuildDashboard() {
 
 function drawDashboard(main) {
   main.innerHTML = '';
+  const tier = state.tier || {};
   const s = state.stats;
-  const pct = s.config_gesamt ? Math.round((s.config_gesetzt / s.config_gesamt) * 100) : 0;
 
-  main.appendChild(el(`
-    <div class="stats-panel">
-      <h2>${s.icon ? `<img src="${s.icon}" />` : ''} ${s.name}</h2>
-      <div class="stat-row">
-        <div class="stat"><div class="n">${s.member_count}</div><div class="l">Mitglieder</div></div>
-        <div class="stat"><div class="n">${s.channel_count}</div><div class="l">Channels</div></div>
-        <div class="stat"><div class="n">${s.role_count}</div><div class="l">Rollen</div></div>
-        <div class="stat"><div class="n">${s.dienstnummern_vergeben}</div><div class="l">Dienstnummern</div></div>
-        <div class="stat"><div class="n">${s.config_gesetzt}/${s.config_gesamt}</div><div class="l">Konfiguriert</div></div>
+  if (tier.admin && s) {
+    const pct = s.config_gesamt ? Math.round((s.config_gesetzt / s.config_gesamt) * 100) : 0;
+    main.appendChild(el(`
+      <div class="stats-panel">
+        <h2>${s.icon ? `<img src="${s.icon}" />` : ''} ${s.name}</h2>
+        <div class="stat-row">
+          <div class="stat"><div class="n">${s.member_count}</div><div class="l">Mitglieder</div></div>
+          <div class="stat"><div class="n">${s.channel_count}</div><div class="l">Channels</div></div>
+          <div class="stat"><div class="n">${s.role_count}</div><div class="l">Rollen</div></div>
+          <div class="stat"><div class="n">${s.dienstnummern_vergeben}</div><div class="l">Dienstnummern</div></div>
+          <div class="stat"><div class="n">${s.config_gesetzt}/${s.config_gesamt}</div><div class="l">Konfiguriert</div></div>
+        </div>
+        <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
       </div>
-      <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
-    </div>
-  `));
+    `));
+  } else {
+    main.appendChild(el(`<div class="stats-panel"><h2>${state.tier?.name ?? 'Server'}</h2></div>`));
+  }
 
   const layout = el('<div class="layout"></div>');
   const nav = el('<nav class="categories"></nav>');
-  for (const kat of state.schema) {
-    const btn = el(`<button>${kat.label}</button>`);
-    if (kat.id === state.activeCategory) btn.classList.add('active');
-    btn.onclick = () => { state.activeCategory = kat.id; drawDashboard(main); };
+
+  const navButton = (label, id) => {
+    const btn = el(`<button>${label}</button>`);
+    if (state.activeCategory === id) btn.classList.add('active');
+    btn.onclick = () => { state.activeCategory = id; drawDashboard(main); };
     nav.appendChild(btn);
+  };
+
+  if (tier.admin) {
+    for (const kat of state.schema) navButton(kat.label, kat.id);
+    navButton('📋 Bewerbungsfragen', '_bewerbungsfragen');
   }
+  if (tier.admin || tier.staff || tier.dienstaufsicht) {
+    navButton('👮 Personalakten', 'personalakten');
+  } else if (tier.officer) {
+    navButton('📁 Meine Akte', 'personalakte_eigene');
+  }
+  navButton('🧑 Bürgerakten', 'buergerakten');
   layout.appendChild(nav);
 
   const contentWrap = el('<div></div>');
-  const kategorie = state.schema.find((k) => k.id === state.activeCategory);
-  contentWrap.appendChild(renderCategoryPanel(kategorie));
   layout.appendChild(contentWrap);
-
   main.appendChild(layout);
+
+  if (state.activeCategory === '_bewerbungsfragen') {
+    contentWrap.innerHTML = '<div class="loading">Lade Fragen …</div>';
+    renderBewerbungsfragenPanel(contentWrap);
+  } else if (state.activeCategory === 'personalakten') {
+    contentWrap.innerHTML = '<div class="loading">Lade Personalakten …</div>';
+    renderPersonalaktenListe(contentWrap);
+  } else if (state.activeCategory === 'personalakte_eigene') {
+    contentWrap.innerHTML = '<div class="loading">Lade deine Akte …</div>';
+    renderPersonalakteDetail(contentWrap, state.user.id);
+  } else if (state.activeCategory && state.activeCategory.startsWith('personalakte:')) {
+    contentWrap.innerHTML = '<div class="loading">Lade Akte …</div>';
+    renderPersonalakteDetail(contentWrap, state.activeCategory.split(':')[1]);
+  } else if (state.activeCategory === 'buergerakten') {
+    contentWrap.innerHTML = '<div class="loading">Lade Bürgerakten …</div>';
+    renderBuergerakten(contentWrap);
+  } else if (state.activeCategory && state.activeCategory.startsWith('buergerakte:')) {
+    contentWrap.innerHTML = '<div class="loading">Lade Bürgerakte …</div>';
+    renderBuergerakteDetail(contentWrap, state.activeCategory.split(':')[1]);
+  } else {
+    const kategorie = state.schema?.find((k) => k.id === state.activeCategory);
+    if (kategorie) contentWrap.appendChild(renderCategoryPanel(kategorie));
+  }
+}
+
+async function renderBewerbungsfragenPanel(container) {
+  try {
+    const { arten } = await api('bewerbungsfragen', { guild: state.currentGuild });
+    container.innerHTML = '';
+    for (const art of arten) {
+      const panel = el(`
+        <div class="content-panel" style="margin-bottom:16px;">
+          <h2>${art.label}</h2>
+          <div class="hint" style="margin-bottom:10px;">${art.beschreibung} — eine Frage pro Zeile. Zeilen hinzufügen, löschen oder verschieben = Fragen hinzufügen/löschen/umsortieren.</div>
+          <textarea style="min-height:220px;">${art.fragen.join('\n')}</textarea>
+          <div class="field-actions">
+            <button class="btn small save-bf">Speichern</button>
+            ${!art.ist_standard ? '<button class="btn secondary small reset-bf">Auf Standard zurücksetzen</button>' : ''}
+            <span class="save-status"></span>
+          </div>
+          ${art.ist_standard ? '<div class="hint">Zeigt aktuell die Standardfragen.</div>' : '<div class="badge warn" style="margin-top:8px;">Eigene Fragen aktiv</div>'}
+        </div>
+      `);
+      const textarea = panel.querySelector('textarea');
+      const status = panel.querySelector('.save-status');
+      panel.querySelector('.save-bf').onclick = async () => {
+        const fragen = textarea.value.split('\n').map((z) => z.trim()).filter(Boolean);
+        setStatus(status, 'Speichere …');
+        try {
+          await api('bewerbungsfragen', { guild: state.currentGuild, method: 'POST', body: { art: art.art, fragen } });
+          setStatus(status, 'Gespeichert ✓', 'ok');
+          setTimeout(() => renderBewerbungsfragenPanel(container), 600);
+        } catch (e) {
+          setStatus(status, e.message, 'err');
+        }
+      };
+      const resetBtn = panel.querySelector('.reset-bf');
+      if (resetBtn) {
+        resetBtn.onclick = async () => {
+          setStatus(status, 'Setze zurück …');
+          try {
+            await api('bewerbungsfragen', { guild: state.currentGuild, method: 'POST', body: { art: art.art, reset: true } });
+            renderBewerbungsfragenPanel(container);
+          } catch (e) {
+            setStatus(status, e.message, 'err');
+          }
+        };
+      }
+      container.appendChild(panel);
+    }
+  } catch (e) {
+    container.innerHTML = `<div class="error-box">${e.message}</div>`;
+  }
 }
 
 function channelOptions(kind) {
@@ -427,6 +653,364 @@ function channelOptions(kind) {
   return state.channels
     .filter((c) => c.type === typ)
     .sort((a, b) => a.position - b.position);
+}
+
+// ------------------------------- Personalakten --------------------------
+
+async function renderPersonalaktenListe(container) {
+  try {
+    const { personal } = await api('personalakten', { guild: state.currentGuild });
+    container.innerHTML = '';
+    const panel = el('<div class="content-panel"><h2>👮 Personalakten</h2></div>');
+    if (personal.length === 0) {
+      panel.appendChild(el('<div class="hint">Noch keine Dienstnummern vergeben.</div>'));
+    }
+    for (const p of personal) {
+      const row = el(`
+        <div class="field" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <div style="font-weight:600; display:flex; align-items:center; gap:8px;">
+              <span class="status-dot ${p.suspendiert ? 'err' : 'ok'}"></span>
+              ${p.name} ${p.dienstnummer ? `<span class="hint" style="margin:0;">#${p.dienstnummer}</span>` : ''}
+            </div>
+            <div class="hint">${p.eintraege_gesamt} Eintra${p.eintraege_gesamt === 1 ? 'g' : 'ege'} · ${p.aktive_verwarnungen} aktive Verwarnung(en)${p.suspendiert ? ' · suspendiert' : ''}</div>
+          </div>
+          <span style="color:var(--accent-strong)">→</span>
+        </div>
+      `);
+      row.onclick = () => {
+        state.activeCategory = `personalakte:${p.user_id}`;
+        drawDashboard(document.querySelector('main'));
+      };
+      panel.appendChild(row);
+    }
+    container.appendChild(panel);
+  } catch (e) {
+    container.innerHTML = `<div class="error-box">${e.message}</div>`;
+  }
+}
+
+function renderPersonalakteAktionen(container, userId, akte) {
+  const wrap = el(`
+    <div class="field">
+      <label>Personalakte verwalten</label>
+      <div class="role-list" id="pa-tabs" style="margin-bottom:12px;"></div>
+      <div id="pa-aktion-body"></div>
+    </div>
+  `);
+  const tabs = wrap.querySelector('#pa-tabs');
+  const body = wrap.querySelector('#pa-aktion-body');
+
+  const aktionen = [
+    { id: 'verwarnen', label: '⚠️ Verwarnen' },
+    { id: 'suspendieren', label: '⏸️ Suspendieren' },
+    { id: 'aufheben', label: '✅ Suspendierung aufheben' },
+    { id: 'kuendigen', label: '⛔ Kündigen' },
+  ];
+  let aktiv = 'verwarnen';
+
+  function zeichneTabs() {
+    tabs.innerHTML = '';
+    for (const a of aktionen) {
+      const chip = el(`<div class="role-chip${a.id === aktiv ? ' active' : ''}">${a.label}</div>`);
+      chip.onclick = () => { aktiv = a.id; zeichneTabs(); zeichneBody(); };
+      tabs.appendChild(chip);
+    }
+  }
+
+  function zeichneBody() {
+    body.innerHTML = '';
+
+    if (aktiv === 'verwarnen') {
+      const form = el(`
+        <div>
+          <div class="desc">Trägt eine Verwarnung ein. Bei der 3. Verwarnung erfolgt automatisch eine Kündigung inkl. Suspendierungs-Rolle.</div>
+          <textarea placeholder="Grund der Verwarnung" style="min-height:70px;"></textarea>
+          <div class="field-actions">
+            <button class="btn small">Verwarnen</button>
+            <span class="save-status"></span>
+          </div>
+        </div>
+      `);
+      const textarea = form.querySelector('textarea');
+      const status = form.querySelector('.save-status');
+      form.querySelector('button').onclick = async () => {
+        const grund = textarea.value.trim();
+        if (!grund) { setStatus(status, 'Grund fehlt', 'err'); return; }
+        setStatus(status, 'Speichere …');
+        try {
+          const res = await api('personalakte_verwarnen', { guild: state.currentGuild, target: userId, method: 'POST', body: { grund } });
+          setStatus(status, res.kuendigung ? '3. Verwarnung — automatisch gekündigt ✓' : 'Verwarnt ✓', 'ok');
+          setTimeout(() => renderPersonalakteDetail(container, userId), 700);
+        } catch (e) {
+          setStatus(status, e.message, 'err');
+        }
+      };
+      body.appendChild(form);
+    }
+
+    if (aktiv === 'suspendieren') {
+      const form = el(`
+        <div>
+          <div class="desc">Trägt eine Suspendierung ein und entfernt die Polizist-Rolle. Ohne Dauer bleibt sie unbefristet, bis sie manuell aufgehoben wird.</div>
+          <textarea placeholder="Grund der Suspendierung" style="min-height:70px; margin-bottom:8px;"></textarea>
+          <input type="text" placeholder="Dauer, optional — z. B. 3d, 12h, 2d6h" />
+          <div class="field-actions">
+            <button class="btn small">Suspendieren</button>
+            <span class="save-status"></span>
+          </div>
+        </div>
+      `);
+      const textarea = form.querySelector('textarea');
+      const dauerInput = form.querySelector('input');
+      const status = form.querySelector('.save-status');
+      form.querySelector('button').onclick = async () => {
+        const grund = textarea.value.trim();
+        if (!grund) { setStatus(status, 'Grund fehlt', 'err'); return; }
+        setStatus(status, 'Speichere …');
+        try {
+          const res = await api('personalakte_suspendieren', { guild: state.currentGuild, target: userId, method: 'POST', body: { grund, dauer: dauerInput.value.trim() } });
+          setStatus(status, `Suspendiert bis: ${res.bis} ✓`, 'ok');
+          setTimeout(() => renderPersonalakteDetail(container, userId), 700);
+        } catch (e) {
+          setStatus(status, e.message, 'err');
+        }
+      };
+      body.appendChild(form);
+    }
+
+    if (aktiv === 'aufheben') {
+      const form = el(`
+        <div>
+          <div class="desc">Beendet eine laufende Suspendierung vorzeitig und gibt die Polizist-Rolle zurück.</div>
+          <div class="field-actions">
+            <button class="btn secondary small">Suspendierung aufheben</button>
+            <span class="save-status"></span>
+          </div>
+        </div>
+      `);
+      const status = form.querySelector('.save-status');
+      form.querySelector('button').onclick = async () => {
+        setStatus(status, 'Speichere …');
+        try {
+          await api('personalakte_suspendierung_aufheben', { guild: state.currentGuild, target: userId, method: 'POST', body: {} });
+          setStatus(status, 'Aufgehoben ✓', 'ok');
+          setTimeout(() => renderPersonalakteDetail(container, userId), 700);
+        } catch (e) {
+          setStatus(status, e.message, 'err');
+        }
+      };
+      body.appendChild(form);
+    }
+
+    if (aktiv === 'kuendigen') {
+      const form = el(`
+        <div>
+          <div class="desc">Trägt eine Kündigung ein, entfernt die Mitglieds-/Warn-Rollen und vergibt die Suspendierungs-Rolle.</div>
+          <textarea placeholder="Grund der Kündigung" style="min-height:70px;"></textarea>
+          <div class="field-actions">
+            <button class="btn danger small">Kündigen</button>
+            <span class="save-status"></span>
+          </div>
+        </div>
+      `);
+      const textarea = form.querySelector('textarea');
+      const status = form.querySelector('.save-status');
+      form.querySelector('button').onclick = async () => {
+        const grund = textarea.value.trim();
+        if (!grund) { setStatus(status, 'Grund fehlt', 'err'); return; }
+        if (!confirm(`${akte.name} wirklich kündigen?`)) return;
+        setStatus(status, 'Speichere …');
+        try {
+          await api('personalakte_kuendigen', { guild: state.currentGuild, target: userId, method: 'POST', body: { grund } });
+          setStatus(status, 'Gekündigt ✓', 'ok');
+          setTimeout(() => renderPersonalakteDetail(container, userId), 700);
+        } catch (e) {
+          setStatus(status, e.message, 'err');
+        }
+      };
+      body.appendChild(form);
+    }
+  }
+
+  zeichneTabs();
+  zeichneBody();
+  return wrap;
+}
+
+async function renderPersonalakteDetail(container, userId) {
+  try {
+    const akte = await api('personalakte', { guild: state.currentGuild, target: userId });
+    container.innerHTML = '';
+    const tier = state.tier || {};
+    const kannHandeln = tier.admin || tier.staff;
+    const kannWiderrufen = tier.admin ? false : tier.dienstaufsicht; // Dienstaufsicht bewusst ohne Admin-Bypass, wie im Bot
+
+    const panel = el(`<div class="content-panel"><h2>📁 ${akte.name}</h2>${akte.dienstnummer ? `<div class="hint">Dienstnummer #${akte.dienstnummer}</div>` : ''}</div>`);
+
+    if (kannHandeln) {
+      panel.appendChild(renderPersonalakteAktionen(container, userId, akte));
+    }
+
+    if (akte.eintraege.length === 0) {
+      panel.appendChild(el('<div class="hint" style="margin-top:14px;">Diese Personalakte ist leer.</div>'));
+    }
+    for (const e of akte.eintraege) {
+      const zeit = new Date(e.zeitpunkt).toLocaleString('de-DE');
+      const row = el(`
+        <div class="field entry-row" data-typ="${e.typ}">
+          <div style="display:flex; justify-content:space-between; gap:10px;">
+            <div>
+              <strong>${e.label}</strong>${e.kategorie ? ` · ${e.kategorie}` : ''}${e.widerrufen ? ' <span class="badge err" style="margin-left:6px;">zurückgenommen</span>' : ''}
+              <div class="hint">${zeit} · ${e.aktenzeichen || ''}</div>
+              <div style="margin-top:4px;">${e.grund}</div>
+            </div>
+          </div>
+          <div class="field-actions"></div>
+        </div>
+      `);
+      const actions = row.querySelector('.field-actions');
+      if (kannWiderrufen && !e.widerrufen && (e.typ === 'verwarnung' || e.typ === 'suspendierung')) {
+        const btn = el('<button class="btn secondary small">Widerrufen</button>');
+        const status = el('<span class="save-status"></span>');
+        btn.onclick = async () => {
+          setStatus(status, 'Speichere …');
+          try {
+            await api('personalakte_widerruf', { guild: state.currentGuild, target: userId, method: 'POST', body: { aktenzeichen: e.aktenzeichen } });
+            renderPersonalakteDetail(container, userId);
+          } catch (err) {
+            setStatus(status, err.message, 'err');
+          }
+        };
+        actions.appendChild(btn);
+        actions.appendChild(status);
+      }
+      if (kannWiderrufen) {
+        const delBtn = el('<button class="btn secondary small" style="border-color:var(--err); color:#ff97a4;">Löschen</button>');
+        delBtn.onclick = async () => {
+          if (!confirm('Diesen Eintrag endgültig löschen? Das kann nicht rückgängig gemacht werden.')) return;
+          try {
+            await api('personalakte_loeschen', { guild: state.currentGuild, target: userId, method: 'POST', body: { aktenzeichen: e.aktenzeichen } });
+            renderPersonalakteDetail(container, userId);
+          } catch (err) {
+            alert(err.message);
+          }
+        };
+        actions.appendChild(delBtn);
+      }
+      panel.appendChild(row);
+    }
+    container.appendChild(panel);
+  } catch (e) {
+    container.innerHTML = `<div class="error-box">${e.message}</div>`;
+  }
+}
+
+// ------------------------------- Bürgerakten -----------------------------
+
+async function renderBuergerakten(container) {
+  container.innerHTML = '';
+  const panel = el(`
+    <div class="content-panel">
+      <h2>🧑 Bürgerakten</h2>
+      <div class="field">
+        <input type="text" placeholder="Roblox-Name suchen …" id="ba-search" />
+      </div>
+      <div id="ba-liste"></div>
+      <div class="field" style="margin-top:22px;">
+        <label>Neue Bürgerakte / Eintrag hinzufügen</label>
+        <div class="desc">Existiert noch keine Akte für diesen Namen, wird automatisch eine neue angelegt.</div>
+        <input type="text" placeholder="Roblox-Name" id="ba-name" style="margin-bottom:8px;" />
+        <textarea placeholder="Eintrag (z. B. Vorfall, Notiz) — optional" id="ba-text" style="min-height:80px;"></textarea>
+        <div class="field-actions">
+          <button class="btn small" id="ba-anlegen">Speichern</button>
+          <span class="save-status" id="ba-status"></span>
+        </div>
+      </div>
+    </div>
+  `);
+  container.appendChild(panel);
+
+  const liste = panel.querySelector('#ba-liste');
+  async function suchen(query) {
+    liste.innerHTML = '<div class="hint">Lade …</div>';
+    try {
+      const { buergerakten } = await api('buergerakten', { guild: state.currentGuild, search: query });
+      liste.innerHTML = '';
+      if (buergerakten.length === 0) {
+        liste.appendChild(el('<div class="hint">Keine Bürgerakten gefunden.</div>'));
+      }
+      for (const b of buergerakten) {
+        const row = el(`
+          <div class="field" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:600;">${b.roblox_name}</div>
+            <div class="hint">${b.eintraege_anzahl} Eintra${b.eintraege_anzahl === 1 ? 'g' : 'ege'} →</div>
+          </div>
+        `);
+        row.onclick = () => {
+          state.activeCategory = `buergerakte:${b.roblox_user_id}`;
+          drawDashboard(document.querySelector('main'));
+        };
+        liste.appendChild(row);
+      }
+    } catch (e) {
+      liste.innerHTML = `<div class="error-box">${e.message}</div>`;
+    }
+  }
+  suchen('');
+  let timer = null;
+  panel.querySelector('#ba-search').oninput = (ev) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => suchen(ev.target.value), 400);
+  };
+
+  const status = panel.querySelector('#ba-status');
+  panel.querySelector('#ba-anlegen').onclick = async () => {
+    const roblox_name = panel.querySelector('#ba-name').value.trim();
+    const text = panel.querySelector('#ba-text').value.trim();
+    if (!roblox_name) { setStatus(status, 'Roblox-Name fehlt', 'err'); return; }
+    setStatus(status, 'Speichere …');
+    try {
+      const res = await api('buergerakten', { guild: state.currentGuild, method: 'POST', body: { roblox_name, text } });
+      setStatus(status, 'Gespeichert ✓', 'ok');
+      panel.querySelector('#ba-name').value = '';
+      panel.querySelector('#ba-text').value = '';
+      suchen('');
+    } catch (e) {
+      setStatus(status, e.message, 'err');
+    }
+  };
+}
+
+async function renderBuergerakteDetail(container, robloxId) {
+  try {
+    const params = new URLSearchParams({ resource: 'buergerakte', guild: state.currentGuild, roblox_id: robloxId });
+    const res = await fetch(`/api/bot?${params.toString()}`, { credentials: 'include' });
+    const akte = await res.json();
+    if (!res.ok) throw new Error(akte.error || 'Fehler');
+    container.innerHTML = '';
+    const panel = el(`
+      <div class="content-panel">
+        <h2>🧑 ${akte.roblox_name}</h2>
+        <div class="hint">Roblox-ID ${akte.roblox_user_id}</div>
+      </div>
+    `);
+    if (akte.eintraege.length === 0) {
+      panel.appendChild(el('<div class="hint" style="margin-top:14px;">Noch keine Einträge.</div>'));
+    }
+    for (const e of akte.eintraege) {
+      const zeit = new Date(e.zeitpunkt).toLocaleString('de-DE');
+      panel.appendChild(el(`
+        <div class="field">
+          <div class="hint">${zeit}</div>
+          <div style="margin-top:4px;">${e.text}</div>
+        </div>
+      `));
+    }
+    container.appendChild(panel);
+  } catch (e) {
+    container.innerHTML = `<div class="error-box">${e.message}</div>`;
+  }
 }
 
 function renderCategoryPanel(kategorie) {
