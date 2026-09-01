@@ -88,6 +88,8 @@ const RESOURCE_MAP = {
   roles: { method: 'GET', path: (g) => `/api/guilds/${g}/roles` },
   stats: { method: 'GET', path: (g) => `/api/guilds/${g}/stats` },
   bewerbungsfragen: { path: (g) => `/api/guilds/${g}/bewerbungsfragen` },
+  officer_permission: { path: (g) => `/api/guilds/${g}/officer-permission` },
+  modules: { path: (g) => `/api/guilds/${g}/modules` },
   personalakten: { method: 'GET', path: (g) => `/api/guilds/${g}/personalakten` },
   personalakte: { method: 'GET', path: (g, t) => `/api/guilds/${g}/personalakte/${t}` },
   personalakte_kuendigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/kuendigen` },
@@ -111,6 +113,9 @@ const RESOURCE_MAP = {
   admin_lock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/lock` },
   admin_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/unlock` },
   admin_unlock_owner: { method: 'POST', global: true, path: (_g, t) => `/api/admin/owners/${t}/unlock` },
+
+  // -- NEU: Support-Fall eröffnen — für JEDEN eingeloggten Nutzer, nicht nur Admin --
+  support_case_create: { method: 'POST', anyUser: true, path: () => `/api/support/cases` },
 
   // -- NEU: User-/IP-Sperrsystem (siehe Hinweis oben zu api/callback.js) --
   security_locks: { method: 'GET', global: true, path: () => `/api/security/locks` },
@@ -167,6 +172,9 @@ module.exports = async (req, res) => {
     // Doppelte Prüfung mit Absicht: sowohl das Session-Flag (schnell) als auch
     // der direkte ID-Vergleich (falls eine alte Session noch kein isAdmin-Feld hat).
     if (session.u.id !== ADMIN_USER_ID) return sendJson(res, 403, { error: 'Keine Berechtigung' });
+  } else if (mapping.anyUser) {
+    // Kein Guild-Zugriff nötig, aber eine gültige Session ist bereits weiter
+    // oben (if (!session) ...) sichergestellt.
   } else {
     const guild = url.searchParams.get('guild');
     if (!guild) return sendJson(res, 400, { error: "Parameter 'guild' fehlt" });
@@ -196,6 +204,15 @@ module.exports = async (req, res) => {
     if (['resource', 'guild', 'target'].includes(key)) continue;
     extra.set(key, value);
   }
+  // Admin-/globale Ressourcen bekommen die aufrufende Discord-User-ID zusätzlich
+  // als Query-Parameter mit — der Bot prüft das serverseitig NOCHMAL gegen
+  // ADMIN_USER_ID (siehe _require_admin_actor in dashboard_api.py), damit ein
+  // durchgesickerter API-Key allein nicht für Admin-Aktionen reicht. Bei GET-
+  // Anfragen gibt es keinen Body, deshalb hier als Query-Parameter.
+  if (mapping.global) {
+    extra.set('requester_id', session.u.id);
+  }
+
   const qs = extra.toString();
   const fullPath = qs ? `${botPath}?${qs}` : botPath;
 
