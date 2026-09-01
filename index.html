@@ -7,36 +7,40 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* ------------------------------------------------------------------
+     Designsystem: neutrale Verwaltungssoftware-Optik (wie ein echtes
+     Polizei-CAD/RMS-System), bewusst zurückhaltend statt "Marketing-SaaS":
+     ein Akzentton, flache Flächen, feine Linien statt Schlagschatten,
+     Statusfarben nur dort, wo sie tatsächlich einen Status bedeuten.
+     ------------------------------------------------------------------ */
   :root {
-    --bg: #070a10;
-    --bg-grid: rgba(91,140,255,0.045);
-    --panel: #0e131d;
-    --panel-2: #131a26;
-    --panel-3: #182131;
-    --border: #232e40;
-    --border-soft: #1a222f;
+    --bg: #101214;
+    --surface: #16191c;
+    --surface-2: #1c2024;
+    --surface-3: #23282d;
+    --border: #2b3238;
+    --border-soft: #21262b;
 
-    --accent: #5b8cff;
-    --accent-2: #8f6bff;
-    --accent-soft: rgba(91,140,255,0.14);
-    --accent-strong: #9db8ff;
+    --accent: #4d7cc7;
+    --accent-dim: rgba(77,124,199,0.16);
+    --accent-text: #a9c4ea;
 
-    --text: #e9edf7;
-    --text-dim: #8b96ab;
-    --text-faint: #576079;
+    --text: #e4e7eb;
+    --text-dim: #8f98a3;
+    --text-faint: #5c6570;
 
-    --ok: #34d399;
-    --ok-soft: rgba(52,211,153,0.14);
-    --warn: #f5a623;
-    --warn-soft: rgba(245,166,35,0.14);
-    --err: #f4586b;
-    --err-soft: rgba(244,88,107,0.14);
-    --purple: #b98bff;
-    --purple-soft: rgba(185,139,255,0.14);
+    --ok: #3ba776;
+    --ok-soft: rgba(59,167,118,0.14);
+    --warn: #c98a2e;
+    --warn-soft: rgba(201,138,46,0.14);
+    --err: #c1495a;
+    --err-soft: rgba(193,73,90,0.14);
+    /* "gold" markiert Admin-/Aufsichts-Funktionen — bewusst gedeckt statt bunt */
+    --gold: #b89552;
+    --gold-soft: rgba(184,149,82,0.14);
 
-    --radius: 14px;
-    --radius-sm: 9px;
-    --shadow: 0 10px 30px -14px rgba(0,0,0,0.55);
+    --radius: 8px;
+    --radius-sm: 6px;
     font-family: 'Inter', system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
@@ -44,20 +48,16 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    background-image:
-      radial-gradient(700px 400px at 15% -10%, rgba(91,140,255,0.09), transparent 60%),
-      radial-gradient(600px 380px at 100% 0%, rgba(185,139,255,0.06), transparent 55%),
-      linear-gradient(var(--bg-grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
-    background-size: auto, auto, 34px 34px, 34px 34px;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    font-size: 14px;
   }
-  a { color: var(--accent-strong); }
-  ::selection { background: var(--accent-soft); color: var(--accent-strong); }
+  a { color: var(--accent-text); }
+  ::selection { background: var(--accent-dim); color: var(--accent-text); }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; }
 
   /* ---------------------------- Login ---------------------------- */
   .center-screen {
@@ -66,65 +66,62 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
     padding: 20px;
     text-align: center;
   }
   .badge-mark {
-    width: 56px; height: 56px;
-    border-radius: 16px;
-    background: linear-gradient(155deg, var(--panel-3), var(--panel));
+    width: 48px; height: 48px;
+    border-radius: var(--radius);
+    background: var(--surface);
     border: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
-    font-size: 19px;
-    color: var(--accent-strong);
-    box-shadow: 0 0 0 1px rgba(91,140,255,0.08), 0 16px 34px -14px rgba(91,140,255,0.35);
+    font-size: 16px;
+    color: var(--accent-text);
   }
   .logo {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-faint);
   }
-  h1 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: -0.015em; }
-  .lede { color: var(--text-dim); max-width: 380px; font-size: 14px; line-height: 1.6; margin: 0; }
+  h1 { font-size: 22px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+  .lede { color: var(--text-dim); max-width: 380px; font-size: 13.5px; line-height: 1.6; margin: 0; }
+
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, var(--accent), #4d7dff);
-    color: #06101f;
-    border: none;
-    padding: 11px 20px;
+    gap: 7px;
+    background: var(--accent);
+    color: #0d1116;
+    border: 1px solid var(--accent);
+    padding: 9px 16px;
     border-radius: var(--radius-sm);
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 600;
+    font-size: 13.5px;
     cursor: pointer;
     text-decoration: none;
-    transition: filter .12s, transform .12s;
+    transition: background .12s, border-color .12s;
   }
-  .btn:hover { filter: brightness(1.08); }
+  .btn:hover { background: #5f8ad2; border-color: #5f8ad2; }
   .btn:active { transform: translateY(1px); }
-  .btn.secondary {
-    background: var(--panel-2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn.secondary:hover { background: var(--panel-3); }
-  .btn.danger { background: linear-gradient(135deg, var(--err), #d43a52); color: #1a0508; }
-  .btn.purple { background: linear-gradient(135deg, var(--purple), #8a5cff); color: #14071f; }
-  .btn.small { padding: 7px 13px; font-size: 12.5px; }
-  .btn:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+  .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .btn.secondary:hover { background: var(--surface-3); }
+  .btn.danger { background: var(--err); border-color: var(--err); color: #150507; }
+  .btn.danger:hover { background: #d05a6b; }
+  .btn.purple { background: var(--gold); border-color: var(--gold); color: #150f04; }
+  .btn.purple:hover { background: #c7a666; }
+  .btn.small { padding: 6px 12px; font-size: 12.5px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
   .error-box {
-    border: 1px solid rgba(244,88,107,0.35);
+    border: 1px solid rgba(193,73,90,0.35);
     background: var(--err-soft);
-    color: #ff97a4;
-    padding: 11px 14px;
+    color: #e39aa5;
+    padding: 10px 13px;
     border-radius: var(--radius-sm);
-    font-size: 13.5px;
+    font-size: 13px;
     max-width: 420px;
   }
 
@@ -134,264 +131,217 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 13px 22px;
+    padding: 12px 22px;
     border-bottom: 1px solid var(--border-soft);
-    background: rgba(14,19,29,0.85);
-    backdrop-filter: blur(10px);
+    background: var(--surface);
     position: sticky;
     top: 0;
     z-index: 5;
     flex-wrap: wrap;
   }
   header.topbar .brand {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 9px;
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     color: var(--text);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    text-transform: uppercase;
   }
-  header.topbar .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-  .user-chip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-dim);
-  }
-  .user-chip img { width: 27px; height: 27px; border-radius: 50%; border: 1px solid var(--border); }
-  main { max-width: 1200px; margin: 0 auto; padding: 26px 18px 90px; }
+  header.topbar .brand .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .user-chip { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-dim); }
+  .user-chip img { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 18px 90px; }
 
   /* ------------------------- Guild picker -------------------------- */
-  .page-heading { display: flex; flex-direction: column; gap: 4px; margin-bottom: 22px; }
-  .page-heading h1 { font-size: 21px; }
-  .page-heading p { color: var(--text-dim); font-size: 13.5px; margin: 0; }
+  .page-heading { display: flex; flex-direction: column; gap: 3px; margin-bottom: 20px; }
+  .page-heading h1 { font-size: 19px; }
+  .page-heading p { color: var(--text-dim); font-size: 13px; margin: 0; }
 
-  .guild-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 12px;
-  }
+  .guild-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: var(--border-soft); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; }
   .guild-card {
-    background: var(--panel);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius);
-    padding: 15px;
+    background: var(--surface);
+    padding: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: border-color .15s, transform .15s, background .15s, box-shadow .15s;
+    transition: background .1s;
   }
-  .guild-card:hover { border-color: rgba(91,140,255,0.4); background: var(--panel-2); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .guild-card:hover { background: var(--surface-2); }
   .guild-card img, .guild-card .fallback-icon {
-    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-    background: var(--panel-3);
+    width: 36px; height: 36px; border-radius: var(--radius-sm); flex-shrink: 0;
+    background: var(--surface-3);
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: var(--accent-strong);
+    font-weight: 700; color: var(--accent-text);
     font-family: 'JetBrains Mono', monospace;
-    border: 1px solid var(--border);
+    font-size: 13px;
   }
   .guild-card .meta { min-width: 0; }
-  .guild-card .name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .guild-card .name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .guild-card .sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
-  .section-title {
-    font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-faint);
-    margin: 34px 0 10px;
-    font-weight: 700;
-  }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint); margin: 30px 0 10px; font-weight: 600; }
   .invite-card {
-    background: var(--panel);
-    border: 1px dashed var(--border);
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius);
-    padding: 14px 15px;
+    padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 12px;
     justify-content: space-between;
   }
   .invite-card .left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .invite-card .name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .invite-card + .invite-card { margin-top: 8px; }
+  .invite-card .name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .invite-card + .invite-card { margin-top: 6px; }
 
   /* ---------------------------- Stats ------------------------------ */
   .stats-panel {
-    background: linear-gradient(160deg, var(--panel-2), var(--panel));
+    background: var(--surface);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius);
-    padding: 18px 20px;
-    margin-bottom: 18px;
-    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    margin-bottom: 16px;
   }
-  .stats-panel h2 { margin: 0 0 14px; font-size: 15.5px; display: flex; align-items: center; gap: 10px; font-weight: 800; }
-  .stats-panel h2 img { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); }
-  .stat-row { display: flex; flex-wrap: wrap; gap: 26px; }
-  .stat { min-width: 84px; }
-  .stat .n { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--accent-strong); font-weight: 700; }
-  .stat .l { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
-  .progress-bar { height: 5px; background: var(--panel-3); border-radius: 3px; overflow: hidden; margin-top: 14px; }
-  .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--purple)); }
+  .stats-panel h2 { margin: 0 0 12px; font-size: 14.5px; display: flex; align-items: center; gap: 9px; font-weight: 700; }
+  .stats-panel h2 img { width: 26px; height: 26px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 28px; }
+  .stat { min-width: 80px; }
+  .stat .n { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--text); font-weight: 600; }
+  .stat .l { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+  .progress-bar { height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+  .progress-bar .fill { height: 100%; background: var(--accent); }
 
-  /* ------------------------ Kategorie-Leiste (statt Sidebar) ------------------------ */
-  /* Behebt das "muss scrollen"-Problem: horizontale, umbrechende Chip-Leiste
-     statt einer langen vertikalen Sidebar-Liste. */
-  nav.categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
+  /* ------------------------ Kategorie-Leiste ------------------------ */
+  nav.categories { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--border-soft); padding-bottom: 14px; }
   nav.categories button {
-    position: relative;
-    background: var(--panel);
+    background: transparent;
     border: 1px solid var(--border-soft);
     color: var(--text-dim);
-    padding: 9px 15px;
-    font-size: 13px;
+    padding: 7px 13px;
+    font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 999px;
-    transition: border-color .12s, color .12s, background .12s;
+    border-radius: var(--radius-sm);
+    transition: border-color .1s, color .1s, background .1s;
   }
-  nav.categories button:hover { border-color: rgba(91,140,255,0.35); color: var(--text); }
-  nav.categories button.active {
-    background: linear-gradient(135deg, var(--accent-soft), rgba(185,139,255,0.12));
-    border-color: rgba(91,140,255,0.45);
-    color: var(--accent-strong);
-  }
-  nav.categories button.admin-tab.active,
-  nav.categories button.admin-tab:hover { border-color: rgba(185,139,255,0.5); color: var(--purple); }
+  nav.categories button:hover { border-color: var(--border); color: var(--text); background: var(--surface); }
+  nav.categories button.active { background: var(--accent); border-color: var(--accent); color: #0d1116; }
+  nav.categories button.admin-tab.active { background: var(--gold); border-color: var(--gold); color: #150f04; }
 
   .content-panel {
-    background: var(--panel);
+    background: var(--surface);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius);
-    padding: 22px;
-    box-shadow: var(--shadow);
+    padding: 20px;
   }
-  .content-panel h2 { margin: 0 0 4px; font-size: 16.5px; font-weight: 800; }
-  .content-panel + .content-panel { margin-top: 16px; }
+  .content-panel h2 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+  .content-panel + .content-panel { margin-top: 14px; }
 
-  /* Config-Felder als Grid-Karten statt einer langen vertikalen Liste —
-     das ist der Kern der Scroll-Fix: mehrere Felder nebeneinander sichtbar. */
-  .field-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
-    margin-top: 16px;
-  }
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-top: 14px; }
   .field-card {
-    background: var(--panel-2);
+    background: var(--surface-2);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-sm);
-    padding: 14px;
+    padding: 13px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
   }
   .field-card.wide { grid-column: 1 / -1; }
-  .field-card label { display: block; font-size: 13px; font-weight: 700; }
-  .field-card .desc { font-size: 12px; color: var(--text-dim); margin: -4px 0 2px; }
+  .field-card label { display: block; font-size: 12.5px; font-weight: 600; }
+  .field-card .desc { font-size: 11.5px; color: var(--text-dim); margin: -3px 0 1px; line-height: 1.5; }
 
-  .field { margin-top: 16px; }
+  .field { margin-top: 14px; }
   .field:first-of-type { margin-top: 0; }
-  .field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-  .field .desc { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
+  .field .desc { font-size: 11.5px; color: var(--text-dim); margin-bottom: 7px; line-height: 1.5; }
 
   select, input[type=text], input[type=search], textarea {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 9px 11px;
+    padding: 8px 10px;
     border-radius: var(--radius-sm);
-    font-size: 13.5px;
+    font-size: 13px;
     font-family: inherit;
   }
-  textarea { min-height: 110px; resize: vertical; }
-  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .role-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  textarea { min-height: 100px; resize: vertical; }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+  .role-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .role-chip {
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 12px;
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: 11.5px;
     cursor: pointer;
     user-select: none;
     color: var(--text-dim);
-    transition: border-color .12s, color .12s, background .12s;
+    transition: border-color .1s, color .1s, background .1s;
   }
-  .role-chip.active { border-color: var(--accent); color: var(--accent-strong); background: var(--accent-soft); }
-  .field-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-  .save-status { font-size: 12px; color: var(--text-dim); }
+  .role-chip.active { border-color: var(--accent); color: var(--accent-text); background: var(--accent-dim); }
+  .field-actions { display: flex; align-items: center; gap: 9px; margin-top: 9px; flex-wrap: wrap; }
+  .save-status { font-size: 11.5px; color: var(--text-dim); }
   .save-status.ok { color: var(--ok); }
   .save-status.err { color: var(--err); }
-  .loading { color: var(--text-dim); padding: 40px; text-align: center; font-size: 13.5px; }
-  .hint { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .loading { color: var(--text-dim); padding: 36px; text-align: center; font-size: 13px; }
+  .hint { font-size: 11.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
 
   /* ----------------------- Badges / status ------------------------- */
-  .badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 700; padding: 3px 9px;
-    border-radius: 20px; text-transform: uppercase; letter-spacing: .3px;
-  }
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-sm); }
   .badge.ok { background: var(--ok-soft); color: var(--ok); }
   .badge.warn { background: var(--warn-soft); color: var(--warn); }
-  .badge.err { background: var(--err-soft); color: #ff97a4; }
-  .badge.purple { background: var(--purple-soft); color: var(--purple); }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  .status-dot.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
-  .status-dot.err { background: var(--err); box-shadow: 0 0 6px var(--err); }
-  .status-dot.warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+  .badge.err { background: var(--err-soft); color: #e39aa5; }
+  .badge.purple { background: var(--gold-soft); color: var(--gold); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .status-dot.ok { background: var(--ok); }
+  .status-dot.err { background: var(--err); }
+  .status-dot.warn { background: var(--warn); }
 
-  .entry-row { border-left: 3px solid var(--border); padding-left: 14px !important; margin-left: -3px; }
+  .entry-row { border-left: 2px solid var(--border); padding-left: 13px !important; margin-left: -2px; }
   .entry-row[data-typ="kuendigung"] { border-left-color: var(--err); }
   .entry-row[data-typ="verwarnung"] { border-left-color: var(--warn); }
-  .entry-row[data-typ="suspendierung"] { border-left-color: #ff8a3d; }
+  .entry-row[data-typ="suspendierung"] { border-left-color: #b9773a; }
   .entry-row[data-typ="sonstiges"] { border-left-color: var(--text-faint); }
 
   /* --------------------------- Bürgerakten -------------------------- */
-  .buerger-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 4px; cursor: pointer; border-radius: var(--radius-sm);
-  }
-  .buerger-row:hover { background: var(--panel-2); }
-  .avatar-sm { width: 36px; height: 36px; border-radius: 8px; background: var(--panel-3); border: 1px solid var(--border); object-fit: cover; flex-shrink: 0; }
-  .avatar-lg { width: 96px; height: 96px; border-radius: 12px; background: var(--panel-3); border: 1px solid var(--border); object-fit: cover; }
-  .rblx-suggest {
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius-sm);
-    margin-top: 6px;
-    overflow: hidden;
-    background: var(--bg);
-  }
-  .rblx-suggest .rblx-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 10px; cursor: pointer; font-size: 13px;
-  }
-  .rblx-suggest .rblx-item:hover { background: var(--panel-2); }
+  .buerger-row { display: flex; align-items: center; gap: 11px; padding: 9px 4px; cursor: pointer; border-radius: var(--radius-sm); }
+  .buerger-row:hover { background: var(--surface-2); }
+  .avatar-sm { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--surface-3); border: 1px solid var(--border); object-fit: cover; flex-shrink: 0; }
+  .avatar-lg { width: 88px; height: 88px; border-radius: var(--radius); background: var(--surface-3); border: 1px solid var(--border); object-fit: cover; }
+  .rblx-suggest { border: 1px solid var(--border-soft); border-radius: var(--radius-sm); margin-top: 5px; overflow: hidden; background: var(--bg); }
+  .rblx-suggest .rblx-item { display: flex; align-items: center; gap: 9px; padding: 7px 9px; cursor: pointer; font-size: 12.5px; }
+  .rblx-suggest .rblx-item:hover { background: var(--surface-2); }
   .rblx-suggest .rblx-item .name { font-weight: 600; }
-  .rblx-suggest .rblx-item .uname { color: var(--text-faint); font-size: 11.5px; }
+  .rblx-suggest .rblx-item .uname { color: var(--text-faint); font-size: 11px; }
 
   /* ----------------------------- Admin ------------------------------ */
   .admin-hero {
-    background: linear-gradient(150deg, rgba(185,139,255,0.14), rgba(91,140,255,0.06));
-    border: 1px solid rgba(185,139,255,0.3);
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-left: 3px solid var(--gold);
     border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-bottom: 18px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   }
-  .admin-hero h2 { margin: 0; font-size: 16px; color: var(--purple); }
-  .admin-hero p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-dim); }
-  .case-row { border-left: 3px solid var(--border); padding: 10px 0 10px 14px; margin-bottom: 8px; }
+  .admin-hero h2 { margin: 0; font-size: 14.5px; color: var(--gold); }
+  .admin-hero p { margin: 2px 0 0; font-size: 12px; color: var(--text-dim); }
+  .case-row { border-left: 2px solid var(--border); padding: 9px 0 9px 13px; margin-bottom: 7px; }
   .case-row[data-status="offen"] { border-left-color: var(--warn); }
   .case-row[data-status="in_bearbeitung"] { border-left-color: var(--accent); }
   .case-row[data-status="geschlossen"] { border-left-color: var(--ok); }
-  .lock-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border-soft); }
+  .lock-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border-soft); }
   .lock-row:first-child { border-top: none; }
+
+  /* -------------------------- Toggle-Switch -------------------------- */
+  .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider { position: absolute; cursor: pointer; inset: 0; background: var(--surface-3); border: 1px solid var(--border); border-radius: 999px; transition: background .12s; }
+  .switch .slider::before { content: ""; position: absolute; height: 14px; width: 14px; left: 3px; top: 3px; background: var(--text-dim); border-radius: 50%; transition: transform .12s, background .12s; }
+  .switch input:checked + .slider { background: var(--accent-dim); border-color: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(18px); background: var(--accent); }
 </style>
 </head>
 <body>
@@ -510,6 +460,7 @@ function renderTopbar(container) {
     <header class="topbar">
       <div class="brand" id="brand-home"><span class="dot"></span>Polizei System</div>
       <div class="user-chip">
+        <button class="btn secondary small" id="support-btn">🆘 Support</button>
         ${state.isAdmin ? '<button class="btn purple small" id="admin-btn">🛡 Admin</button>' : ''}
         ${avatarUrl(state.user) ? `<img src="${avatarUrl(state.user)}" />` : ''}
         <span>${esc(state.user.name)}</span>
@@ -522,9 +473,56 @@ function renderTopbar(container) {
     await api('logout');
     location.reload();
   };
+  bar.querySelector('#support-btn').onclick = () => openSupportModal();
   const adminBtn = bar.querySelector('#admin-btn');
   if (adminBtn) adminBtn.onclick = () => renderAdminArea();
   container.appendChild(bar);
+}
+
+// Kleines Overlay-Formular, mit dem JEDER eingeloggte Nutzer (nicht nur Admin)
+// einen Support-Fall eröffnen kann. Landet im Admin-Bereich unter "Support-Fälle".
+function openSupportModal() {
+  const overlay = el(`
+    <div style="position:fixed; inset:0; background:rgba(4,6,10,0.65); backdrop-filter:blur(3px); z-index:50; display:flex; align-items:center; justify-content:center; padding:20px;">
+      <div class="content-panel" style="max-width:420px; width:100%;">
+        <h2>🆘 Support kontaktieren</h2>
+        <div class="hint" style="margin-bottom:10px;">Deine Anfrage geht direkt an den Bot-Entwickler.</div>
+        <div class="field">
+          <label>Titel</label>
+          <input type="text" id="support-titel" placeholder="Kurze Zusammenfassung" />
+        </div>
+        <div class="field">
+          <label>Nachricht</label>
+          <textarea id="support-nachricht" placeholder="Was ist das Problem?" style="min-height:100px;"></textarea>
+        </div>
+        <div class="field-actions">
+          <button class="btn small" id="support-send">Absenden</button>
+          <button class="btn secondary small" id="support-cancel">Abbrechen</button>
+          <span class="save-status" id="support-status"></span>
+        </div>
+      </div>
+    </div>
+  `);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (ev) => { if (ev.target === overlay) overlay.remove(); });
+  overlay.querySelector('#support-cancel').onclick = () => overlay.remove();
+  overlay.querySelector('#support-send').onclick = async () => {
+    const titel = overlay.querySelector('#support-titel').value.trim();
+    const nachricht = overlay.querySelector('#support-nachricht').value.trim();
+    const status = overlay.querySelector('#support-status');
+    if (!nachricht) { setStatus(status, 'Nachricht fehlt', 'err'); return; }
+    setStatus(status, 'Sende …');
+    try {
+      await api('support_case_create', {
+        method: 'POST',
+        body: { titel, nachricht, guild_id: state.currentGuild, ersteller_name: state.user.name },
+      });
+      setStatus(status, 'Gesendet ✓', 'ok');
+      setTimeout(() => overlay.remove(), 900);
+    } catch (e) {
+      setStatus(status, e.message, 'err');
+    }
+  };
 }
 
 async function renderGuildPicker() {
@@ -603,7 +601,14 @@ async function renderGuildDashboard() {
 
   const tier = state.tier || {};
   try {
-    const calls = [];
+    const calls = [
+      // Module werden für JEDES Zugriffslevel geladen, damit z. B. auch
+      // normale Polizisten die Bürgerakten-Kachel nicht sehen, wenn ein
+      // Admin dieses Modul für den Server deaktiviert hat.
+      api('modules', { guild: state.currentGuild })
+        .then((r) => (state.modules = r.module))
+        .catch(() => (state.modules = { buergerakten: true, bewerbungsfragen: true })),
+    ];
     if (tier.admin) {
       calls.push(
         api('schema', { guild: state.currentGuild }).then((r) => (state.schema = r.categories)),
@@ -627,6 +632,7 @@ function drawDashboard(main) {
   main.innerHTML = '';
   const tier = state.tier || {};
   const s = state.stats;
+  const modules = state.modules || { buergerakten: true, bewerbungsfragen: true };
 
   if (tier.admin && s) {
     const pct = s.config_gesamt ? Math.round((s.config_gesetzt / s.config_gesamt) * 100) : 0;
@@ -658,14 +664,16 @@ function drawDashboard(main) {
 
   if (tier.admin) {
     for (const kat of state.schema) navButton(kat.label, kat.id);
-    navButton('📋 Bewerbungsfragen', '_bewerbungsfragen');
+    if (modules.bewerbungsfragen) navButton('📋 Bewerbungsfragen', '_bewerbungsfragen');
+    navButton('🔐 Zugriffsrechte', '_zugriffsrechte');
+    navButton('🧩 Module', '_module');
   }
   if (tier.admin || tier.staff || tier.dienstaufsicht) {
     navButton('👮 Personalakten', 'personalakten');
   } else if (tier.officer) {
     navButton('📁 Meine Akte', 'personalakte_eigene');
   }
-  navButton('🧑 Bürgerakten', 'buergerakten');
+  if (modules.buergerakten) navButton('🧑 Bürgerakten', 'buergerakten');
   main.appendChild(nav);
 
   const contentWrap = el('<div></div>');
@@ -674,6 +682,12 @@ function drawDashboard(main) {
   if (state.activeCategory === '_bewerbungsfragen') {
     contentWrap.innerHTML = '<div class="loading">Lade Fragen …</div>';
     renderBewerbungsfragenPanel(contentWrap);
+  } else if (state.activeCategory === '_zugriffsrechte') {
+    contentWrap.innerHTML = '<div class="loading">Lade Einstellung …</div>';
+    renderZugriffsrechtePanel(contentWrap);
+  } else if (state.activeCategory === '_module') {
+    contentWrap.innerHTML = '<div class="loading">Lade Module …</div>';
+    renderModulePanel(contentWrap);
   } else if (state.activeCategory === 'personalakten') {
     contentWrap.innerHTML = '<div class="loading">Lade Personalakten …</div>';
     renderPersonalaktenListe(contentWrap);
@@ -740,6 +754,102 @@ async function renderBewerbungsfragenPanel(container) {
       }
       container.appendChild(panel);
     }
+  } catch (e) {
+    container.innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
+  }
+}
+
+async function renderZugriffsrechtePanel(container) {
+  try {
+    const { enabled } = await api('officer_permission', { guild: state.currentGuild });
+    container.innerHTML = '';
+    const panel = el(`
+      <div class="content-panel">
+        <h2>🔐 Zugriffsrechte</h2>
+        <div class="field-card wide" style="margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+          <div>
+            <label>Normale Polizisten dürfen Personalakte-Aktionen ausführen</label>
+            <div class="desc" style="margin-top:4px;">
+              Wenn aktiviert, dürfen auch Beamte ohne Staff-Rolle in Personalakten <b>Verwarnen</b>, <b>Suspendieren</b>,
+              <b>Kündigen</b> und <b>Suspendierung aufheben</b>. Widerrufen/Löschen eines Eintrags bleibt in jedem Fall
+              der Dienstaufsicht vorbehalten. Standard: aus.
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="officer-toggle" ${enabled ? 'checked' : ''} />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field-actions"><span class="save-status" id="officer-status"></span></div>
+      </div>
+    `);
+    const status = panel.querySelector('#officer-status');
+    panel.querySelector('#officer-toggle').onchange = async (ev) => {
+      const neu = ev.target.checked;
+      setStatus(status, 'Speichere …');
+      try {
+        await api('officer_permission', { guild: state.currentGuild, method: 'POST', body: { enabled: neu } });
+        setStatus(status, neu ? 'Aktiviert ✓' : 'Deaktiviert ✓', 'ok');
+      } catch (e) {
+        ev.target.checked = !neu;
+        setStatus(status, e.message, 'err');
+      }
+    };
+    container.appendChild(panel);
+  } catch (e) {
+    container.innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
+  }
+}
+
+const MODULE_LABELS = {
+  buergerakten: { label: 'Bürgerakten', desc: 'Roblox-Bürgerakten-Verwaltung inkl. Suche und Fotos.' },
+  bewerbungsfragen: { label: 'Bewerbungsfragen', desc: 'Editierbare Bewerbungsfragen pro Bewerbungsart.' },
+};
+
+async function renderModulePanel(container) {
+  try {
+    const { module } = await api('modules', { guild: state.currentGuild });
+    state.modules = module;
+    container.innerHTML = '';
+    const panel = el(`
+      <div class="content-panel">
+        <h2>🧩 Module</h2>
+        <div class="hint" style="margin-bottom:6px;">Deaktivierte Module verschwinden aus der Kategorie-Leiste für alle Zugriffsstufen auf diesem Server.</div>
+        <div class="field-grid" id="module-grid"></div>
+      </div>
+    `);
+    const grid = panel.querySelector('#module-grid');
+    for (const [key, info] of Object.entries(MODULE_LABELS)) {
+      const enabled = !!module[key];
+      const card = el(`
+        <div class="field-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <label>${esc(info.label)}</label>
+            <label class="switch">
+              <input type="checkbox" ${enabled ? 'checked' : ''} />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="desc">${esc(info.desc)}</div>
+          <span class="save-status"></span>
+        </div>
+      `);
+      const status = card.querySelector('.save-status');
+      card.querySelector('input').onchange = async (ev) => {
+        const neu = ev.target.checked;
+        setStatus(status, 'Speichere …');
+        try {
+          const res = await api('modules', { guild: state.currentGuild, method: 'POST', body: { key, enabled: neu } });
+          state.modules = res.module;
+          setStatus(status, neu ? 'Aktiviert ✓' : 'Deaktiviert ✓', 'ok');
+        } catch (e) {
+          ev.target.checked = !neu;
+          setStatus(status, e.message, 'err');
+        }
+      };
+      grid.appendChild(card);
+    }
+    container.appendChild(panel);
   } catch (e) {
     container.innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
   }
