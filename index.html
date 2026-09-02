@@ -33,34 +33,33 @@
      Statusfarben nur dort, wo sie tatsächlich einen Status bedeuten.
      ------------------------------------------------------------------ */
   :root {
-    /* Himmelblau-Theme: kräftiger, gesättigter Himmelblau-Ton als Seiten-
-       hintergrund (nicht blass/weißlich), weiße Panels heben sich davon ab.
-       Akzentfarbe ist ein deutlich dunkleres Blau, damit Buttons/aktive
-       Zustände auf dem hellen Himmelblau noch klar erkennbar bleiben. */
-    --bg: #4fa3e3;
-    --surface: #ffffff;
-    --surface-2: #f2f8fd;
-    --surface-3: #e1eefb;
-    --border: #cfe0f5;
-    --border-soft: #dce9f8;
+    /* Dunkles Theme, an die Startseite angeglichen: dunkle Navy-Fläche als
+       Hintergrund, leicht hellere Panels darüber, Indigo als Akzentfarbe
+       (passend zum Gradient-Akzent der Landingpage). */
+    --bg: #0b0e14;
+    --surface: #12161f;
+    --surface-2: #171c27;
+    --surface-3: #1d2330;
+    --border: #262d3b;
+    --border-soft: #1c212c;
 
-    --accent: #175fb0;
-    --accent-dim: rgba(23,95,176,0.14);
-    --accent-text: #0f3f78;
+    --accent: #6d6bf7;
+    --accent-dim: rgba(109,107,247,0.18);
+    --accent-text: #b3b1ff;
 
-    --text: #0f2038;
-    --text-dim: #2c4d78;
-    --text-faint: #4c6c94;
+    --text: #eef1f7;
+    --text-dim: #98a2b8;
+    --text-faint: #616c82;
 
-    --ok: #157a56;
-    --ok-soft: rgba(21,122,86,0.14);
-    --warn: #93650c;
-    --warn-soft: rgba(147,101,12,0.16);
-    --err: #b23a4c;
-    --err-soft: rgba(178,58,76,0.14);
+    --ok: #35b481;
+    --ok-soft: rgba(53,180,129,0.16);
+    --warn: #d99a3a;
+    --warn-soft: rgba(217,154,58,0.16);
+    --err: #e2495c;
+    --err-soft: rgba(226,73,92,0.16);
     /* "gold" markiert Admin-/Aufsichts-Funktionen — bewusst gedeckt statt bunt */
-    --gold: #8a6524;
-    --gold-soft: rgba(138,101,36,0.16);
+    --gold: #c9a15c;
+    --gold-soft: rgba(201,161,92,0.16);
 
     --radius: 8px;
     --radius-sm: 6px;
@@ -139,9 +138,9 @@
   .btn.small { padding: 6px 12px; font-size: 12.5px; }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
   .error-box {
-    border: 1px solid rgba(207,74,92,0.35);
+    border: 1px solid rgba(226,73,92,0.4);
     background: var(--err-soft);
-    color: #9c2f42;
+    color: #ff9daa;
     padding: 10px 13px;
     border-radius: var(--radius-sm);
     font-size: 13px;
@@ -387,7 +386,7 @@
   .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-sm); }
   .badge.ok { background: var(--ok-soft); color: var(--ok); }
   .badge.warn { background: var(--warn-soft); color: var(--warn); }
-  .badge.err { background: var(--err-soft); color: #9c2f42; }
+  .badge.err { background: var(--err-soft); color: #ff9daa; }
   .badge.purple { background: var(--gold-soft); color: var(--gold); }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .status-dot.ok { background: var(--ok); }
@@ -845,7 +844,10 @@ function renderLoginScreen() {
       <header class="landing-header">
         <div class="brand-mark">
           <div class="badge-mark">PS</div>
-          <div class="brand-text"><div class="name">Polizei System</div></div>
+          <div class="brand-text">
+            <div class="name">Polizei System</div>
+            <div class="tagline">Dienststellen-Dashboard</div>
+          </div>
         </div>
         <nav class="landing-nav-links">
           <a href="#landing-features">Funktionen</a>
@@ -974,10 +976,16 @@ async function openSupportModal() {
 async function ladeUndZeichneTicket(body) {
   let ticket;
   try {
-    const res = await api('support_ticket_mine', { guild: state.currentGuild });
+    // "mine" ist an die Session (actor_id), nicht an einen Server gebunden.
+    const res = await api('support_ticket_mine');
     ticket = res.ticket || null;
   } catch (e) {
-    body.innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
+    body.innerHTML = `
+      <div class="error-box">
+        Das Ticket-System ist auf der Bot-Seite noch nicht eingerichtet — die Route
+        <code>/api/support/tickets/mine</code> fehlt noch in der Bot-HTTP-API
+        (Fehler vom Server: ${esc(e.message)}).
+      </div>`;
     return;
   }
   if (ticket && ticket.status !== 'geschlossen') {
@@ -1030,7 +1038,7 @@ function zeichneOffenesTicket(body, ticket) {
     if (!text) { setStatus(status, 'Nachricht fehlt', 'err'); return; }
     setStatus(status, 'Sende …');
     try {
-      await api('support_ticket_message', { method: 'POST', body: { ticket_id: ticket.id, text } });
+      await api('support_ticket_message', { target: ticket.id, method: 'POST', body: { text } });
       await ladeUndZeichneTicket(body);
     } catch (e) {
       setStatus(status, e.message, 'err');
@@ -1040,7 +1048,7 @@ function zeichneOffenesTicket(body, ticket) {
     if (!confirm('Ticket wirklich schließen?')) return;
     setStatus(status, 'Schließe …');
     try {
-      await api('support_ticket_close', { method: 'POST', body: { ticket_id: ticket.id } });
+      await api('support_ticket_close', { target: ticket.id, method: 'POST', body: {} });
       await ladeUndZeichneTicket(body);
     } catch (e) {
       setStatus(status, e.message, 'err');
@@ -1833,7 +1841,7 @@ async function renderPersonalakteDetail(container, userId) {
         actions.appendChild(status);
       }
       if (kannWiderrufen) {
-        const delBtn = el('<button class="btn secondary small" style="border-color:var(--err); color:#a5334a;">Löschen</button>');
+        const delBtn = el('<button class="btn secondary small" style="border-color:var(--err); color:#ff9daa;">Löschen</button>');
         delBtn.onclick = async () => {
           if (!confirm('Diesen Eintrag endgültig löschen? Das kann nicht rückgängig gemacht werden.')) return;
           try {
@@ -2239,7 +2247,7 @@ async function renderAdminSupport(container) {
         if (!text) return;
         setStatus(status, 'Sende …');
         try {
-          await api('support_ticket_reply', { method: 'POST', body: { ticket_id: t.id, text } });
+          await api('support_ticket_reply', { target: t.id, method: 'POST', body: { text } });
           renderAdminSupport(container);
         } catch (err) {
           setStatus(status, err.message, 'err');
@@ -2249,7 +2257,7 @@ async function renderAdminSupport(container) {
         setStatus(status, 'Speichere …');
         try {
           const resource = offen ? 'support_ticket_close' : 'support_ticket_reopen';
-          await api(resource, { method: 'POST', body: { ticket_id: t.id } });
+          await api(resource, { target: t.id, method: 'POST', body: {} });
           renderAdminSupport(container);
         } catch (err) {
           setStatus(status, err.message, 'err');
