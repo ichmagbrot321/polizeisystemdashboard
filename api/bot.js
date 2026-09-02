@@ -16,6 +16,13 @@
 //   - buergerakten/buergerakte reichen jetzt optionale Roblox-Felder
 //     (roblox_user_id, roblox_avatar_url) durch, die vom Frontend über den
 //     separaten /api/roblox-Proxy ermittelt wurden.
+//   - Support-System auf DAUERHAFTE TICKETS umgestellt (statt Einweg-
+//     "Fälle"): support_ticket_mine/create/message/close sind für JEDEN
+//     eingeloggten Nutzer aufrufbar (anyUser) — ob jemand wirklich nur sein
+//     eigenes Ticket sehen/schließen darf, prüft dashboard_api.py serverseitig
+//     anhand von actor_id gegen ticket.ersteller_id (oder ADMIN_USER_ID).
+//     support_tickets_all/reply/reopen bleiben admin-only (global), da nur
+//     der Bot-Entwickler Tickets serverübergreifend bearbeitet.
 //
 // WICHTIG: Wer im Bot tatsächlich "Verwarnen/Suspendieren/Kündigen" darf
 // (aktuell nur admin/staff), wird SERVERSEITIG im Bot geprüft, nicht hier.
@@ -73,11 +80,13 @@ function parseCookies(header) {
 }
 
 // ---------------------------------------------------------------------------
-// Ressourcen-Zuordnung: resource-Name -> { method?, global?, path(guild, target, query) }
+// Ressourcen-Zuordnung: resource-Name -> { method?, global?, anyUser?, path(guild, target, query) }
 // method fehlt = die HTTP-Methode der eingehenden Anfrage wird 1:1 durchgereicht
 // (für Ressourcen, die sowohl GET als auch POST unterstützen, z. B. config).
-// global: true = Ressource ist NICHT an einen Server gebunden (Support-Fälle,
-// Admin-Sperrsystem) und nur für ADMIN_USER_ID sichtbar.
+// global: true = Ressource ist NICHT an einen Server gebunden und nur für
+//   ADMIN_USER_ID sichtbar (Support-Ticket-Verwaltung, Admin-Sperrsystem).
+// anyUser: true = kein Guild-Zugriff nötig, aber jede gültige Session darf
+//   die Ressource aufrufen (z. B. das eigene Support-Ticket).
 // ---------------------------------------------------------------------------
 
 const RESOURCE_MAP = {
@@ -105,19 +114,29 @@ const RESOURCE_MAP = {
   buergerakte: { method: 'GET', path: (g, _t, q) => `/api/guilds/${g}/buergerakte/${q.roblox_id}` },
 
   // -- Globale, nur für ADMIN_USER_ID sichtbare Ressourcen --
-  support_cases: { method: 'GET', global: true, path: () => `/api/support/cases` },
-  support_case: { method: 'GET', global: true, path: (_g, t) => `/api/support/cases/${t}` },
-  support_case_status: { method: 'POST', global: true, path: (_g, t) => `/api/support/cases/${t}/status` },
-  support_case_reply: { method: 'POST', global: true, path: (_g, t) => `/api/support/cases/${t}/reply` },
   admin_guilds: { method: 'GET', global: true, path: () => `/api/admin/guilds` },
   admin_lock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/lock` },
   admin_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/unlock` },
   admin_unlock_owner: { method: 'POST', global: true, path: (_g, t) => `/api/admin/owners/${t}/unlock` },
 
-  // -- NEU: Support-Fall eröffnen — für JEDEN eingeloggten Nutzer, nicht nur Admin --
-  support_case_create: { method: 'POST', anyUser: true, path: () => `/api/support/cases` },
+  // -- NEU: dauerhaftes Support-Ticket-System (ersetzt die alten support_case_*
+  //    "Einweg-Fälle") --
+  // Für JEDEN eingeloggten Nutzer aufrufbar: eigenes Ticket abrufen/eröffnen/
+  // beantworten/schließen. dashboard_api.py MUSS serverseitig sicherstellen,
+  // dass "message"/"close" nur auf das eigene Ticket wirken (actor_id ==
+  // ticket.ersteller_id) — sonst könnte jeder fremde Tickets schließen.
+  support_ticket_mine: { method: 'GET', anyUser: true, path: () => `/api/support/tickets/mine` },
+  support_ticket_create: { method: 'POST', anyUser: true, path: () => `/api/support/tickets` },
+  support_ticket_message: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${t}/messages` },
+  support_ticket_close: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${t}/close` },
 
-  // -- NEU: User-/IP-Sperrsystem (siehe Hinweis oben zu api/callback.js) --
+  // Nur für ADMIN_USER_ID (den Bot-Entwickler): alle Tickets serverübergreifend
+  // einsehen, beantworten und wieder öffnen.
+  support_tickets_all: { method: 'GET', global: true, path: () => `/api/support/tickets` },
+  support_ticket_reply: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${t}/reply` },
+  support_ticket_reopen: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${t}/reopen` },
+
+  // -- User-/IP-Sperrsystem --
   security_locks: { method: 'GET', global: true, path: () => `/api/security/locks` },
   security_lock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${t}/lock` },
   security_unlock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${t}/unlock` },
@@ -211,6 +230,12 @@ module.exports = async (req, res) => {
   // Anfragen gibt es keinen Body, deshalb hier als Query-Parameter.
   if (mapping.global) {
     extra.set('requester_id', session.u.id);
+  }
+  // Ebenso bei "anyUser"-Ressourcen: der Bot muss wissen, WER die Anfrage
+  // stellt, um z. B. "nur mein eigenes Ticket" durchzusetzen — auch bei GET,
+  // wo es (anders als bei POST) keinen Body mit actor_id gibt.
+  if (mapping.anyUser) {
+    extra.set('actor_id', session.u.id);
   }
 
   const qs = extra.toString();
