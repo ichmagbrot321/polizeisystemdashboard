@@ -3,7 +3,26 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Polizei System</title>
+<title>Polizei System — Dienststellen-Dashboard</title>
+<meta name="description" content="Dienstnummern, Personalakte, Bewerbungen, Schichten und Bürgerakten — alles in einem Dashboard für deine Discord-Polizei-Community." />
+
+<!-- Open-Graph-Tags: dafür verantwortlich, wie der Link auf WhatsApp, Discord,
+     Telegram usw. als Vorschaukarte (Bild + Titel + Text) angezeigt wird.
+     WICHTIG: og:url unten auf die ECHTE, öffentliche Domain ändern, sonst
+     zeigen manche Plattformen die Vorschau nicht richtig an. -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Polizei System" />
+<meta property="og:title" content="Polizei System — Dienststellen-Dashboard" />
+<meta property="og:description" content="Dienstnummern, Personalakte, Bewerbungen, Schichten und Bürgerakten — alles in einem Dashboard für deine Discord-Polizei-Community." />
+<meta property="og:image" content="https://i.postimg.cc/jjKkZszW/polizei-system-banner-3zu1.png" />
+<meta property="og:url" content="https://polizei-system-dashboard.vercel.app/" />
+
+<!-- Twitter/X nutzt teils eigene Tags statt der Open-Graph-Tags -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Polizei System — Dienststellen-Dashboard" />
+<meta name="twitter:description" content="Dienstnummern, Personalakte, Bewerbungen, Schichten und Bürgerakten — alles in einem Dashboard." />
+<meta name="twitter:image" content="https://i.postimg.cc/jjKkZszW/polizei-system-banner-3zu1.png" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -241,6 +260,78 @@
   }
   .content-panel h2 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
   .content-panel + .content-panel { margin-top: 14px; }
+
+  /* --------------------------- Breadcrumb --------------------------- */
+  .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 12.5px; color: var(--text-dim); flex-wrap: wrap; }
+  .breadcrumb .crumb { cursor: pointer; padding: 2px 1px; transition: color .1s; }
+  .breadcrumb .crumb:hover { color: var(--accent-text); }
+  .breadcrumb .crumb.current { color: var(--text); font-weight: 700; cursor: default; }
+  .breadcrumb .crumb-sep { color: var(--text-faint); }
+
+  /* ---------------------------- Übersichtskacheln ---------------------------- */
+  .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 8px; }
+  .dash-tile {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color .12s, background .12s, transform .12s;
+  }
+  .dash-tile:hover { border-color: var(--accent); background: var(--surface-2); transform: translateY(-1px); }
+  .tile-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .tile-title { font-weight: 700; font-size: 13.5px; }
+  .tile-fraction {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    color: var(--text-dim); background: var(--surface-3); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+  .tile-fraction.complete { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+  .tile-desc { font-size: 12px; color: var(--text-dim); line-height: 1.55; margin: 0; }
+  .tile-preview { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+  .tile-preview-line { font-size: 11.5px; color: var(--text-dim); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile-preview-line strong { color: var(--text); font-weight: 600; }
+  .tile-preview.empty { font-size: 11.5px; color: var(--text-faint); font-style: italic; }
+  .tile-progress { height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .tile-progress .fill { height: 100%; background: var(--accent); }
+
+  /* ----------------------------- Support-Ticket ----------------------------- */
+  .support-overlay {
+    position: fixed; inset: 0; background: rgba(4,6,10,0.65); backdrop-filter: blur(3px);
+    z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .support-panel { max-width: 460px; width: 100%; max-height: 82vh; overflow-y: auto; }
+  .support-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .support-panel-head h2 { margin: 0; }
+  .support-thread { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 2px; }
+  .support-msg { border-radius: var(--radius-sm); padding: 9px 11px; font-size: 13px; line-height: 1.5; max-width: 92%; }
+  .support-msg.me { background: var(--surface-2); border: 1px solid var(--border-soft); align-self: flex-start; }
+  .support-msg.staff { background: var(--accent-dim); border: 1px solid rgba(77,124,199,0.3); align-self: flex-end; }
+  .support-msg-meta { font-size: 10.5px; color: var(--text-faint); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .4px; }
+  .support-msg-text { white-space: pre-wrap; word-break: break-word; }
+
+  /* ------------------------------ Splashscreen ------------------------------ */
+  .app-splash {
+    position: fixed; inset: 0; z-index: 100;
+    background: #0b0e13;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    transition: opacity .35s ease;
+  }
+  .app-splash.fade-out { opacity: 0; pointer-events: none; }
+  .splash-logo-wrap {
+    width: 96px; height: 96px; border-radius: 50%; overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.14);
+    box-shadow: 0 0 46px rgba(77,124,199,0.35);
+  }
+  .splash-logo { width: 100%; height: 100%; object-fit: cover; animation: splash-spin 2.2s cubic-bezier(.65,.05,.36,1) 1; }
+  @keyframes splash-spin { from { transform: rotate(0deg); } to { transform: rotate(1440deg); } }
+  .splash-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.55); text-transform: uppercase;
+  }
 
   .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-top: 14px; }
   .field-card {
@@ -839,7 +930,7 @@ function renderTopbar(container) {
     <header class="topbar">
       <div class="brand" id="brand-home"><span class="dot"></span>Polizei System</div>
       <div class="user-chip">
-        <button class="btn secondary small" id="support-btn">🆘 Support</button>
+        <button class="btn secondary small" id="support-btn">🎫 Mein Ticket</button>
         ${state.isAdmin ? '<button class="btn purple small" id="admin-btn">🛡 Admin</button>' : ''}
         ${avatarUrl(state.user) ? `<img src="${avatarUrl(state.user)}" />` : ''}
         <span>${esc(state.user.name)}</span>
@@ -858,46 +949,138 @@ function renderTopbar(container) {
   container.appendChild(bar);
 }
 
-// Kleines Overlay-Formular, mit dem JEDER eingeloggte Nutzer (nicht nur Admin)
-// einen Support-Fall eröffnen kann. Landet im Admin-Bereich unter "Support-Fälle".
-function openSupportModal() {
+// Echtes, dauerhaftes Support-Ticket statt einer Einweg-Nachricht: bleibt
+// offen, bis es geschlossen wird, und zeigt beim erneuten Öffnen wieder den
+// kompletten Gesprächsverlauf inkl. Antworten des Entwicklers.
+async function openSupportModal() {
   const overlay = el(`
-    <div style="position:fixed; inset:0; background:rgba(4,6,10,0.65); backdrop-filter:blur(3px); z-index:50; display:flex; align-items:center; justify-content:center; padding:20px;">
-      <div class="content-panel" style="max-width:420px; width:100%;">
-        <h2>🆘 Support kontaktieren</h2>
-        <div class="hint" style="margin-bottom:10px;">Deine Anfrage geht direkt an den Bot-Entwickler.</div>
-        <div class="field">
-          <label>Titel</label>
-          <input type="text" id="support-titel" placeholder="Kurze Zusammenfassung" />
+    <div class="support-overlay">
+      <div class="content-panel support-panel">
+        <div class="support-panel-head">
+          <h2>🎫 Mein Support-Ticket</h2>
+          <button class="btn secondary small" id="support-close-x">✕</button>
         </div>
-        <div class="field">
-          <label>Nachricht</label>
-          <textarea id="support-nachricht" placeholder="Was ist das Problem?" style="min-height:100px;"></textarea>
-        </div>
-        <div class="field-actions">
-          <button class="btn small" id="support-send">Absenden</button>
-          <button class="btn secondary small" id="support-cancel">Abbrechen</button>
-          <span class="save-status" id="support-status"></span>
-        </div>
+        <div id="support-body"><div class="loading">Lade …</div></div>
       </div>
     </div>
   `);
   document.body.appendChild(overlay);
   overlay.addEventListener('click', (ev) => { if (ev.target === overlay) overlay.remove(); });
-  overlay.querySelector('#support-cancel').onclick = () => overlay.remove();
-  overlay.querySelector('#support-send').onclick = async () => {
-    const titel = overlay.querySelector('#support-titel').value.trim();
-    const nachricht = overlay.querySelector('#support-nachricht').value.trim();
-    const status = overlay.querySelector('#support-status');
+  overlay.querySelector('#support-close-x').onclick = () => overlay.remove();
+
+  await ladeUndZeichneTicket(overlay.querySelector('#support-body'));
+}
+
+async function ladeUndZeichneTicket(body) {
+  let ticket;
+  try {
+    const res = await api('support_ticket_mine', { guild: state.currentGuild });
+    ticket = res.ticket || null;
+  } catch (e) {
+    body.innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
+    return;
+  }
+  if (ticket && ticket.status !== 'geschlossen') {
+    zeichneOffenesTicket(body, ticket);
+  } else {
+    zeichneNeuesTicketFormular(body, ticket);
+  }
+}
+
+function zeichneOffenesTicket(body, ticket) {
+  body.innerHTML = '';
+  const badgeKind = ticket.status === 'offen' ? 'warn' : 'ok';
+  body.appendChild(el(`
+    <div class="hint" style="margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+      <span class="badge ${badgeKind}">${esc(ticket.status)}</span>
+      <span>${esc(ticket.titel || 'Ohne Titel')}</span>
+    </div>
+  `));
+
+  const thread = el('<div class="support-thread"></div>');
+  const nachrichten = (ticket.nachrichten && ticket.nachrichten.length)
+    ? ticket.nachrichten
+    : [{ von: 'nutzer', text: ticket.nachricht, zeitpunkt: ticket.erstellt_am }];
+  for (const n of nachrichten) {
+    const vonEntwickler = n.von === 'entwickler' || n.von === 'staff';
+    const zeit = n.zeitpunkt ? new Date(n.zeitpunkt).toLocaleString('de-DE') : '';
+    thread.appendChild(el(`
+      <div class="support-msg ${vonEntwickler ? 'staff' : 'me'}">
+        <div class="support-msg-meta">${vonEntwickler ? 'Entwickler' : 'Du'}${zeit ? ' · ' + zeit : ''}</div>
+        <div class="support-msg-text">${esc(n.text || '')}</div>
+      </div>
+    `));
+  }
+  body.appendChild(thread);
+
+  body.appendChild(el(`
+    <div class="field" style="margin-top:14px;">
+      <textarea id="support-reply-text" placeholder="Nachricht hinzufügen …" style="min-height:70px;"></textarea>
+    </div>
+    <div class="field-actions">
+      <button class="btn small" id="support-reply-send">Senden</button>
+      <button class="btn secondary small" id="support-ticket-close">Ticket schließen</button>
+      <span class="save-status" id="support-reply-status"></span>
+    </div>
+  `));
+
+  const status = body.querySelector('#support-reply-status');
+  body.querySelector('#support-reply-send').onclick = async () => {
+    const text = body.querySelector('#support-reply-text').value.trim();
+    if (!text) { setStatus(status, 'Nachricht fehlt', 'err'); return; }
+    setStatus(status, 'Sende …');
+    try {
+      await api('support_ticket_message', { method: 'POST', body: { ticket_id: ticket.id, text } });
+      await ladeUndZeichneTicket(body);
+    } catch (e) {
+      setStatus(status, e.message, 'err');
+    }
+  };
+  body.querySelector('#support-ticket-close').onclick = async () => {
+    if (!confirm('Ticket wirklich schließen?')) return;
+    setStatus(status, 'Schließe …');
+    try {
+      await api('support_ticket_close', { method: 'POST', body: { ticket_id: ticket.id } });
+      await ladeUndZeichneTicket(body);
+    } catch (e) {
+      setStatus(status, e.message, 'err');
+    }
+  };
+}
+
+function zeichneNeuesTicketFormular(body, letztesTicket) {
+  body.innerHTML = '';
+  body.appendChild(el(
+    letztesTicket
+      ? '<div class="hint" style="margin-bottom:10px;">Dein letztes Ticket wurde geschlossen. Du kannst jederzeit ein neues eröffnen.</div>'
+      : '<div class="hint" style="margin-bottom:10px;">Deine Anfrage geht direkt an den Bot-Entwickler und bleibt offen, bis sie geschlossen wird.</div>'
+  ));
+  body.appendChild(el(`
+    <div class="field">
+      <label>Titel</label>
+      <input type="text" id="support-titel" placeholder="Kurze Zusammenfassung" />
+    </div>
+    <div class="field">
+      <label>Nachricht</label>
+      <textarea id="support-nachricht" placeholder="Was ist das Problem?" style="min-height:100px;"></textarea>
+    </div>
+    <div class="field-actions">
+      <button class="btn small" id="support-send">Ticket eröffnen</button>
+      <span class="save-status" id="support-status"></span>
+    </div>
+  `));
+  const status = body.querySelector('#support-status');
+  body.querySelector('#support-send').onclick = async () => {
+    const titel = body.querySelector('#support-titel').value.trim();
+    const nachricht = body.querySelector('#support-nachricht').value.trim();
     if (!nachricht) { setStatus(status, 'Nachricht fehlt', 'err'); return; }
     setStatus(status, 'Sende …');
     try {
-      await api('support_case_create', {
+      await api('support_ticket_create', {
         method: 'POST',
         body: { titel, nachricht, guild_id: state.currentGuild, ersteller_name: state.user.name },
       });
-      setStatus(status, 'Gesendet ✓', 'ok');
-      setTimeout(() => overlay.remove(), 900);
+      await ladeUndZeichneTicket(body);
     } catch (e) {
       setStatus(status, e.message, 'err');
     }
@@ -994,17 +1177,204 @@ async function renderGuildDashboard() {
         api('config', { guild: state.currentGuild }).then((r) => (state.config = r.config)),
         api('channels', { guild: state.currentGuild }).then((r) => (state.channels = r.channels)),
         api('roles', { guild: state.currentGuild }).then((r) => (state.roles = r.roles)),
-        api('stats', { guild: state.currentGuild }).then((r) => (state.stats = r))
+        api('stats', { guild: state.currentGuild }).then((r) => (state.stats = r)),
+        // Zusätzliche Vorschau-Daten, damit die Übersichtskacheln zeigen können,
+        // was aktuell schon eingestellt ist.
+        api('officer_permission', { guild: state.currentGuild })
+          .then((r) => (state.officerPermission = r.enabled))
+          .catch(() => (state.officerPermission = null)),
+        api('bewerbungsfragen', { guild: state.currentGuild })
+          .then((r) => (state.bewerbungsfragenArten = r.arten))
+          .catch(() => (state.bewerbungsfragenArten = null))
       );
     }
     await Promise.all(calls);
-    state.activeCategory = tier.admin ? (state.schema[0]?.id ?? null) : 'personalakte_eigene';
-    if (!tier.admin && (tier.staff || tier.dienstaufsicht)) state.activeCategory = 'personalakten';
-    else if (!tier.admin && tier.officer) state.activeCategory = 'personalakte_eigene';
+    // Start immer auf der Kachel-Übersicht, nicht direkt in der ersten Kategorie.
+    state.activeCategory = null;
     drawDashboard(main);
   } catch (e) {
     main.innerHTML = `<div class="error-box">${esc(e.message)}</div>`;
   }
+}
+
+// ------------------------- Übersichtskacheln ------------------------------
+// Jede Einstellungs-Kategorie/jeder Bereich wird als Kachel dargestellt.
+// Kacheln mit Einstellungen zeigen zusätzlich eine kleine Vorschau ("Kanal X",
+// "Rolle Y", "3/5 gesetzt") und einen Fortschrittsbalken, damit man auf einen
+// Blick sieht, was schon konfiguriert ist, ohne extra reinklicken zu müssen.
+
+function resolveOptionName(kind, id) {
+  if (id == null || id === '') return '—';
+  const idStr = String(id);
+  const list = kind === 'role' || kind === 'role_list' ? state.roles : state.channels;
+  const found = (list || []).find((o) => String(o.id) === idStr);
+  return found ? found.name : idStr;
+}
+
+function buildSchemaTile(kat) {
+  const items = kat.items || [];
+  const textItems = kat.text_items || [];
+  const total = items.length + textItems.length;
+  let setCount = 0;
+  const preview = [];
+
+  for (const item of items) {
+    const raw = state.config ? state.config[item.key] : null;
+    const isList = item.kind === 'role_list';
+    const configured = isList ? Array.isArray(raw) && raw.length > 0 : raw != null && raw !== '';
+    if (!configured) continue;
+    setCount++;
+    if (preview.length < 3) {
+      const valueText = isList
+        ? raw.map((id) => resolveOptionName('role', id)).join(', ')
+        : resolveOptionName(item.kind, raw);
+      preview.push(`<strong>${esc(item.label)}:</strong> ${esc(valueText)}`);
+    }
+  }
+  for (const item of textItems) {
+    const raw = state.config ? state.config[item.key] : null;
+    const configured = raw != null && String(raw).trim() !== '';
+    if (!configured) continue;
+    setCount++;
+    if (preview.length < 3) {
+      const short = String(raw).length > 34 ? `${String(raw).slice(0, 34)}…` : String(raw);
+      preview.push(`<strong>${esc(item.label)}:</strong> ${esc(short)}`);
+    }
+  }
+  const extra = setCount - preview.length;
+  if (extra > 0) preview.push(`+${extra} weitere`);
+  return { id: kat.id, title: kat.label, total, setCount, preview };
+}
+
+function buildBewerbungsfragenTile() {
+  const arten = state.bewerbungsfragenArten;
+  if (!arten || !arten.length) {
+    return { id: '_bewerbungsfragen', title: '📋 Bewerbungsfragen', desc: 'Editierbare Bewerbungsfragen pro Laufbahn.' };
+  }
+  const eigene = arten.filter((a) => !a.ist_standard);
+  const preview = eigene.length
+    ? eigene.slice(0, 3).map((a) => `<strong>${esc(a.label)}:</strong> eigene Fragen`)
+    : ['Alle Laufbahnen nutzen die Standardfragen'];
+  return { id: '_bewerbungsfragen', title: '📋 Bewerbungsfragen', preview };
+}
+
+function buildZugriffsrechteTile() {
+  const enabled = state.officerPermission;
+  const preview = [
+    enabled == null
+      ? 'Status wird geladen …'
+      : enabled
+      ? '<strong>Aktiviert</strong> — normale Polizisten dürfen handeln'
+      : '<strong>Deaktiviert</strong> — nur Staff/Dienstaufsicht',
+  ];
+  return { id: '_zugriffsrechte', title: '🔐 Zugriffsrechte', preview };
+}
+
+function buildModuleTile() {
+  const modules = state.modules || {};
+  const keys = Object.keys(MODULE_LABELS);
+  const enabledCount = keys.filter((k) => modules[k]).length;
+  const preview = keys.map((k) => `<strong>${esc(MODULE_LABELS[k].label)}:</strong> ${modules[k] ? 'aktiviert' : 'deaktiviert'}`);
+  return { id: '_module', title: '🧩 Module', total: keys.length, setCount: enabledCount, preview };
+}
+
+function renderTileGrid(tiles, main) {
+  const grid = el('<div class="tile-grid"></div>');
+  for (const t of tiles) {
+    const pct = t.total != null ? Math.round((t.setCount / t.total) * 100) : null;
+    const previewHtml = t.preview && t.preview.length
+      ? `<div class="tile-preview">${t.preview.map((l) => `<div class="tile-preview-line">${l}</div>`).join('')}</div>`
+      : t.total != null
+      ? '<div class="tile-preview empty">Noch nichts konfiguriert</div>'
+      : '';
+    const fractionHtml = t.total != null
+      ? `<span class="tile-fraction${pct === 100 ? ' complete' : ''}">${t.setCount}/${t.total}</span>`
+      : '';
+    const card = el(`
+      <div class="dash-tile">
+        <div class="tile-head">
+          <div class="tile-title">${esc(t.title)}</div>
+          ${fractionHtml}
+        </div>
+        ${t.desc ? `<p class="tile-desc">${esc(t.desc)}</p>` : ''}
+        ${previewHtml}
+        ${pct != null ? `<div class="tile-progress"><div class="fill" style="width:${pct}%"></div></div>` : ''}
+      </div>
+    `);
+    card.onclick = () => { state.activeCategory = t.id; drawDashboard(main); };
+    grid.appendChild(card);
+  }
+  return grid;
+}
+
+function renderOverviewTiles(main, tier, modules) {
+  const wrap = el('<div></div>');
+  const configTiles = [];
+  if (tier.admin) {
+    for (const kat of state.schema) configTiles.push(buildSchemaTile(kat));
+    if (modules.bewerbungsfragen) configTiles.push(buildBewerbungsfragenTile());
+    configTiles.push(buildZugriffsrechteTile());
+    configTiles.push(buildModuleTile());
+  }
+
+  const manageTiles = [];
+  if (tier.admin || tier.staff || tier.dienstaufsicht) {
+    manageTiles.push({ id: 'personalakten', title: '👮 Personalakten', desc: 'Verwarnungen, Suspendierungen und Kündigungen aller Beamten einsehen und bearbeiten.' });
+  } else if (tier.officer) {
+    manageTiles.push({ id: 'personalakte_eigene', title: '📁 Meine Akte', desc: 'Deine eigene Personalakte mit allen Einträgen einsehen.' });
+  }
+  if (modules.buergerakten) {
+    manageTiles.push({ id: 'buergerakten', title: '🧑 Bürgerakten', desc: 'Roblox-Bürger suchen, Akten anlegen und Einträge hinzufügen.' });
+  }
+
+  if (configTiles.length) {
+    wrap.appendChild(el('<div class="section-title" style="margin-top:0;">Einstellungen</div>'));
+    wrap.appendChild(renderTileGrid(configTiles, main));
+  }
+  if (manageTiles.length) {
+    wrap.appendChild(el(`<div class="section-title"${configTiles.length ? '' : ' style="margin-top:0;"'}>Verwaltung</div>`));
+    wrap.appendChild(renderTileGrid(manageTiles, main));
+  }
+  if (!configTiles.length && !manageTiles.length) {
+    wrap.appendChild(el('<div class="hint">Für dich sind aktuell keine Bereiche freigeschaltet.</div>'));
+  }
+  main.appendChild(wrap);
+}
+
+function breadcrumbFor(activeCategory) {
+  const tier = state.tier || {};
+  const crumbs = [{ label: '🏠 Übersicht', target: null }];
+  if (activeCategory === '_bewerbungsfragen') crumbs.push({ label: '📋 Bewerbungsfragen' });
+  else if (activeCategory === '_zugriffsrechte') crumbs.push({ label: '🔐 Zugriffsrechte' });
+  else if (activeCategory === '_module') crumbs.push({ label: '🧩 Module' });
+  else if (activeCategory === 'personalakten') crumbs.push({ label: '👮 Personalakten' });
+  else if (activeCategory === 'personalakte_eigene') crumbs.push({ label: '📁 Meine Akte' });
+  else if (activeCategory === 'buergerakten') crumbs.push({ label: '🧑 Bürgerakten' });
+  else if (activeCategory && activeCategory.startsWith('personalakte:')) {
+    const zumStaff = tier.admin || tier.staff || tier.dienstaufsicht;
+    crumbs.push({ label: zumStaff ? '👮 Personalakten' : '📁 Meine Akte', target: zumStaff ? 'personalakten' : 'personalakte_eigene' });
+    crumbs.push({ label: 'Akte' });
+  } else if (activeCategory && activeCategory.startsWith('buergerakte:')) {
+    crumbs.push({ label: '🧑 Bürgerakten', target: 'buergerakten' });
+    crumbs.push({ label: 'Akte' });
+  } else {
+    const kat = state.schema?.find((k) => k.id === activeCategory);
+    if (kat) crumbs.push({ label: kat.label });
+  }
+  return crumbs;
+}
+
+function renderBreadcrumb(main) {
+  const crumbs = breadcrumbFor(state.activeCategory);
+  const trail = el('<div class="breadcrumb"></div>');
+  crumbs.forEach((c, idx) => {
+    const isLast = idx === crumbs.length - 1;
+    const seg = el(`<span class="crumb${isLast ? ' current' : ''}">${esc(c.label)}</span>`);
+    if (!isLast) seg.onclick = () => { state.activeCategory = c.target; drawDashboard(main); };
+    trail.appendChild(seg);
+    if (!isLast) trail.appendChild(el('<span class="crumb-sep">/</span>'));
+  });
+  main.appendChild(trail);
 }
 
 function drawDashboard(main) {
@@ -1032,28 +1402,12 @@ function drawDashboard(main) {
     main.appendChild(el(`<div class="stats-panel"><h2>${esc(state.tier?.name ?? 'Server')}</h2></div>`));
   }
 
-  // Kategorie-Leiste: horizontale, umbrechende Chips statt Sidebar -> kein Scrollen mehr nötig.
-  const nav = el('<nav class="categories"></nav>');
-  const navButton = (label, id) => {
-    const btn = el(`<button>${label}</button>`);
-    if (state.activeCategory === id) btn.classList.add('active');
-    btn.onclick = () => { state.activeCategory = id; drawDashboard(main); };
-    nav.appendChild(btn);
-  };
+  if (state.activeCategory === null) {
+    renderOverviewTiles(main, tier, modules);
+    return;
+  }
 
-  if (tier.admin) {
-    for (const kat of state.schema) navButton(kat.label, kat.id);
-    if (modules.bewerbungsfragen) navButton('📋 Bewerbungsfragen', '_bewerbungsfragen');
-    navButton('🔐 Zugriffsrechte', '_zugriffsrechte');
-    navButton('🧩 Module', '_module');
-  }
-  if (tier.admin || tier.staff || tier.dienstaufsicht) {
-    navButton('👮 Personalakten', 'personalakten');
-  } else if (tier.officer) {
-    navButton('📁 Meine Akte', 'personalakte_eigene');
-  }
-  if (modules.buergerakten) navButton('🧑 Bürgerakten', 'buergerakten');
-  main.appendChild(nav);
+  renderBreadcrumb(main);
 
   const contentWrap = el('<div></div>');
   main.appendChild(contentWrap);
@@ -1837,57 +2191,66 @@ async function renderAdminArea() {
 
 async function renderAdminSupport(container) {
   try {
-    const { cases } = await api('support_cases');
+    const { tickets } = await api('support_tickets_all');
     container.innerHTML = '';
-    const panel = el('<div class="content-panel"><h2>📨 Support-Fälle</h2></div>');
-    if (!cases || cases.length === 0) {
-      panel.appendChild(el('<div class="hint">Aktuell keine offenen Support-Fälle.</div>'));
+    const panel = el('<div class="content-panel"><h2>🎫 Support-Tickets</h2><div class="hint" style="margin-bottom:8px;">Ein Ticket bleibt offen, bis es geschlossen wird — auch für den Ersteller sichtbar, wenn er das Ticket-Fenster erneut öffnet.</div></div>');
+    const liste = (tickets || []).slice().sort((a, b) => (a.status === b.status ? 0 : a.status === 'offen' ? -1 : 1));
+    if (!liste.length) {
+      panel.appendChild(el('<div class="hint">Aktuell keine Support-Tickets.</div>'));
     }
-    for (const c of (cases || [])) {
-      const zeit = new Date(c.erstellt_am).toLocaleString('de-DE');
-      const badgeKind = c.status === 'offen' ? 'warn' : c.status === 'geschlossen' ? 'ok' : 'purple';
+    for (const t of liste) {
+      const offen = t.status !== 'geschlossen';
+      const badgeKind = offen ? 'warn' : 'ok';
+      const nachrichten = (t.nachrichten && t.nachrichten.length)
+        ? t.nachrichten
+        : [{ von: 'nutzer', text: t.nachricht, zeitpunkt: t.erstellt_am }];
+      const threadHtml = nachrichten.map((n) => {
+        const vonNutzer = !(n.von === 'entwickler' || n.von === 'staff');
+        const zeit = n.zeitpunkt ? new Date(n.zeitpunkt).toLocaleString('de-DE') : '';
+        return `
+          <div class="support-msg ${vonNutzer ? 'me' : 'staff'}">
+            <div class="support-msg-meta">${vonNutzer ? esc(t.ersteller_name || 'Nutzer') : 'Du (Entwickler)'}${zeit ? ' · ' + zeit : ''}</div>
+            <div class="support-msg-text">${esc(n.text || '')}</div>
+          </div>`;
+      }).join('');
       const row = el(`
-        <div class="case-row" data-status="${esc(c.status)}">
+        <div class="case-row" data-status="${offen ? 'offen' : 'geschlossen'}">
           <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div>
-              <strong>${esc(c.titel || 'Ohne Titel')}</strong>
-              <span class="badge ${badgeKind}" style="margin-left:8px;">${esc(c.status)}</span>
-              ${c.vpn_verdacht ? '<span class="badge err" style="margin-left:6px;">⚠️ VPN-Verdacht</span>' : ''}
-              <div class="hint">${zeit} · Server: ${esc(c.guild_name || c.guild_id || '—')} · von ${esc(c.ersteller_name || c.ersteller_id)}</div>
-              <div style="margin-top:4px;">${esc(c.nachricht || '')}</div>
-              ${c.letzte_ip ? `<div class="hint">Letzte bekannte IP: <code>${esc(c.letzte_ip)}</code></div>` : ''}
+            <div style="flex:1; min-width:240px;">
+              <strong>${esc(t.titel || 'Ohne Titel')}</strong>
+              <span class="badge ${badgeKind}" style="margin-left:8px;">${offen ? 'offen' : 'geschlossen'}</span>
+              ${t.vpn_verdacht ? '<span class="badge err" style="margin-left:6px;">⚠️ VPN-Verdacht</span>' : ''}
+              <div class="hint">Server: ${esc(t.guild_name || t.guild_id || '—')} · von ${esc(t.ersteller_name || t.ersteller_id)}</div>
+              ${t.letzte_ip ? `<div class="hint">Letzte bekannte IP: <code>${esc(t.letzte_ip)}</code></div>` : ''}
+              <div class="support-thread" style="margin-top:8px;">${threadHtml}</div>
             </div>
           </div>
           <div class="field-actions">
-            <select class="status-select">
-              <option value="offen"${c.status === 'offen' ? ' selected' : ''}>Offen</option>
-              <option value="in_bearbeitung"${c.status === 'in_bearbeitung' ? ' selected' : ''}>In Bearbeitung</option>
-              <option value="geschlossen"${c.status === 'geschlossen' ? ' selected' : ''}>Geschlossen</option>
-            </select>
             <input type="text" class="reply-input" placeholder="Antwort schreiben …" style="min-width:220px;" />
             <button class="btn small reply-btn">Antworten</button>
+            <button class="btn secondary small toggle-btn">${offen ? 'Ticket schließen' : 'Wieder öffnen'}</button>
             <span class="save-status"></span>
           </div>
         </div>
       `);
       const status = row.querySelector('.save-status');
-      row.querySelector('.status-select').onchange = async (ev) => {
-        setStatus(status, 'Speichere …');
-        try {
-          await api('support_case_status', { target: c.id, method: 'POST', body: { status: ev.target.value } });
-          setStatus(status, 'Gespeichert ✓', 'ok');
-        } catch (err) {
-          setStatus(status, err.message, 'err');
-        }
-      };
       row.querySelector('.reply-btn').onclick = async () => {
         const text = row.querySelector('.reply-input').value.trim();
         if (!text) return;
         setStatus(status, 'Sende …');
         try {
-          await api('support_case_reply', { target: c.id, method: 'POST', body: { text } });
-          row.querySelector('.reply-input').value = '';
-          setStatus(status, 'Gesendet ✓', 'ok');
+          await api('support_ticket_reply', { method: 'POST', body: { ticket_id: t.id, text } });
+          renderAdminSupport(container);
+        } catch (err) {
+          setStatus(status, err.message, 'err');
+        }
+      };
+      row.querySelector('.toggle-btn').onclick = async () => {
+        setStatus(status, 'Speichere …');
+        try {
+          const resource = offen ? 'support_ticket_close' : 'support_ticket_reopen';
+          await api(resource, { method: 'POST', body: { ticket_id: t.id } });
+          renderAdminSupport(container);
         } catch (err) {
           setStatus(status, err.message, 'err');
         }
@@ -2065,13 +2428,35 @@ async function renderAdminUserLocks(container) {
 
 // ------------------------------- Boot ----------------------------------
 
+// Kurzer Lade-Splashscreen direkt nach dem Login (rundes, sich drehendes
+// Logo, wie beim Discord-Start) — läuft eine feste Zeit ab und blendet dann
+// zum eigentlichen Dashboard über.
+const BOT_LOGO_URL = 'https://i.postimg.cc/jjKkZszW/polizei-system-banner-3zu1.png';
+
+function showSplashThenRun(renderFn) {
+  const splash = el(`
+    <div class="app-splash">
+      <div class="splash-logo-wrap"><img class="splash-logo" src="${BOT_LOGO_URL}" /></div>
+      <div class="splash-text">Polizei System wird geladen …</div>
+    </div>
+  `);
+  document.body.appendChild(splash);
+  setTimeout(() => {
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.remove();
+      renderFn();
+    }, 350);
+  }, 2200);
+}
+
 async function boot() {
   app.innerHTML = '<div class="loading">Lade …</div>';
   try {
     const me = await api('me');
     state.user = me.user;
     state.isAdmin = !!me.isAdmin;
-    renderGuildPicker();
+    showSplashThenRun(renderGuildPicker);
   } catch {
     renderLoginScreen();
   }
