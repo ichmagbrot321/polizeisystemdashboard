@@ -1022,13 +1022,15 @@ function zeichneOffenesTicket(body, ticket) {
   body.appendChild(thread);
 
   body.appendChild(el(`
-    <div class="field" style="margin-top:14px;">
-      <textarea id="support-reply-text" placeholder="Nachricht hinzufügen …" style="min-height:70px;"></textarea>
-    </div>
-    <div class="field-actions">
-      <button class="btn small" id="support-reply-send">Senden</button>
-      <button class="btn secondary small" id="support-ticket-close">Ticket schließen</button>
-      <span class="save-status" id="support-reply-status"></span>
+    <div>
+      <div class="field" style="margin-top:14px;">
+        <textarea id="support-reply-text" placeholder="Nachricht hinzufügen …" style="min-height:70px;"></textarea>
+      </div>
+      <div class="field-actions">
+        <button class="btn small" id="support-reply-send">Senden</button>
+        <button class="btn secondary small" id="support-ticket-close">Ticket schließen</button>
+        <span class="save-status" id="support-reply-status"></span>
+      </div>
     </div>
   `));
 
@@ -1064,17 +1066,19 @@ function zeichneNeuesTicketFormular(body, letztesTicket) {
       : '<div class="hint" style="margin-bottom:10px;">Deine Anfrage geht direkt an den Bot-Entwickler und bleibt offen, bis sie geschlossen wird.</div>'
   ));
   body.appendChild(el(`
-    <div class="field">
-      <label>Titel</label>
-      <input type="text" id="support-titel" placeholder="Kurze Zusammenfassung" />
-    </div>
-    <div class="field">
-      <label>Nachricht</label>
-      <textarea id="support-nachricht" placeholder="Was ist das Problem?" style="min-height:100px;"></textarea>
-    </div>
-    <div class="field-actions">
-      <button class="btn small" id="support-send">Ticket eröffnen</button>
-      <span class="save-status" id="support-status"></span>
+    <div>
+      <div class="field">
+        <label>Titel</label>
+        <input type="text" id="support-titel" placeholder="Kurze Zusammenfassung" />
+      </div>
+      <div class="field">
+        <label>Nachricht</label>
+        <textarea id="support-nachricht" placeholder="Was ist das Problem?" style="min-height:100px;"></textarea>
+      </div>
+      <div class="field-actions">
+        <button class="btn small" id="support-send">Ticket eröffnen</button>
+        <span class="save-status" id="support-status"></span>
+      </div>
     </div>
   `));
   const status = body.querySelector('#support-status');
