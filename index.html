@@ -332,6 +332,22 @@
     color: rgba(255,255,255,0.55); text-transform: uppercase;
   }
 
+  /* --------------------------- Benachrichtigungen --------------------------- */
+  #support-btn, #admin-btn { position: relative; }
+  .notify-dot {
+    position: absolute; top: -3px; right: -3px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--err); border: 2px solid var(--surface);
+    pointer-events: none;
+  }
+  .notify-badge {
+    position: absolute; top: -8px; right: -8px;
+    min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 999px; background: var(--err); color: #fff;
+    font-size: 10px; font-weight: 700; line-height: 17px; text-align: center;
+    border: 2px solid var(--surface); pointer-events: none;
+  }
+
   .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-top: 14px; }
   .field-card {
     background: var(--surface-2);
@@ -927,6 +943,66 @@ function renderLoginScreen() {
   startLandingNet(page.querySelector('canvas.landing-net'));
 }
 
+// ------------------------------- Benachrichtigungen ------------------------
+// Kleiner roter Punkt auf "Mein Ticket" (neue Antwort vom Entwickler) bzw.
+// eine Zahl auf "Admin" (Anzahl Tickets mit ungelesener Nutzer-Nachricht).
+// Läuft im Hintergrund, solange man eingeloggt ist — unabhängig davon,
+// welche Seite gerade offen ist.
+
+function updateNotifyDot(buttonId, show) {
+  const btn = document.getElementById(buttonId);
+  if (!btn) return;
+  let dot = btn.querySelector('.notify-dot');
+  if (show && !dot) {
+    dot = el('<span class="notify-dot"></span>');
+    btn.appendChild(dot);
+  } else if (!show && dot) {
+    dot.remove();
+  }
+}
+
+function updateNotifyBadge(buttonId, count) {
+  const btn = document.getElementById(buttonId);
+  if (!btn) return;
+  let badge = btn.querySelector('.notify-badge');
+  if (count > 0) {
+    if (!badge) {
+      badge = el('<span class="notify-badge"></span>');
+      btn.appendChild(badge);
+    }
+    badge.textContent = count > 9 ? '9+' : String(count);
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
+async function pollNotifications() {
+  // Kein Login (noch) vorhanden -> nichts zu prüfen.
+  if (!state.user) return;
+  try {
+    const { unread } = await api('support_ticket_unread');
+    updateNotifyDot('support-btn', unread);
+  } catch {
+    // Backend evtl. noch nicht aktualisiert oder kurzzeitig nicht erreichbar
+    // — dafür keine Fehlermeldung anzeigen, einfach beim nächsten Mal erneut versuchen.
+  }
+  if (state.isAdmin) {
+    try {
+      const { count } = await api('support_tickets_unread_count');
+      updateNotifyBadge('admin-btn', count);
+    } catch {
+      // s. o.
+    }
+  }
+}
+
+let _notifyPollHandle = null;
+function startNotificationPolling() {
+  if (_notifyPollHandle) return;
+  pollNotifications();
+  _notifyPollHandle = setInterval(pollNotifications, 30000);
+}
+
 function renderTopbar(container) {
   const bar = el(`
     <header class="topbar">
@@ -949,6 +1025,9 @@ function renderTopbar(container) {
   const adminBtn = bar.querySelector('#admin-btn');
   if (adminBtn) adminBtn.onclick = () => renderAdminArea();
   container.appendChild(bar);
+  // Sofort nach jedem Rendern der Topbar prüfen, ob Punkte/Zahlen gesetzt
+  // werden müssen — die Elemente sind gerade neu erzeugt worden.
+  pollNotifications();
 }
 
 // Echtes, dauerhaftes Support-Ticket statt einer Einweg-Nachricht: bleibt
@@ -979,6 +1058,9 @@ async function ladeUndZeichneTicket(body) {
     // "mine" ist an die Session (actor_id), nicht an einen Server gebunden.
     const res = await api('support_ticket_mine');
     ticket = res.ticket || null;
+    // Das Abrufen markiert serverseitig als gelesen — Punkt sofort entfernen,
+    // statt bis zum nächsten 30-Sekunden-Poll zu warten.
+    updateNotifyDot('support-btn', false);
   } catch (e) {
     body.innerHTML = `
       <div class="error-box">
@@ -2204,6 +2286,9 @@ async function renderAdminArea() {
 async function renderAdminSupport(container) {
   try {
     const { tickets } = await api('support_tickets_all');
+    // Das vollständige Laden markiert serverseitig alle als gelesen —
+    // Zahl sofort entfernen, statt bis zum nächsten Poll zu warten.
+    updateNotifyBadge('admin-btn', 0);
     container.innerHTML = '';
     const panel = el('<div class="content-panel"><h2>🎫 Support-Tickets</h2><div class="hint" style="margin-bottom:8px;">Ein Ticket bleibt offen, bis es geschlossen wird — auch für den Ersteller sichtbar, wenn er das Ticket-Fenster erneut öffnet.</div></div>');
     const liste = (tickets || []).slice().sort((a, b) => (a.status === b.status ? 0 : a.status === 'offen' ? -1 : 1));
@@ -2468,6 +2553,7 @@ async function boot() {
     const me = await api('me');
     state.user = me.user;
     state.isAdmin = !!me.isAdmin;
+    startNotificationPolling();
     showSplashThenRun(renderGuildPicker);
   } catch {
     renderLoginScreen();
