@@ -126,6 +126,7 @@ const RESOURCE_MAP = {
   // dass "message"/"close" nur auf das eigene Ticket wirken (actor_id ==
   // ticket.ersteller_id) — sonst könnte jeder fremde Tickets schließen.
   support_ticket_mine: { method: 'GET', anyUser: true, path: () => `/api/support/tickets/mine` },
+  support_ticket_unread: { method: 'GET', anyUser: true, path: () => `/api/support/tickets/unread` },
   support_ticket_create: { method: 'POST', anyUser: true, path: () => `/api/support/tickets` },
   support_ticket_message: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${t}/messages` },
   support_ticket_close: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${t}/close` },
@@ -133,6 +134,7 @@ const RESOURCE_MAP = {
   // Nur für ADMIN_USER_ID (den Bot-Entwickler): alle Tickets serverübergreifend
   // einsehen, beantworten und wieder öffnen.
   support_tickets_all: { method: 'GET', global: true, path: () => `/api/support/tickets` },
+  support_tickets_unread_count: { method: 'GET', global: true, path: () => `/api/support/tickets/unread-count` },
   support_ticket_reply: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${t}/reply` },
   support_ticket_reopen: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${t}/reopen` },
 
