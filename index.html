@@ -2206,6 +2206,527 @@ code {
   font-size: 0.875rem;
 }
 </style>
+
+<!-- Login Page Styles -->
+<style>
+.login-container {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.login-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-glow {
+  position: absolute;
+  filter: blur(80px);
+  opacity: 0.4;
+}
+
+.login-glow.g1 {
+  top: -200px;
+  left: -100px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--primary), transparent 70%);
+}
+
+.login-glow.g2 {
+  bottom: -200px;
+  right: -100px;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+}
+
+.login-header {
+  position: relative;
+  z-index: 2;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 20, 25, 0.7);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-brand-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: white;
+}
+
+.login-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.login-brand-subtitle {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.login-main {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+
+.login-hero {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 60px;
+}
+
+.login-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-soft);
+  border: 1px solid rgba(59, 130, 246, 3);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+
+.login-pill .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--primary);
+}
+
+.login-hero h1 {
+  font-size: 48px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.login-description {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.login-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.login-error {
+  margin-top: 20px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 80px;
+}
+
+.login-stat {
+  background: var(--bg-secondary);
+  padding: 24px;
+  text-align: center;
+}
+
+.login-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.login-stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.login-modules {
+  text-align: center;
+}
+
+.login-modules h2 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.login-section-description {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  text-align: left;
+}
+
+.login-module-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.login-module-card:hover {
+  border-color: var(--border-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-module-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.login-module-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.login-module-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.full-page-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Entry Row */
+.entry-row {
+  border-left: 3px solid var(--border-primary);
+  padding-left: 16px;
+  background: var(--bg-secondary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.entry-row[data-typ="kuendigung"] {
+  border-left-color: var(--danger);
+}
+
+.entry-row[data-typ="verwarnung"] {
+  border-left-color: var(--warning);
+}
+
+.entry-row[data-typ="suspendierung"] {
+  border-left-color: var(--info);
+}
+
+.entry-row[data-typ="sonstiges"] {
+  border-left-color: var(--text-faint);
+}
+
+.border-l-4 {
+  border-left: 4px solid;
+}
+
+.border-danger {
+  border-color: var(--danger);
+}
+
+.border-warning {
+  border-color: var(--warning);
+}
+
+.border-info {
+  border-color: var(--info);
+}
+
+/* Guild Card */
+.guild-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.guild-card {
+  transition: all 0.2s ease;
+}
+
+/* Support Modal */
+.support-panel {
+  min-width: 400px;
+  max-width: 600px;
+}
+
+.support-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.support-msg {
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 85%;
+}
+
+.support-msg.me {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  align-self: flex-start;
+}
+
+.support-msg.staff {
+  background: var(--primary-soft);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  align-self: flex-end;
+}
+
+.support-msg-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.support-msg-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-primary);
+}
+
+.field-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.save-status {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+}
+
+.save-status.ok {
+  color: var(--success);
+}
+
+.save-status.err {
+  color: var(--danger);
+}
+
+/* Content Panel */
+.content-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.content-panel h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.field {
+  margin-top: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.field-group {
+  margin-top: 16px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.btn-link.text-danger {
+  color: var(--danger);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.ml-sm {
+  margin-left: 8px;
+}
+
+.ml-md {
+  margin-left: 16px;
+}
+
+.mt-xs {
+  margin-top: 4px;
+}
+
+.mt-sm {
+  margin-top: 8px;
+}
+
+.mt-md {
+  margin-top: 12px;
+}
+
+.mt-lg {
+  margin-top: 16px;
+}
+
+.mt-xl {
+  margin-top: 24px;
+}
+
+.mb-sm {
+  margin-bottom: 8px;
+}
+
+.mb-md {
+  margin-bottom: 12px;
+}
+
+.mb-lg {
+  margin-bottom: 16px;
+}
+
+.mb-xl {
+  margin-bottom: 24px;
+}
+
+.border-b {
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.gap-sm {
+  gap: 8px;
+}
+
+.gap-md {
+  gap: 12px;
+}
+
+.gap-lg {
+  gap: 16px;
+}
+
+.rounded {
+  border-radius: var(--radius-md);
+}
+
+.p-md {
+  padding: 12px;
+}
+
+.p-lg {
+  padding: 16px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .login-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .login-hero h1 {
+    font-size: 32px;
+  }
+
+  .login-modules h2 {
+    font-size: 24px;
+  }
+}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -3900,75 +4421,6 @@ function zeichneOffenesTicket(body, ticket) {
   };
 }
 
-
-function zeichneOffenesTicket(body, ticket) {
-  body.innerHTML = '';
-  
-  const badgeClass = ticket.status === 'offen' ? 'alert-warning' : 'alert-success';
-  body.innerHTML = `
-    <div class="alert ${badgeClass}" style="margin-bottom: var(--spacing-md);">
-      <strong>${esc(ticket.status.toUpperCase())}</strong> ${esc(ticket.titel || 'Ohne Titel')}
-    </div>
-  `;
-  
-  const thread = el('<div class="support-thread mb-lg"></div>');
-  const nachrichten = (ticket.nachrichten && ticket.nachrichten.length)
-    ? ticket.nachrichten
-    : [{ von: 'nutzer', text: ticket.nachricht, zeitpunkt: ticket.erstellt_am }];
-  
-  for (const n of nachrichten) {
-    const vonEntwickler = n.von === 'entwickler' || n.von === 'staff';
-    const zeit = n.zeitpunkt ? new Date(n.zeitpunkt).toLocaleString('de-DE') : '';
-    thread.innerHTML += `
-      <div class="support-msg ${vonEntwickler ? 'staff' : 'me'}">
-        <div class="support-msg-meta">
-          ${vonEntwickler ? 'Entwickler' : 'Du'}${zeit ? ' · ' + zeit : ''}
-        </div>
-        <div class="support-msg-text">${esc(n.text || '')}</div>
-      </div>
-    `;
-  }
-  body.appendChild(thread);
-  
-  body.innerHTML += `
-    <div class="field mb-lg">
-      <label class="form-label">Nachricht hinzufügen</label>
-      <textarea class="form-input" id="support-reply-text" placeholder="Nachricht ..." rows="3"></textarea>
-      <div class="field-actions flex justify-between">
-        <button class="btn btn-primary" id="support-reply-send">Senden</button>
-        <span class="save-status" id="support-reply-status"></span>
-      </div>
-    </div>
-    <div class="field-actions flex justify-end">
-      <button class="btn btn-danger" id="support-ticket-close">Ticket schließen</button>
-    </div>
-  `;
-  
-  const status = body.querySelector('#support-reply-status');
-  body.querySelector('#support-reply-send').onclick = async () => {
-    const text = body.querySelector('#support-reply-text').value.trim();
-    if (!text) { setStatus(status, 'Nachricht fehlt', 'err'); return; }
-    setStatus(status, 'Sende ...');
-    try {
-      await api('support_ticket_message', { target: ticket.id, method: 'POST', body: { text } });
-      await ladeUndZeichneTicket(body);
-    } catch (e) {
-      setStatus(status, e.message, 'err');
-    }
-  };
-  
-  body.querySelector('#support-ticket-close').onclick = async () => {
-    if (!confirm('Ticket wirklich schließen?')) return;
-    setStatus(status, 'Schließe ...');
-    try {
-      await api('support_ticket_close', { target: ticket.id, method: 'POST', body: {} });
-      await ladeUndZeichneTicket(body);
-    } catch (e) {
-      setStatus(status, e.message, 'err');
-    }
-  };
-}
-
 function zeichneNeuesTicketFormular(body, letztesTicket) {
   body.innerHTML = '';
   body.innerHTML += `
@@ -4295,36 +4747,6 @@ function renderApp() {
       }
   }
 }
-
-async function boot() {
-  app.innerHTML = '<div class="loading-center"><div class="loading-spinner lg"></div><div class="loading-text">Lade ...</div></div>';
-  
-  try {
-    const me = await api('me');
-    state.user = me.user;
-    state.isAdmin = !!me.isAdmin;
-    startNotificationPolling();
-    
-    // Kurz warten für bessere UX
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Zum Server-Auswahl gehen wenn eingeloggt
-    if (state.user) {
-      state.activeView = 'servers';
-      renderGuildPicker(); // Aus Original für Server-Auswahl
-    } else {
-      renderLoginScreen();
-    }
-  } catch (e) {
-    renderLoginScreen();
-  }
-}
-
-// DOMContentLoaded Event
-document.addEventListener('DOMContentLoaded', boot);
-</script>
-</body>
-</html>
 
 // ================================================================
 // GUILD PICKER (Server-Auswahl)
@@ -4700,10 +5122,9 @@ function getViewTitle(view) {
   if (view.startsWith('buergerakte:')) return 'Bürgerakte';
   return titles[view] || view;
 }
-<style>
-/* ================================================================
-   LOGIN PAGE
-   ================================================================ */
+
+// ================================================================
+// BÜRGERAKTEN
 .login-container {
   min-height: 100vh;
   background: var(--bg-primary);
@@ -5223,12 +5644,11 @@ function getViewTitle(view) {
   .login-hero h1 {
     font-size: 32px;
   }
-  
+
   .login-modules h2 {
     font-size: 24px;
   }
 }
-</style>
 
 // ================================================================
 // BÜRGERAKTEN
@@ -5886,13 +6306,113 @@ async function boot() {
       splash.style.opacity = '0';
       setTimeout(() => {
         splash.remove();
-        renderGuildPicker();
+        if (state.user) {
+          state.activeView = 'servers';
+          renderGuildPicker();
+        } else {
+          renderLoginScreen();
+        }
       }, 350);
     }, 1500);
-    
+
   } catch (e) {
     renderLoginScreen();
   }
+}
+
+// ================================================================
+// LOGIN SCREEN
+// ================================================================
+
+function renderLoginScreen() {
+  const redirectToLogin = () => {
+    window.location.href = loginUrl();
+  };
+
+  app.innerHTML = `
+    <div class="login-container">
+      <div class="login-background">
+        <div class="login-glow g1"></div>
+        <div class="login-glow g2"></div>
+      </div>
+      <div class="login-header">
+        <div class="login-brand">
+          <div class="login-brand-icon">🛡️</div>
+          <div class="login-brand-text">
+            <div class="login-brand-title">Polizei System</div>
+            <div class="login-brand-subtitle">Dashboard</div>
+          </div>
+        </div>
+      </div>
+      <div class="login-main">
+        <div class="login-hero">
+          <div class="login-pill">
+            <span class="dot"></span>
+            Professionell
+          </div>
+          <h1>
+            Polizei<br/>
+            <span class="gradient-text">System Dashboard</span>
+          </h1>
+          <p class="login-description">
+            Verwalte deine Polizei-Dienststelle professionell mit unserem umfassenden Dashboard-System. Zugriff über Discord.
+          </p>
+          <div class="login-actions">
+            <button class="btn btn-primary btn-lg" onclick="redirectToLogin()">
+              🔑 Mit Discord anmelden
+            </button>
+          </div>
+          <div class="login-error" id="login-error"></div>
+        </div>
+        <div class="login-stats">
+          <div class="login-stat">
+            <div class="login-stat-value">24/7</div>
+            <div class="login-stat-label">Verfügbar</div>
+          </div>
+          <div class="login-stat">
+            <div class="login-stat-value">500+</div>
+            <div class="login-stat-label">Server</div>
+          </div>
+          <div class="login-stat">
+            <div class="login-stat-value">99%</div>
+            <div class="login-stat-label">Uptime</div>
+          </div>
+          <div class="login-stat">
+            <div class="login-stat-value">∞</div>
+            <div class="login-stat-label">Möglichkeiten</div>
+          </div>
+        </div>
+        <div class="login-modules">
+          <h2>Verfügbare Module</h2>
+          <p class="login-section-description">
+            Entdecke alle Funktionen, die unser Dashboard zu bieten hat.
+          </p>
+          <div class="login-module-grid">
+            <div class="login-module-card">
+              <div class="login-module-icon" style="background: var(--primary-soft); color: var(--primary);">📁</div>
+              <div class="login-module-title">Personalakten</div>
+              <div class="login-module-desc">Verwalte Akten, Verwarnungen und Disziplinarmaßnahmen zentral.</div>
+            </div>
+            <div class="login-module-card">
+              <div class="login-module-icon" style="background: var(--success-soft); color: var(--success);">🚗</div>
+              <div class="login-module-title">Fahrzeugverwaltung</div>
+              <div class="login-module-desc">Registriere und verwalte Fahrzeuge deiner Dienststelle.</div>
+            </div>
+            <div class="login-module-card">
+              <div class="login-module-icon" style="background: var(--warning-soft); color: var(--warning);">🚨</div>
+              <div class="login-module-title">Einsatzverwaltung</div>
+              <div class="login-module-desc">Koordiniere Einsätze und Operationen effizient.</div>
+            </div>
+            <div class="login-module-card">
+              <div class="login-module-icon" style="background: var(--accent-soft); color: var(--accent);">📊</div>
+              <div class="login-module-title">Statistiken</div>
+              <div class="login-module-desc">Detaillierte Analysen und Auswertungen deiner Daten.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 boot();
