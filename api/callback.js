@@ -222,26 +222,33 @@ module.exports = async (req, res) => {
       .map((g) => ({ id: g.id, name: g.name, icon: g.icon }));
 
     // Server, auf denen der Bot schon ist — Grundlage für die Rollen-Zugriffsprüfung.
-    // Auch hier fail-open: wenn der Bot nicht antwortet, ist die Liste leer.
+    // Fail-open: wenn der Bot nicht antwortet, bleiben botGuildIds leer (kein Server wird
+    // über Bot-Rollen zugeordnet, aber Discord-Admin-Server werden trotzdem angezeigt).
     let botGuilds = [];
     let botGuildIds = new Set();
+    let botReachable = false;
     try {
       const botGuildsData = await botFetch('/api/guilds');
-      botGuilds = botGuildsData ? botGuildsData.guilds || [] : [];
-      botGuildIds = new Set(botGuilds.map((g) => g.id));
+      if (botGuildsData) {
+        botGuilds = botGuildsData.guilds || [];
+        botGuildIds = new Set(botGuilds.map((g) => g.id));
+        botReachable = true;
+      }
     } catch (err) {
-      console.error('[callback] Bot-Guild-Liste nicht erreichbar (fail-open):', err.message);
+      console.error('[callback] Bot-Guild-Liste nicht erreichbar:', err.message);
     }
 
     // Für jeden Server, auf dem der Bot ist UND der User Mitglied ist: Zugriffsstufe abfragen.
     const eigeneBotGuilds = (Array.isArray(guilds) ? guilds : []).filter((g) => botGuildIds.has(g.id));
     let accessResults = [];
+    let accessCheckFailed = false;
     try {
       accessResults = await Promise.all(
         eigeneBotGuilds.map((g) => botFetch(`/api/guilds/${g.id}/access/${user.id}`))
       );
     } catch (err) {
-      console.error('[callback] Zugriffsprüfung fehlgeschlagen (fail-open):', err.message);
+      console.error('[callback] Zugriffsprüfung fehlgeschlagen:', err.message);
+      accessCheckFailed = true;
     }
     const managed = [];
     eigeneBotGuilds.forEach((g, i) => {
@@ -262,6 +269,32 @@ module.exports = async (req, res) => {
         dienstnummer: dienstnummer || null,
       });
     });
+
+    // Fallback: Wenn der Bot nicht erreichbar ist oder die Zugriffsprüfung fehlschlug,
+    // zeige Discord-Admin/Owner-Server trotzdem an (mit admin: true markiert).
+    // Das stellt sicher, dass das Dashboard nicht komplett leer ist, wenn der Bot down ist.
+    const needsFallback = accessCheckFailed || managed.length === 0;
+    if (needsFallback && discordAdminGuilds.length > 0) {
+      console.warn('[callback] Bot-Zugriff nicht verfügbar, zeige Discord-Admin-Server als Fallback');
+      // Server, wo der User Discord-Admin/Owner ist
+      discordAdminGuilds.forEach((g) => {
+        // Nur Server hinzufügen, wo der User Discord-Admin ist und die nicht schon über Bot-Rollen erfasst wurden
+        const alreadyManaged = managed.some((m) => m.id === g.id);
+        if (!alreadyManaged) {
+          managed.push({
+            id: g.id,
+            name: g.name,
+            icon: g.icon || null,
+            member_count: null,
+            admin: true, // Discord-Admin/Owner
+            staff: false,
+            dienstaufsicht: false,
+            officer: false,
+            dienstnummer: null,
+          });
+        }
+      });
+    }
 
     const unmanaged = discordAdminGuilds.filter((g) => !botGuildIds.has(g.id));
 
