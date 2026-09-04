@@ -5798,7 +5798,7 @@ async function boot() {
 // ================================================================
 
 function renderLoginScreen() {
-  const redirectToLogin = () => {
+  window.redirectToLogin = () => {
     window.location.href = loginUrl();
   };
 
