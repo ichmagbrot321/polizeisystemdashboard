@@ -50,9 +50,6 @@ const BOT_FETCH_TIMEOUT_MS = 8000;
 const IP_INTEL_TIMEOUT_MS = 2500;
 
 function sign(payload) {
-  if (!process.env.SESSION_SECRET) {
-    throw new Error('SESSION_SECRET ist nicht gesetzt.');
-  }
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const sig = crypto
     .createHmac('sha256', process.env.SESSION_SECRET)
@@ -122,20 +119,6 @@ async function checkIpIntel(ip) {
 
 module.exports = async (req, res) => {
   try {
-    // Prüfe kritische Umgebungsvariablen VOR dem Start
-    if (!process.env.SESSION_SECRET) {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end('SESSION_SECRET fehlt auf dem Server.');
-      return;
-    }
-    if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end('Discord-Umgebungsvariablen fehlen auf dem Server.');
-      return;
-    }
-
     const url = new URL(req.url, `https://${req.headers.host}`);
     const code = url.searchParams.get('code');
     const fehler = url.searchParams.get('error');
@@ -197,20 +180,19 @@ module.exports = async (req, res) => {
     // damit er sich selbst nicht aussperren kann.
     // -----------------------------------------------------------------
     if (user.id !== ADMIN_USER_ID) {
-      try {
-        const sperrCheck = await botFetch(
-          `/api/security/check?user_id=${encodeURIComponent(user.id)}&ip=${encodeURIComponent(clientIp)}`
-        );
-        if (sperrCheck && sperrCheck.gesperrt) {
-          res.statusCode = 302;
-          res.setHeader('Location', `/?login_error=locked${sperrCheck.grund ? `&reason=${encodeURIComponent(sperrCheck.grund)}` : ''}`);
-          res.end();
-          return;
-        }
-      } catch (err) {
-        // Fail-open: wenn der Bot down ist, soll das Dashboard nicht für ALLE ausfallen.
-        // Wir loggen den Fehler, lassen den Login aber durch.
-        console.error('[callback] Sperrprüfung fehlgeschlagen (fail-open):', err.message);
+      const sperrCheck = await botFetch(
+        `/api/security/check?user_id=${encodeURIComponent(user.id)}&ip=${encodeURIComponent(clientIp)}`
+      ).catch((err) => {
+        console.error('[callback] Sperrprüfung fehlgeschlagen (fail-open, Login wird trotzdem erlaubt):', err.message);
+        return null;
+      });
+      // Fail-open bewusst: wenn der Bot down ist, soll das Dashboard nicht für
+      // ALLE ausfallen. sperrCheck === null bedeutet "Prüfung nicht möglich".
+      if (sperrCheck && sperrCheck.gesperrt) {
+        res.statusCode = 302;
+        res.setHeader('Location', `/?login_error=locked${sperrCheck.grund ? `&reason=${encodeURIComponent(sperrCheck.grund)}` : ''}`);
+        res.end();
+        return;
       }
     }
 
@@ -226,13 +208,11 @@ module.exports = async (req, res) => {
     // über Bot-Rollen zugeordnet, aber Discord-Admin-Server werden trotzdem angezeigt).
     let botGuilds = [];
     let botGuildIds = new Set();
-    let botReachable = false;
     try {
       const botGuildsData = await botFetch('/api/guilds');
       if (botGuildsData) {
         botGuilds = botGuildsData.guilds || [];
         botGuildIds = new Set(botGuilds.map((g) => g.id));
-        botReachable = true;
       }
     } catch (err) {
       console.error('[callback] Bot-Guild-Liste nicht erreichbar:', err.message);
@@ -240,16 +220,9 @@ module.exports = async (req, res) => {
 
     // Für jeden Server, auf dem der Bot ist UND der User Mitglied ist: Zugriffsstufe abfragen.
     const eigeneBotGuilds = (Array.isArray(guilds) ? guilds : []).filter((g) => botGuildIds.has(g.id));
-    let accessResults = [];
-    let accessCheckFailed = false;
-    try {
-      accessResults = await Promise.all(
-        eigeneBotGuilds.map((g) => botFetch(`/api/guilds/${g.id}/access/${user.id}`))
-      );
-    } catch (err) {
-      console.error('[callback] Zugriffsprüfung fehlgeschlagen:', err.message);
-      accessCheckFailed = true;
-    }
+    const accessResults = await Promise.all(
+      eigeneBotGuilds.map((g) => botFetch(`/api/guilds/${g.id}/access/${user.id}`))
+    );
     const managed = [];
     eigeneBotGuilds.forEach((g, i) => {
       const access = accessResults[i];
@@ -270,29 +243,23 @@ module.exports = async (req, res) => {
       });
     });
 
-    // Fallback: Wenn der Bot nicht erreichbar ist oder die Zugriffsprüfung fehlschlug,
-    // zeige Discord-Admin/Owner-Server trotzdem an (mit admin: true markiert).
-    // Das stellt sicher, dass das Dashboard nicht komplett leer ist, wenn der Bot down ist.
-    const needsFallback = accessCheckFailed || managed.length === 0;
-    if (needsFallback && discordAdminGuilds.length > 0) {
-      console.warn('[callback] Bot-Zugriff nicht verfügbar, zeige Discord-Admin-Server als Fallback');
-      // Server, wo der User Discord-Admin/Owner ist
+    // Fallback: Wenn der Bot nicht erreichbar ist, zeige Discord-Admin/Owner-Server
+    // trotzdem an (mit admin: true markiert). Das stellt sicher, dass das Dashboard
+    // nicht komplett leer ist, wenn der Bot down ist.
+    if (botGuildIds.size === 0 && discordAdminGuilds.length > 0) {
+      console.warn('[callback] Bot nicht erreichbar, zeige Discord-Admin-Server als Fallback');
       discordAdminGuilds.forEach((g) => {
-        // Nur Server hinzufügen, wo der User Discord-Admin ist und die nicht schon über Bot-Rollen erfasst wurden
-        const alreadyManaged = managed.some((m) => m.id === g.id);
-        if (!alreadyManaged) {
-          managed.push({
-            id: g.id,
-            name: g.name,
-            icon: g.icon || null,
-            member_count: null,
-            admin: true, // Discord-Admin/Owner
-            staff: false,
-            dienstaufsicht: false,
-            officer: false,
-            dienstnummer: null,
-          });
-        }
+        managed.push({
+          id: g.id,
+          name: g.name,
+          icon: g.icon || null,
+          member_count: null,
+          admin: true,
+          staff: false,
+          dienstaufsicht: false,
+          officer: false,
+          dienstnummer: null,
+        });
       });
     }
 
