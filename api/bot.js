@@ -145,6 +145,52 @@ const RESOURCE_MAP = {
   security_lock_ip: { method: 'POST', global: true, path: () => `/api/security/ip/lock` },
   security_unlock_ip: { method: 'POST', global: true, path: (_g, t) => `/api/security/ip/${t}/unlock` },
   security_seen: { method: 'GET', global: true, path: (_g, t) => `/api/security/seen/${t}` },
+
+  // -- NEU: SENTINEL — Advanced Threat Detection System --
+  sentinel_stats: { method: 'GET', global: true, path: () => `/api/sentinel/stats` },
+  sentinel_threat_log: { method: 'GET', global: true, path: () => `/api/sentinel/threat-log` },
+  sentinel_users: { method: 'GET', global: true, path: () => `/api/sentinel/users` },
+  sentinel_ips: { method: 'GET', global: true, path: () => `/api/sentinel/ips` },
+  sentinel_user_detail: { method: 'GET', global: true, path: (_g, t) => `/api/sentinel/user/${t}` },
+  sentinel_add_flag: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/user/${t}/flag` },
+  sentinel_user_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/user/${t}/unlock` },
+  sentinel_ip_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/ip/${t}/unlock` },
+  sentinel_get_captcha: { method: 'GET', global: true, path: (_g, t) => `/api/sentinel/captcha/${t}` },
+  sentinel_verify_captcha: { method: 'POST', global: true, path: () => `/api/sentinel/captcha/verify` },
+  sentinel_blacklist: { method: 'GET', global: true, path: () => `/api/sentinel/blacklist` },
+  sentinel_whitelist: { method: 'GET', global: true, path: () => `/api/sentinel/whitelist` },
+  sentinel_whitelist_add: { method: 'POST', global: true, path: () => `/api/sentinel/whitelist/add` },
+  sentinel_whitelist_remove: { method: 'POST', global: true, path: () => `/api/sentinel/whitelist/remove` },
+
+  // -- NEU: Dienstanweisungen --
+  dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
+  dienstanweisung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
+  dienstanweisung_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${g}/dienstanweisungen/${t}` },
+  dienstanweisung_bestaetigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/dienstanweisungen/${t}/bestaetigen` },
+  dienstanweisung_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${g}/dienstanweisungen/${t}` },
+
+  // -- NEU: Fahrzeuge --
+  fahrzeuge: { method: 'GET', path: (g) => `/api/guilds/${g}/fahrzeuge` },
+  fahrzeug_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/fahrzeuge` },
+  fahrzeug_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
+  fahrzeug_aktualisieren: { method: 'PUT', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
+  fahrzeug_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
+
+  // -- NEU: Audit-Log --
+  audit_logs: { method: 'GET', path: (g) => `/api/guilds/${g}/audit-logs` },
+
+  // -- NEU: Krankmeldungen --
+  krankenmeldungen: { method: 'GET', path: (g) => `/api/guilds/${g}/krankenmeldungen` },
+  krankenmeldungen_meine: { method: 'GET', path: (g) => `/api/guilds/${g}/krankenmeldungen/meine` },
+  krankenmeldung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/krankenmeldungen` },
+  krankenmeldung_genehmigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/krankenmeldungen/${t}/genehmigen` },
+  krankenmeldung_ablehnen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/krankenmeldungen/${t}/ablehnen` },
+
+  // -- NEU: Messenger --
+  messenger_channels: { method: 'GET', path: (g) => `/api/guilds/${g}/messenger/channels` },
+  messenger_channel_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/messenger/channels` },
+  messenger_nachrichten: { method: 'GET', anyUser: true, path: (_g, t) => `/api/messenger/channels/${t}/nachrichten` },
+  messenger_nachricht_senden: { method: 'POST', anyUser: true, path: (_g, t) => `/api/messenger/channels/${t}/nachrichten` },
 };
 
 // ---------------------------------------------------------------------------
