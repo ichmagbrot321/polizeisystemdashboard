@@ -2621,6 +2621,241 @@ code {
   animation: pulse-icon 1.5s ease-in-out infinite;
 }
 
+/* ================================================================
+   FULLSCREEN VPN/PROXY BLOCK
+   ================================================================ */
+
+.vpn-fullscreen-block {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 25%, #b91c1c 50%, #dc2626 75%, #991b1b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: vpn-block-in 0.5s ease;
+}
+
+@keyframes vpn-block-in {
+  from {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.vpn-block-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(0, 0, 0, 0.05) 20px,
+      rgba(0, 0, 0, 0.05) 40px
+    ),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  animation: vpn-bg-pulse 3s ease-in-out infinite;
+}
+
+@keyframes vpn-bg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.vpn-block-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vpn-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: vpn-float 8s ease-in-out infinite;
+}
+
+.vpn-particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+.vpn-particle:nth-child(2) { left: 20%; top: 80%; animation-delay: 1s; }
+.vpn-particle:nth-child(3) { left: 30%; top: 40%; animation-delay: 2s; }
+.vpn-particle:nth-child(4) { left: 40%; top: 60%; animation-delay: 0.5s; }
+.vpn-particle:nth-child(5) { left: 50%; top: 30%; animation-delay: 1.5s; }
+.vpn-particle:nth-child(6) { left: 60%; top: 70%; animation-delay: 2.5s; }
+.vpn-particle:nth-child(7) { left: 70%; top: 20%; animation-delay: 3s; }
+.vpn-particle:nth-child(8) { left: 80%; top: 50%; animation-delay: 0.8s; }
+.vpn-particle:nth-child(9) { left: 90%; top: 80%; animation-delay: 1.8s; }
+.vpn-particle:nth-child(10) { left: 15%; top: 50%; animation-delay: 2.8s; }
+
+@keyframes vpn-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-30px) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.vpn-block-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: white;
+  max-width: 600px;
+  padding: 40px;
+  animation: vpn-content-in 0.6s ease 0.2s both;
+}
+
+@keyframes vpn-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vpn-block-icon-wrap {
+  margin-bottom: 24px;
+}
+
+.vpn-block-icon {
+  font-size: 100px;
+  display: inline-block;
+  animation: vpn-icon-shake 0.5s ease-in-out 0.8s;
+  filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes vpn-icon-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+}
+
+.vpn-block-badge {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: vpn-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vpn-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.1); }
+}
+
+.vpn-block-title {
+  font-size: 56px;
+  font-weight: 900;
+  margin: 0 0 8px 0;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.vpn-block-subtitle {
+  font-size: 24px;
+  margin: 0 0 32px 0;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+.vpn-block-info {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.vpn-block-info-item {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vpn-block-info-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.vpn-block-info-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.vpn-block-info-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.vpn-block-info-value.danger {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.vpn-block-action {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.vpn-block-action p {
+  margin: 0 0 8px 0;
+}
+
+.vpn-block-action-hint {
+  font-size: 12px;
+  opacity: 0.5;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .vpn-block-content {
+    padding: 24px;
+    max-width: 95%;
+  }
+
+  .vpn-block-icon {
+    font-size: 70px;
+  }
+
+  .vpn-block-title {
+    font-size: 36px;
+  }
+
+  .vpn-block-subtitle {
+    font-size: 18px;
+  }
+
+  .vpn-block-info {
+    padding: 16px;
+  }
+}
+
 .login-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -10495,14 +10730,48 @@ function renderLoginScreen() {
   }
 
   let errorHtml = '';
+  let fullscreenBlock = '';
+
   if (loginError === 'locked') {
     if (isVpn) {
-      errorHtml = `
-        <div class="login-error vpn-error">
-          <div class="vpn-error-icon">🔒</div>
-          <div class="vpn-error-title">VPN/Proxy erkannt!</div>
-          <div class="vpn-error-text">Deine Verbindung wurde als VPN/Proxy identifiziert. ${errorReason || 'Dein Account wurde gesperrt.'}</div>
-          <div class="vpn-error-action">Kontaktiere einen Administrator für Support.</div>
+      // FULLSCREEN VPN-BLOCK — überschreibt den ganzen Login-Screen
+      fullscreenBlock = `
+        <div class="vpn-fullscreen-block">
+          <div class="vpn-block-bg"></div>
+          <div class="vpn-block-particles">
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+            <div class="vpn-particle"></div>
+          </div>
+          <div class="vpn-block-content">
+            <div class="vpn-block-icon-wrap">
+              <div class="vpn-block-icon">🔒</div>
+            </div>
+            <div class="vpn-block-badge">SICHERHEITSWARNUNG</div>
+            <h1 class="vpn-block-title">VPN / PROXY ERKANNT</h1>
+            <p class="vpn-block-subtitle">Dein Zugang wurde blockiert</p>
+            <div class="vpn-block-info">
+              <div class="vpn-block-info-item">
+                <div class="vpn-block-info-label">Grund der Sperre</div>
+                <div class="vpn-block-info-value">${errorReason || 'VPN/Proxy-Nutzung beim Login'}</div>
+              </div>
+              <div class="vpn-block-info-item">
+                <div class="vpn-block-info-label">Status</div>
+                <div class="vpn-block-info-value danger">⛔ Account permanent gesperrt</div>
+              </div>
+            </div>
+            <div class="vpn-block-action">
+              <p>Wenn dies ein Fehler ist, kontaktiere den Bot-Entwickler.</p>
+              <p class="vpn-block-action-hint">Deine IP wurde protokolliert.</p>
+            </div>
+          </div>
         </div>
       `;
     } else {
@@ -10514,6 +10783,12 @@ function renderLoginScreen() {
         </div>
       `;
     }
+  }
+
+  // Wenn FULLSCREEN-BLOCK: Komplett anderes Layout
+  if (fullscreenBlock) {
+    app.innerHTML = fullscreenBlock;
+    return;
   }
 
   app.innerHTML = `
