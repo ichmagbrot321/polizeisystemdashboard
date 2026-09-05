@@ -2935,9 +2935,35 @@ code {
   border-radius: var(--radius-md);
 }
 
+.skeleton-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+
+.skeleton-line:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton-title {
+  height: 18px;
+  width: 60%;
+  margin-bottom: 12px;
+}
+
 .skeleton-text {
   height: 14px;
-  margin-bottom: 8px;
+  width: 80%;
 }
 
 .skeleton-text.short {
@@ -2950,6 +2976,22 @@ code {
 
 .skeleton-text.full {
   width: 100%;
+}
+
+.skeleton-stat {
+  text-align: center;
+}
+
+.skeleton-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skeleton-table-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
 }
 
 .skeleton-avatar {
@@ -4596,6 +4638,49 @@ async function robloxApi(action, params, signal) {
 function avatarUrl(user) {
   if (!user?.avatar) return null;
   return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
+}
+
+// ================================================================
+// SKELETON LOADER
+// ================================================================
+
+function renderSkeleton(type = 'card', count = 1) {
+  const skeletons = [];
+  for (let i = 0; i < count; i++) {
+    if (type === 'card') {
+      skeletons.push(`
+        <div class="skeleton-card">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-text"></div>
+          <div class="skeleton-line skeleton-text short"></div>
+        </div>
+      `);
+    } else if (type === 'stat') {
+      skeletons.push(`
+        <div class="skeleton-card skeleton-stat">
+          <div class="skeleton-line skeleton-title" style="width: 40%;"></div>
+          <div class="skeleton-line skeleton-text" style="width: 60%;"></div>
+        </div>
+      `);
+    } else if (type === 'list') {
+      skeletons.push(`
+        <div class="skeleton-card skeleton-list-item">
+          <div class="skeleton-line" style="width: 70%;"></div>
+          <div class="skeleton-line short" style="width: 30%;"></div>
+        </div>
+      `);
+    } else if (type === 'table') {
+      skeletons.push(`
+        <div class="skeleton-card skeleton-table-row">
+          <div class="skeleton-line" style="width: 20%;"></div>
+          <div class="skeleton-line" style="width: 40%;"></div>
+          <div class="skeleton-line short" style="width: 15%;"></div>
+          <div class="skeleton-line short" style="width: 15%;"></div>
+        </div>
+      `);
+    }
+  }
+  return skeletons.join('');
 }
 
 function guildIconUrl(g) {
@@ -7458,6 +7543,62 @@ async function submitAblehnen(kmId) {
     closeModal();
     showSuccess('Abgelehnt', 'Krankmeldung wurde abgelehnt');
     renderKrankenmeldungen();
+  } catch (e) {
+    showError('Fehler', e.message);
+  }
+}
+
+// ================================================================
+// PERSONALAKTEN (Übersicht)
+// ================================================================
+
+async function renderPersonalakten() {
+  const main = document.querySelector('.page-content');
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="page-header page-enter">
+      <div class="page-header-content">
+        <h1 class="page-title">📁 Personalakten</h1>
+        <p class="page-description">Verwaltung der Personalakten aller Beamten</p>
+      </div>
+    </div>
+    <div id="personalakten-list">
+      ${renderSkeleton('card', 4)}
+    </div>
+  `;
+
+  try {
+    const result = await api('personalakten', { guild: state.currentGuild });
+    const list = document.getElementById('personalakten-list');
+    if (!list) return;
+
+    const akten = result.personalakten || [];
+    if (akten.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📁</div>
+          <div class="empty-state-title">Keine Personalakten</div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = akten.map(akte => `
+      <div class="card stagger-item">
+        <div class="card-body">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold">${esc(akte.name || 'Unbekannt')}</h3>
+              <p class="text-sm text-muted">${esc(akte.rang || '—')} · ${esc(akte.dienststelle || '—')}</p>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="navigateTo('personalakte:${akte.user_id}')">
+              Ansehen
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
   } catch (e) {
     showError('Fehler', e.message);
   }
