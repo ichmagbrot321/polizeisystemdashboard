@@ -2575,6 +2575,50 @@ code {
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-error .error-icon,
+.login-error .vpn-error-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.login-error .error-title,
+.login-error .vpn-error-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.login-error .error-text,
+.login-error .vpn-error-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.login-error .vpn-error-action {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.login-error.vpn-error {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.login-error.vpn-error .vpn-error-icon {
+  animation: pulse-icon 1.5s ease-in-out infinite;
 }
 
 .login-stats {
@@ -10438,6 +10482,40 @@ function renderLoginScreen() {
     window.location.href = loginUrl();
   };
 
+  // URL-Parameter für Login-Fehler checken
+  const urlParams = new URLSearchParams(window.location.search);
+  const loginError = urlParams.get('login_error');
+  const errorReason = urlParams.get('reason');
+  const isVpn = urlParams.get('vpn') === '1';
+
+  // URL-Cleanup (Fehler-Params entfernen)
+  if (loginError) {
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  }
+
+  let errorHtml = '';
+  if (loginError === 'locked') {
+    if (isVpn) {
+      errorHtml = `
+        <div class="login-error vpn-error">
+          <div class="vpn-error-icon">🔒</div>
+          <div class="vpn-error-title">VPN/Proxy erkannt!</div>
+          <div class="vpn-error-text">Deine Verbindung wurde als VPN/Proxy identifiziert. ${errorReason || 'Dein Account wurde gesperrt.'}</div>
+          <div class="vpn-error-action">Kontaktiere einen Administrator für Support.</div>
+        </div>
+      `;
+    } else {
+      errorHtml = `
+        <div class="login-error">
+          <div class="error-icon">🚫</div>
+          <div class="error-title">Zugriff gesperrt</div>
+          <div class="error-text">${errorReason || 'Dein Account wurde gesperrt. Kontaktiere einen Administrator.'}</div>
+        </div>
+      `;
+    }
+  }
+
   app.innerHTML = `
     <div class="login-container">
       <div class="login-background">
@@ -10471,7 +10549,7 @@ function renderLoginScreen() {
               🔑 Mit Discord anmelden
             </button>
           </div>
-          <div class="login-error" id="login-error"></div>
+          <div id="login-error-container">${errorHtml}</div>
         </div>
         <div class="login-stats">
           <div class="login-stat">
