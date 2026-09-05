@@ -4689,6 +4689,105 @@ button:focus-visible,
   gap: 16px;
   margin-bottom: 24px;
 }
+
+/* ================================================================
+   VPN WARNUNG BANNER
+   ================================================================ */
+
+.vpn-warning-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+  animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateY(-20px); }
+}
+
+.vpn-warning-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.vpn-warning-icon {
+  font-size: 28px;
+  animation: pulse-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.vpn-warning-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.vpn-warning-text strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.vpn-warning-text span {
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+.vpn-warning-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.vpn-warning-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .vpn-warning-banner {
+    padding: 10px 16px;
+  }
+  .vpn-warning-content {
+    gap: 10px;
+  }
+  .vpn-warning-icon {
+    font-size: 22px;
+  }
+  .vpn-warning-text strong {
+    font-size: 13px;
+  }
+  .vpn-warning-text span {
+    font-size: 11px;
+  }
+}
 </style>
 </head>
 <body>
@@ -4699,7 +4798,7 @@ button:focus-visible,
 // KONFIGURATION
 // ================================================================
 
-const DISCORD_CLIENT_ID = "1528709772784963645";
+const DISCORD_CLIENT_ID = "1528709772784963635";
 
 const app = document.getElementById('app');
 
@@ -10239,7 +10338,10 @@ async function boot() {
     initTooltips();
 
     startNotificationPolling();
-    
+
+    // VPN/Proxy Check beim Boot
+    checkClientVpn();
+
     // Splash anzeigen
     const splash = el(`
       <div class="app-splash">
@@ -10251,7 +10353,7 @@ async function boot() {
     `);
     splash.style.cssText = 'position: fixed; inset: 0; z-index: 100; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity 0.35s ease;';
     document.body.appendChild(splash);
-    
+
     setTimeout(() => {
       splash.style.opacity = '0';
       setTimeout(() => {
@@ -10268,6 +10370,63 @@ async function boot() {
   } catch (e) {
     renderLoginScreen();
   }
+}
+
+// ================================================================
+// VPN/PROXY ERKENNUNG
+// ================================================================
+
+async function checkClientVpn() {
+  try {
+    const resp = await fetch('https://ip-api.com/json/?fields=status,proxy,hosting,countryCode,isp');
+    const data = await resp.json();
+    if (data.status === 'success') {
+      state.clientVpn = !!(data.proxy || data.hosting);
+      state.clientIpInfo = {
+        country: data.countryCode,
+        isp: data.isp,
+        isProxy: data.proxy,
+        isHosting: data.hosting,
+      };
+
+      // VPN-Warnung direkt anzeigen wenn erkannt
+      if (state.clientVpn) {
+        showVpnWarning(data);
+      }
+    }
+  } catch (e) {
+    // Silent fail - VPN-Check ist nicht kritisch
+    state.clientVpn = false;
+  }
+}
+
+function showVpnWarning(ipData) {
+  // Warnung permanent im Dashboard anzeigen
+  const warning = el(`
+    <div class="vpn-warning-banner" id="vpn-warning">
+      <div class="vpn-warning-content">
+        <div class="vpn-warning-icon">🔒</div>
+        <div class="vpn-warning-text">
+          <strong>VPN/Proxy erkannt!</strong>
+          <span>${ipData.isp || 'Unbekannter ISP'} (${ipData.countryCode || '??'}) — Deine IP wird überwacht.</span>
+        </div>
+      </div>
+      <button class="vpn-warning-close" onclick="dismissVpnWarning()">✕</button>
+    </div>
+  `);
+
+  // In den Body einfügen, über allem
+  document.body.appendChild(warning);
+  warning.style.display = 'flex';
+}
+
+function dismissVpnWarning() {
+  const warning = document.getElementById('vpn-warning');
+  if (warning) {
+    warning.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => warning.remove(), 300);
+  }
+  state.vpnWarningDismissed = true;
 }
 
 // ================================================================
