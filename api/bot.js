@@ -228,6 +228,24 @@ module.exports = async (req, res) => {
     res.setHeader('Set-Cookie', 'dash_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
     return sendJson(res, 200, { ok: true });
   }
+  // Health-Check: Ping an den Bot, um zu prüfen ob er erreichbar ist.
+  if (resource === 'health_check') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
+    if (!process.env.BOT_API_URL) return sendJson(res, 500, { ok: false, error: 'BOT_API_URL nicht gesetzt' });
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const r = await fetch(`${process.env.BOT_API_URL}/api/health`, {
+        headers: { 'X-API-Key': process.env.BOT_API_KEY || '' },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (r.ok) return sendJson(res, 200, { ok: true });
+      return sendJson(res, 200, { ok: false, status: r.status });
+    } catch (err) {
+      return sendJson(res, 200, { ok: false, error: err.message });
+    }
+  }
 
   if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
   if (!resource) return sendJson(res, 400, { error: "Parameter 'resource' fehlt" });
