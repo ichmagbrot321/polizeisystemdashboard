@@ -4893,6 +4893,39 @@ button:focus-visible,
   min-height: 400px;
 }
 
+/* Bot-Status-Anzeige im Admin-Bereich */
+.admin-bot-status {
+  margin: 0 0 16px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.bot-status-checking {
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.bot-status-online {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.bot-status-offline {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
 /* Sentinel Overview Grid for Admin */
 .sentinel-overview-grid {
   display: grid;
@@ -5201,11 +5234,13 @@ function inviteUrl(guildId) {
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
-async function api(resource, { guild, target, search, method = 'GET', body, extraParams } = {}) {
+async function api(resource, { guild, target, search, method = 'GET', body, limit, extraParams } = {}) {
   const params = new URLSearchParams({ resource });
   if (guild) params.set('guild', guild);
   if (target) params.set('target', target);
   if (search) params.set('search', search);
+  // limit wird als Query-Param durchgereicht (z.B. sentinel_threat_log)
+  if (limit !== undefined) params.set('limit', String(limit));
   if (extraParams) {
     for (const [k, v] of Object.entries(extraParams)) {
       if (v !== undefined && v !== null) params.set(k, v);
@@ -5233,6 +5268,19 @@ async function robloxApi(action, params, signal) {
 function avatarUrl(user) {
   if (!user?.avatar) return null;
   return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
+}
+
+// Prüft, ob der Bot erreichbar ist. Nutzt einen einfachen Health-Check via
+// /api/bot?resource=health_check. Wenn der Bot down ist, sehen User sofort,
+// dass die Sperren/Stats nicht aktuell sind.
+async function checkBotStatus() {
+  try {
+    const data = await api('health_check');
+    if (data && data.ok) return 'online';
+    return 'offline';
+  } catch {
+    return 'offline';
+  }
 }
 
 // ================================================================
@@ -8299,7 +8347,7 @@ async function renderSentinelSecurity() {
 
 async function loadSentinelStats() {
   const statsEl = document.getElementById('sentinel-stats');
-  if (!statsEl) return;
+  if (!statsEl) return null;  // Sentinel-Übersicht wird separat gerendert
 
   try {
     const stats = await api('sentinel_stats');
@@ -8505,6 +8553,10 @@ async function loadSentinelOverview(el) {
       api('sentinel_threat_log', { limit: 10 }),
       api('sentinel_stats')
     ]);
+    if (!stats || !threats) {
+      el.innerHTML = '<div class="error-state">Sentinel-Daten konnten nicht geladen werden.</div>';
+      return;
+    }
 
     el.innerHTML = `
       <div class="sentinel-grid-2">
@@ -10273,6 +10325,23 @@ async function renderAdminArea() {
     <div id="admin-tab-content" class="admin-content-area"></div>
   `;
 
+  // Bot-Status prüfen und anzeigen
+  const statusEl = document.createElement('div');
+  statusEl.className = 'admin-bot-status';
+  statusEl.id = 'admin-bot-status';
+  statusEl.innerHTML = '<div class="bot-status-checking">🔄 Bot-Verbindung wird geprüft...</div>';
+  container.appendChild(statusEl);
+
+  checkBotStatus().then(status => {
+    if (status === 'online') {
+      statusEl.innerHTML = '<div class="bot-status-online">🟢 Bot erreichbar</div>';
+    } else {
+      statusEl.innerHTML = '<div class="bot-status-offline">🔴 Bot nicht erreichbar — Sperren/Stats können nicht geladen werden</div>';
+    }
+  }).catch(() => {
+    statusEl.innerHTML = '<div class="bot-status-offline">🔴 Bot nicht erreichbar</div>';
+  });
+
   // Card-based navigation
   const cards = container.querySelectorAll('.admin-card');
   const tabContent = container.querySelector('#admin-tab-content');
@@ -10283,7 +10352,10 @@ async function renderAdminArea() {
     tabContent.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
 
     if (tab === 'sentinel') {
-      loadSentinelStats().then(() => renderSentinelOverview(tabContent));
+      // Im Admin-Bereich gibt es kein #sentinel-stats-Element — renderSentinelOverview
+      // rendert die Stats direkt in den Container, deshalb ist loadSentinelStats hier
+      // nicht nötig (und würde ohnehin nichts tun, da das Element fehlt).
+      renderSentinelOverview(tabContent);
     } else if (tab === 'support') {
       renderAdminSupport(tabContent);
     } else if (tab === 'guilds') {
@@ -10545,27 +10617,29 @@ async function renderAdminUserLocks(container) {
   
   async function ladeSperrliste() {
     const liste = container.querySelector('#locks-liste');
+    if (!liste) return;
     liste.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
     try {
       const data = await api('security_locks');
       console.log('[Admin Locks] API Response:', data);
-      const users = data.users || [];
-      const ips = data.ips || [];
+      const users = (data && data.users) || [];
+      const ips = (data && data.ips) || [];
       if (users.length === 0 && ips.length === 0) {
-        liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔓</div><div class="empty-state-title">Keine Sperren</div></div>';
+        liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔓</div><div class="empty-state-title">Keine Sperren</div><div class="empty-state-description">Aktuell sind keine User oder IPs gesperrt.</div></div>';
         return;
       }
       let html = '';
       if (users && users.length > 0) {
-        html += '<h4 class="text-sm text-muted mb-sm">Gesperrte User</h4>';
+        html += `<h4 class="text-sm text-muted mb-sm">Gesperrte User (${users.length})</h4>`;
         users.forEach(u => {
+          const ts = u.gesperrt_am ? new Date(u.gesperrt_am).toLocaleString('de-DE') : 'unbekannt';
           html += `
             <div class="card mb-sm">
               <div class="card-body flex items-center justify-between">
                 <div>
-                  <strong>${esc(u.name || u.user_id)}</strong>
-                  <span class="text-muted text-xs">(${esc(u.user_id)})</span>
-                  ${u.grund ? `<div class="text-xs text-muted">Grund: ${esc(u.grund)}</div>` : ''}
+                  <strong>User-ID: <code>${esc(u.user_id)}</code></strong>
+                  ${u.grund ? `<div class="text-xs text-muted mt-xs">📋 ${esc(u.grund)}</div>` : ''}
+                  <div class="text-xs text-muted mt-xs">⏱️ ${ts}</div>
                 </div>
                 <button class="btn btn-secondary btn-sm unlock-user-btn" data-id="${esc(u.user_id)}">Entsperren</button>
               </div>
@@ -10574,14 +10648,16 @@ async function renderAdminUserLocks(container) {
         });
       }
       if (ips && ips.length > 0) {
-        html += '<h4 class="text-sm text-muted mb-sm mt-lg">Gesperrte IPs</h4>';
+        html += `<h4 class="text-sm text-muted mb-sm mt-lg">Gesperrte IPs (${ips.length})</h4>`;
         ips.forEach(ip => {
+          const ts = ip.gesperrt_am ? new Date(ip.gesperrt_am).toLocaleString('de-DE') : 'unbekannt';
           html += `
             <div class="card mb-sm">
               <div class="card-body flex items-center justify-between">
                 <div>
                   <strong><code>${esc(ip.ip)}</code></strong>
-                  ${ip.grund ? `<div class="text-xs text-muted">Grund: ${esc(ip.grund)}</div>` : ''}
+                  ${ip.grund ? `<div class="text-xs text-muted mt-xs">📋 ${esc(ip.grund)}</div>` : ''}
+                  <div class="text-xs text-muted mt-xs">⏱️ ${ts}</div>
                 </div>
                 <button class="btn btn-secondary btn-sm unlock-ip-btn" data-ip="${esc(ip.ip)}">Entsperren</button>
               </div>
@@ -10590,7 +10666,7 @@ async function renderAdminUserLocks(container) {
         });
       }
       liste.innerHTML = html;
-      
+
       liste.querySelectorAll('.unlock-user-btn').forEach(btn => {
         btn.onclick = async () => {
           try {
@@ -10600,7 +10676,7 @@ async function renderAdminUserLocks(container) {
           } catch (err) { showError('Fehler', err.message); }
         };
       });
-      
+
       liste.querySelectorAll('.unlock-ip-btn').forEach(btn => {
         btn.onclick = async () => {
           try {
@@ -10611,7 +10687,7 @@ async function renderAdminUserLocks(container) {
         };
       });
     } catch (e) {
-      liste.innerHTML = `<div class="alert alert-danger">${esc(e.message)}</div>`;
+      liste.innerHTML = `<div class="alert alert-danger"><strong>Fehler beim Laden:</strong> ${esc(e.message)}<br><small class="text-muted">Prüfe, ob der Bot läuft und der API-Key korrekt gesetzt ist.</small></div>`;
     }
   }
   ladeSperrliste();
