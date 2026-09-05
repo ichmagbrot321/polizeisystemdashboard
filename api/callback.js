@@ -178,6 +178,9 @@ module.exports = async (req, res) => {
     // Globale Sperrprüfung (User-ID und IP) — läuft VOR dem Ausstellen
     // der Session. Der Bot-Owner (ADMIN_USER_ID) kann sich immer einloggen,
     // damit er sich selbst nicht aussperren kann.
+    //
+    // NEU: Der Bot prüft jetzt SELBST auf VPN/Proxy und sperrt User/IP
+    // automatisch. Die security_check-Response enthält vpn_detected + grund.
     // -----------------------------------------------------------------
     if (user.id !== ADMIN_USER_ID) {
       const sperrCheck = await botFetch(
@@ -189,14 +192,41 @@ module.exports = async (req, res) => {
       // Fail-open bewusst: wenn der Bot down ist, soll das Dashboard nicht für
       // ALLE ausfallen. sperrCheck === null bedeutet "Prüfung nicht möglich".
       if (sperrCheck && sperrCheck.gesperrt) {
+        const grundParam = sperrCheck.grund ? `&reason=${encodeURIComponent(sperrCheck.grund)}` : '';
+        const vpnParam = sperrCheck.vpn_detected ? '&vpn=1' : '';
         res.statusCode = 302;
-        res.setHeader('Location', `/?login_error=locked${sperrCheck.grund ? `&reason=${encodeURIComponent(sperrCheck.grund)}` : ''}`);
+        res.setHeader('Location', `/?login_error=locked${grundParam}${vpnParam}`);
         res.end();
         return;
       }
     }
 
     const ipIntel = await checkIpIntel(clientIp);
+
+    // -----------------------------------------------------------------
+    // DIREKTE VPN-BLOCKADE: Wenn IP-Intel VPN/Proxy erkennt UND der Bot
+    // nicht bereits gesperrt hat, führe die Sperre SELBST durch.
+    // -----------------------------------------------------------------
+    if (user.id !== ADMIN_USER_ID && ipIntel.checked && (ipIntel.proxy || ipIntel.hosting)) {
+      console.warn(`[callback] VPN/Proxy erkannt: ${ipIntel.isp} (${ipIntel.countryCode}) — sperre User ${user.id}`);
+
+      // Sperre via Bot (synchronous, fire-and-forget)
+      botFetch('/api/security/users/' + encodeURIComponent(user.id) + '/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grund: `VPN/Proxy beim Login: ${ipIntel.isp} (${ipIntel.countryCode})`,
+          auch_ip: true,
+        }),
+      }).catch((err) => console.error('[callback] Konnte VPN-User nicht sperren:', err.message));
+
+      // Login umleiten mit VPN-Fehler
+      const grund = `VPN/Proxy erkannt: ${ipIntel.isp || 'Unbekannt'} (${ipIntel.countryCode || '??'}). Dein Account wurde gesperrt.`;
+      res.statusCode = 302;
+      res.setHeader('Location', `/?login_error=locked&reason=${encodeURIComponent(grund)}&vpn=1`);
+      res.end();
+      return;
+    }
 
     // Discord-Admin-Server (für "Server ohne Bot" / Bot einladen — reine Discord-Berechtigung, unabhängig vom Polizei-System)
     const discordAdminGuilds = (Array.isArray(guilds) ? guilds : [])
