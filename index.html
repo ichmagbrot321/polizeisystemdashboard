@@ -8172,6 +8172,21 @@ async function renderPersonalakten() {
   const main = document.querySelector('.page-content');
   if (!main) return;
 
+  // Kein Server gewählt?
+  if (!state.currentGuild) {
+    main.innerHTML = `
+      <div class="empty-state" style="margin-top: 100px;">
+        <div class="empty-state-icon">📁</div>
+        <div class="empty-state-title">Server auswählen</div>
+        <div class="empty-state-description">Personalakten werden server-bezogen angezeigt. Bitte wähle zuerst einen Server aus.</div>
+        <button class="btn btn-primary mt-lg" onclick="state.activeView = 'servers'; renderGuildPicker();">
+          Server wählen
+        </button>
+      </div>
+    `;
+    return;
+  }
+
   main.innerHTML = `
     <div class="page-header page-enter">
       <div class="page-header-content">
@@ -9997,6 +10012,10 @@ async function renderBuergerakten(container) {
 
   async function suchen(query) {
     if (!liste) return;
+    if (!state.currentGuild) {
+      liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🧑‍🤝‍🧑</div><div class="empty-state-title">Server auswählen</div><div class="empty-state-description">Bürgerakten werden server-bezogen angezeigt.</div></div>';
+      return;
+    }
     liste.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div><div class="loading-text">Lade...</div></div>';
     try {
       const { buergerakten } = await api('buergerakten', { guild: state.currentGuild, search: query });
@@ -10528,8 +10547,11 @@ async function renderAdminUserLocks(container) {
     const liste = container.querySelector('#locks-liste');
     liste.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
     try {
-      const { users, ips } = await api('security_locks');
-      if ((!users || users.length === 0) && (!ips || ips.length === 0)) {
+      const data = await api('security_locks');
+      console.log('[Admin Locks] API Response:', data);
+      const users = data.users || [];
+      const ips = data.ips || [];
+      if (users.length === 0 && ips.length === 0) {
         liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔓</div><div class="empty-state-title">Keine Sperren</div></div>';
         return;
       }
@@ -10617,9 +10639,6 @@ async function boot() {
     initTooltips();
 
     startNotificationPolling();
-
-    // VPN/Proxy Check beim Boot
-    checkClientVpn();
 
     // Splash anzeigen
     const splash = el(`
