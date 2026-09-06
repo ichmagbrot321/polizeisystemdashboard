@@ -746,6 +746,8 @@ code {
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -757,6 +759,7 @@ code {
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-hover);
   border-color: var(--text-muted);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -768,6 +771,8 @@ code {
 .btn-danger:hover:not(:disabled) {
   background: #dc2626;
   border-color: #dc2626;
+  box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
 }
 
 .btn-success {
@@ -825,7 +830,7 @@ code {
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all var(--transition-fast);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-fast);
 }
 
 .card:hover {
@@ -837,8 +842,18 @@ code {
 }
 
 .card-clickable:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary);
+}
+
+.card-clickable:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.card-clickable:active {
+  transform: translateY(-1px);
 }
 
 .card-header {
@@ -3440,15 +3455,26 @@ code {
 }
 
 /* === FOCUS STYLES === */
+/* Knapper, konsistenter Focus-Ring — gut sichtbar in beiden Themes */
 *:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--border-focus);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 button:focus-visible,
-.btn:focus-visible {
-  outline: 2px solid var(--primary);
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--border-focus);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Hochkontrast-Focus für bessere Tastaturnavigation */
+*:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* === TOOLTIP === */
@@ -5110,7 +5136,7 @@ button:focus-visible,
 // KONFIGURATION
 // ================================================================
 
-const DISCORD_CLIENT_ID = "1528709772784963645";
+const DISCORD_CLIENT_ID = "1528709772784963635";
 
 const app = document.getElementById('app');
 
@@ -5140,7 +5166,13 @@ const state = {
   autoRefreshHandle: null,
   commandPaletteOpen: false,
   theme: 'auto', // 'auto', 'light', 'dark'
-  lastUpdate: null
+  lastUpdate: null,
+  // Ergänzt: wurden dynamisch gesetzt, aber nie initialisiert
+  officerPermission: null,
+  bewerbungsfragenArten: null,
+  clientVpn: false,
+  clientIpInfo: null,
+  vpnWarningDismissed: false,
 };
 
 // ================================================================
@@ -5417,7 +5449,35 @@ function showSuccessWithAction(title, message, actionText, onAction) {
 // MODAL SYSTEM
 // ================================================================
 
-function showModal(title, content, options = {}) {
+// Globaler Verweis auf das aktuell offene Modal, damit onclick="closeModal()"
+// in den Footer-Buttons (Fahrzeug, Dienstanweisung, Krankenmeldung) zuverlässig
+// funktioniert. Vorher war closeModal nur lokal in showModal definiert — die
+// inline-Handler haben dann "closeModal is not defined" geworfen.
+let _activeModal = null;
+function closeModal() {
+  if (_activeModal && typeof _activeModal.close === 'function') {
+    _activeModal.close();
+  } else {
+    // Fallback: alle modal-overlays entfernen (z. B. wenn showModal gerade
+    // nicht aufgerufen wurde, das Modal aber offen ist)
+    document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+  }
+}
+// Auf window exposen, damit onclick-Handler im HTML-Markup es finden
+window.closeModal = closeModal;
+
+function showModal(arg1, arg2, arg3) {
+  // Backward-kompatibel: akzeptiert sowohl (title, content, options) als auch ({title, content, ...}).
+  let title, content, options;
+  if (typeof arg1 === 'object' && arg1 !== null) {
+    options = arg1;
+    title = options.title;
+    content = options.content;
+  } else {
+    title = arg1;
+    content = arg2;
+    options = arg3 || {};
+  }
   const {
     size = 'default',
     showFooter = true,
@@ -5425,50 +5485,53 @@ function showModal(title, content, options = {}) {
     onClose = () => {},
     closeOnOverlay = true
   } = options;
-  
+
   const sizeClass = size === 'lg' ? 'modal-lg' : size === 'xl' ? 'modal-xl' : '';
-  
+
   const modal = el(`
     <div class="modal-overlay">
       <div class="modal ${sizeClass}">
         <div class="modal-header">
-          <h3 class="modal-title">${title}</h3>
-          <button class="modal-close">✕</button>
+          <h3 class="modal-title">${esc(title || '')}</h3>
+          <button class="modal-close" aria-label="Schließen">✕</button>
         </div>
-        <div class="modal-body">${content}</div>
+        <div class="modal-body">${content || ''}</div>
         ${showFooter ? `<div class="modal-footer">${footerContent}</div>` : ''}
       </div>
     </div>
   `);
-  
+
   document.body.appendChild(modal);
-  
+
+  // ESC-Handler: jetzt IMMER beim Schließen entfernt, damit kein Listener-Leck entsteht
+  // (vorher wurde er nur bei Escape entfernt — Schließen über X/Overlay ließ ihn hängen).
+  const escHandler = (e) => {
+    if (e.key === 'Escape') closeModal();
+  };
+  document.addEventListener('keydown', escHandler);
+
   const closeModal = () => {
+    document.removeEventListener('keydown', escHandler);
+    if (_activeModal && _activeModal.element === modal) _activeModal = null;
     modal.style.animation = 'fadeIn 0.2s ease reverse';
     setTimeout(() => {
       modal.remove();
       onClose();
     }, 200);
   };
-  
+
   modal.querySelector('.modal-close').onclick = closeModal;
-  
+
   if (closeOnOverlay) {
     modal.onclick = (e) => {
       if (e.target === modal) closeModal();
     };
   }
-  
-  // ESC key to close
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', escHandler);
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-  
-  return { close: closeModal, element: modal };
+
+  // Aktives Modal registrieren, damit die globale closeModal()-Funktion darauf zugreifen kann
+  const handle = { close: closeModal, element: modal };
+  _activeModal = handle;
+  return handle;
 }
 
 function showConfirm(title, message, options = {}) {
@@ -5805,10 +5868,12 @@ document.addEventListener('keydown', (e) => {
       closeCommandPalette();
       return;
     }
-    // Close any open modals
-    const modal = document.querySelector('.modal-backdrop');
+    // Close any open modals — sucht nach .modal-overlay (korrekte Klasse, nicht .modal-backdrop).
+    const modal = document.querySelector('.modal-overlay');
     if (modal) {
-      modal.click();
+      // Direkt die Close-Funktion aufrufen statt .click(), damit der Animation-Reverse sauber durchläuft.
+      const closeBtn = modal.querySelector('.modal-close');
+      if (closeBtn) closeBtn.click();
       return;
     }
   }
@@ -6027,7 +6092,14 @@ function toggleFavorite(guildId) {
     showInfo('Entfernt', 'Server aus Favoriten entfernt');
   }
   saveFavorites(state.favorites);
-  renderServerList();
+  // FIX: renderServerList() existierte nicht — wir aktualisieren den Guild-Picker,
+  // wenn der Nutzer gerade dort ist, und sonst die Sidebar (Favoriten-Stern).
+  if (state.activeView === 'servers') {
+    renderGuildPicker();
+  } else {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar && typeof renderSidebarFull === 'function') renderSidebarFull();
+  }
 }
 
 function isFavorite(guildId) {
@@ -7737,7 +7809,7 @@ function showDienstanweisungModal() {
         <div class="form-group">
           <label class="form-label">Rollen (für Lesebestätigung)</label>
           <select class="form-input" name="rollen_ids" multiple size="4">
-            ${(state.config?.rollen || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
+            ${(state.roles || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
           </select>
           <span class="text-xs text-muted">Mehrere mit Strg/Cmd auswählen</span>
         </div>
@@ -7749,7 +7821,7 @@ function showDienstanweisungModal() {
         </div>
       </form>
     `,
-    footer: `
+    footerContent: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="submitDienstanweisung()">Erstellen</button>
     `,
@@ -7759,7 +7831,19 @@ function showDienstanweisungModal() {
 
 async function submitDienstanweisung() {
   const form = document.getElementById('dienstanweisung-form');
+  if (!form) {
+    showError('Fehler', 'Formular nicht gefunden');
+    return;
+  }
   const formData = new FormData(form);
+
+  // Titel ist Pflichtfeld
+  const titel = (formData.get('titel') || '').toString().trim();
+  if (!titel) {
+    showError('Fehler', 'Bitte gib einen Titel ein');
+    return;
+  }
+
   const anhaengeText = formData.get('anhaenge') || '';
   const anhaenge = anhaengeText
     .split('\n')
@@ -7768,15 +7852,17 @@ async function submitDienstanweisung() {
     .map(url => ({ name: url.split('/').pop() || 'Anhang', url }));
 
   const rollenSelect = form.querySelector('[name="rollen_ids"]');
-  const rollen_ids = Array.from(rollenSelect.selectedOptions).map(o => o.value);
+  const rollen_ids = rollenSelect
+    ? Array.from(rollenSelect.selectedOptions).map(o => o.value).filter(Boolean)
+    : [];
 
   try {
     await api('dienstanweisung_erstellen', {
       guild: state.currentGuild,
       method: 'POST',
       body: {
-        titel: formData.get('titel'),
-        inhalt: formData.get('inhalt'),
+        titel,
+        inhalt: formData.get('inhalt') || '',
         bild_url: formData.get('bild_url') || null,
         anhaenge,
         rollen_ids,
@@ -7862,7 +7948,7 @@ async function renderFahrzeuge() {
             <div class="rang-tags">
               ${f.rang_ids && f.rang_ids.length > 0
                 ? f.rang_ids.map(rid => {
-                    const rolle = (state.config?.rollen || []).find(r => r.id === String(rid));
+                    const rolle = (state.roles || []).find(r => r.id === String(rid));
                     return rolle ? `<span class="rang-tag">${esc(rolle.name)}</span>` : '';
                   }).join('')
                 : '<span class="text-xs text-muted">Keine Rollen zugewiesen</span>'
@@ -7897,13 +7983,13 @@ function showFahrzeugModal() {
         <div class="form-group">
           <label class="form-label">Berechtigte Ränge (Mehrfachauswahl)</label>
           <select class="form-input" name="rang_ids" multiple size="5">
-            ${(state.config?.rollen || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
+            ${(state.roles || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
           </select>
           <span class="text-xs text-muted">Rollen, die dieses Fahrzeug fahren dürfen</span>
         </div>
       </form>
     `,
-    footer: `
+    footerContent: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="submitFahrzeug()">Erstellen</button>
     `,
@@ -7913,16 +7999,25 @@ function showFahrzeugModal() {
 
 async function submitFahrzeug() {
   const form = document.getElementById('fahrzeug-form');
+  if (!form) {
+    showError('Fehler', 'Formular nicht gefunden');
+    return;
+  }
   const formData = new FormData(form);
+
+  // Berechtigte Ränge (Mehrfachauswahl) — mit null-Check, falls die Rollen
+  // noch nicht geladen sind (z. B. nach einem Server-Wechsel).
   const rangSelect = form.querySelector('[name="rang_ids"]');
-  const rang_ids = Array.from(rangSelect.selectedOptions).map(o => o.value);
+  const rang_ids = rangSelect
+    ? Array.from(rangSelect.selectedOptions).map(o => o.value).filter(Boolean)
+    : [];
 
   try {
     await api('fahrzeug_erstellen', {
       guild: state.currentGuild,
       method: 'POST',
       body: {
-        name: formData.get('name'),
+        name: (formData.get('name') || '').toString().trim(),
         bild_url: formData.get('bild_url') || null,
         beschreibung: formData.get('beschreibung') || '',
         rang_ids,
@@ -8132,23 +8227,34 @@ function showKrankmeldungModal() {
         </div>
       </form>
     `,
-    footer: `
+    footerContent: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="submitKrankenmeldung()">Einreichen</button>
     `
   });
 }
 
-async function submitKrankenmeldung() {
+async function submitKrankmeldung() {
   const form = document.getElementById('krankenmeldung-form');
+  if (!form) {
+    showError('Fehler', 'Formular nicht gefunden');
+    return;
+  }
   const formData = new FormData(form);
+
+  // Pflichtfelder clientseitig prüfen für bessere UX
+  const grund = (formData.get('grund') || '').toString().trim();
+  if (!grund) {
+    showError('Fehler', 'Bitte gib einen Grund an');
+    return;
+  }
 
   try {
     await api('krankenmeldung_erstellen', {
       guild: state.currentGuild,
       method: 'POST',
       body: {
-        grund: formData.get('grund'),
+        grund,
         von_datum: formData.get('von_datum'),
         bis_datum: formData.get('bis_datum'),
         attest_url: formData.get('attest_url') || null,
@@ -8187,7 +8293,7 @@ async function lehneKrankenmeldungAb(kmId) {
         </div>
       </form>
     `,
-    footer: `
+    footerContent: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-danger" onclick="submitAblehnen('${kmId}')">Ablehnen</button>
     `
@@ -9308,12 +9414,12 @@ async function renderPersonalakteDetail(container, userId) {
             </div>
             <div class="field-actions flex gap-sm">
               ${kannWiderrufen && !e.widerrufen && (e.typ === 'verwarnung' || e.typ === 'suspendierung') ? `
-                <button class="btn btn-secondary btn-sm" onclick="widerrufenEintrag('${userId}', '${e.aktenzeichen}')">
+                <button class="btn btn-secondary btn-sm" data-widerrufen-user="${esc(userId)}" data-widerrufen-az="${esc(e.aktenzeichen)}">
                   Widerrufen
                 </button>
               ` : ''}
               ${kannWiderrufen ? `
-                <button class="btn btn-link btn-sm text-danger p-0" onclick="loescheEintrag('${userId}', '${e.aktenzeichen}')">
+                <button class="btn btn-link btn-sm text-danger p-0" data-loeschen-user="${esc(userId)}" data-loeschen-az="${esc(e.aktenzeichen)}">
                   Löschen
                 </button>
               ` : ''}
@@ -9323,28 +9429,51 @@ async function renderPersonalakteDetail(container, userId) {
         </div>
       `;
     }
-    
+
     container.appendChild(panel);
+
+    // Event-Delegation: Aktions-Buttons (Verwarnen/Suspendieren/...) sicher binden,
+    // ohne inline onclick-Attribute mit potenziell unsicheren Werten.
+    panel.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('[data-aktion]');
+      if (btn) {
+        openAktionModal(btn.dataset.aktion, btn.dataset.userId, btn.dataset.userName);
+        return;
+      }
+      const widerBtn = ev.target.closest('[data-widerrufen-az]');
+      if (widerBtn) {
+        widerrufenEintrag(widerBtn.dataset.widerrufenUser, widerBtn.dataset.widerrufenAz);
+        return;
+      }
+      const delBtn = ev.target.closest('[data-loeschen-az]');
+      if (delBtn) {
+        loescheEintrag(delBtn.dataset.loeschenUser, delBtn.dataset.loeschenAz);
+        return;
+      }
+    });
   } catch (e) {
     container.innerHTML = `<div class="alert alert-danger">${esc(e.message)}</div>`;
   }
 }
 
 function renderPersonalakteAktionen(container, userId, akte) {
+  // User-ID und Name escapen — landen in data-Attributen, die der
+  // Event-Handler unten liest. Vorher direkt in onclick-String eingefügt
+  // (XSS-Risiko bei Namen mit Anführungszeichen).
   return `
     <div class="field-group mb-md">
       <label class="form-label">Personalakte verwalten</label>
       <div class="flex flex-wrap gap-sm">
-        <button class="btn btn-warning btn-sm" onclick="openAktionModal('verwarnen', ${userId}, '${akte.name}')">
+        <button class="btn btn-warning btn-sm" data-aktion="verwarnen" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
           ⚠️ Verwarnen
         </button>
-        <button class="btn btn-info btn-sm" onclick="openAktionModal('suspendieren', ${userId}, '${akte.name}')">
+        <button class="btn btn-info btn-sm" data-aktion="suspendieren" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
           ⏸️ Suspendieren
         </button>
-        <button class="btn btn-info btn-sm" onclick="openAktionModal('aufheben', ${userId}, '${akte.name}')">
+        <button class="btn btn-info btn-sm" data-aktion="aufheben" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
           ✅ Suspendierung aufheben
         </button>
-        <button class="btn btn-danger btn-sm" onclick="openAktionModal('kuendigen', ${userId}, '${akte.name}')">
+        <button class="btn btn-danger btn-sm" data-aktion="kuendigen" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
           ⛔ Kündigen
         </button>
       </div>
@@ -9790,14 +9919,18 @@ async function openGuild(guildId) {
       api('modules', { guild: state.currentGuild })
         .then(r => state.modules = r.module)
         .catch(() => state.modules = { buergerakten: true, bewerbungsfragen: true }),
+      // Rollen für ALLE Nutzer laden — werden für Fahrzeug-Formulare,
+      // Dienstanweisungen und mehr gebraucht (nicht nur Admins).
+      api('roles', { guild: state.currentGuild })
+        .then(r => state.roles = r.roles || [])
+        .catch(() => state.roles = []),
     ];
-    
+
     if (state.tier?.admin) {
       calls.push(
         api('schema', { guild: state.currentGuild }).then(r => state.schema = r.categories),
         api('config', { guild: state.currentGuild }).then(r => state.config = r.config),
         api('channels', { guild: state.currentGuild }).then(r => state.channels = r.channels),
-        api('roles', { guild: state.currentGuild }).then(r => state.roles = r.roles),
         api('stats', { guild: state.currentGuild }).then(r => state.stats = r),
         api('officer_permission', { guild: state.currentGuild })
           .then(r => state.officerPermission = r.enabled)
@@ -10714,6 +10847,9 @@ async function boot() {
     // Initialize tooltips
     initTooltips();
 
+    // Client-seitige VPN/Proxy-Erkennung (Browser-Check)
+    checkClientVpn();
+
     startNotificationPolling();
 
     // Splash anzeigen
@@ -10775,17 +10911,27 @@ async function checkClientVpn() {
 }
 
 function showVpnWarning(ipData) {
-  // Warnung permanent im Dashboard anzeigen
+  // FIX: Vorher konnte das Banner mehrfach eingefügt werden (z. B. bei React-artigen
+  // Re-Renders oder wenn checkClientVpn mehrmals feuert). Jetzt früh aussteigen, wenn
+  // das Banner schon existiert oder der User es aktiv dismissed hat.
+  if (document.getElementById('vpn-warning')) return;
+  if (state.vpnWarningDismissed) return;
+
+  // ISP/Country escapen, weil die Felder frei vom IP-Intel-Dienst kommen
+  // (XSS-Schutz, vorher wurden sie ungesichert eingefügt).
+  const isp = esc(ipData.isp || 'Unbekannter ISP');
+  const cc = esc(ipData.countryCode || '??');
+
   const warning = el(`
     <div class="vpn-warning-banner" id="vpn-warning">
       <div class="vpn-warning-content">
         <div class="vpn-warning-icon">🔒</div>
         <div class="vpn-warning-text">
           <strong>VPN/Proxy erkannt!</strong>
-          <span>${ipData.isp || 'Unbekannter ISP'} (${ipData.countryCode || '??'}) — Deine IP wird überwacht.</span>
+          <span>${isp} (${cc}) — Deine IP wird überwacht.</span>
         </div>
       </div>
-      <button class="vpn-warning-close" onclick="dismissVpnWarning()">✕</button>
+      <button class="vpn-warning-close" aria-label="Warnung schließen" onclick="dismissVpnWarning()">✕</button>
     </div>
   `);
 
@@ -10807,11 +10953,16 @@ function dismissVpnWarning() {
 // LOGIN SCREEN
 // ================================================================
 
-function renderLoginScreen() {
-  window.redirectToLogin = () => {
-    window.location.href = loginUrl();
-  };
+// Top-Level-Funktion, damit onclick="redirectToLogin()" im HTML-Markup
+// zuverlässig funktioniert. Vorher nur window.redirectToLogin, was bei
+// CSP-strict oder im Shadow-DOM nicht greift.
+function redirectToLogin() {
+  window.location.href = loginUrl();
+}
+// Zusätzlich auf window exposen, falls externe Skripte darauf zugreifen.
+window.redirectToLogin = redirectToLogin;
 
+function renderLoginScreen() {
   // URL-Parameter für Login-Fehler checken
   const urlParams = new URLSearchParams(window.location.search);
   const loginError = urlParams.get('login_error');
