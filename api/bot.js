@@ -333,7 +333,7 @@ module.exports = async (req, res) => {
   }
 
   let body;
-  if (method === 'POST') {
+  if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
     let raw = '';
     for await (const chunk of req) raw += chunk;
     let parsed = {};
