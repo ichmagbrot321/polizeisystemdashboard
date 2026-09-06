@@ -8694,36 +8694,40 @@ async function loadSentinelStats() {
 }
 
 function switchSentinelTab(tabName) {
+  const contentEl = document.getElementById('sentinel-content');
+
+  if (!contentEl || state.activeView !== 'sentinel') {
+    // Sentinel ist nicht offen - öffne es erst und wechsle dann zum Tab
+    state.activeView = 'sentinel';
+    renderAppWithLayout().then(() => {
+      // Warte bis Sentinel gerendert wurde
+      setTimeout(() => {
+        const newContent = document.getElementById('sentinel-content');
+        if (newContent) {
+          // Tab-Buttons aktualisieren
+          document.querySelectorAll('.sentinel-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+          });
+          // Content laden
+          newContent.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
+          switch (tabName) {
+            case 'overview': loadSentinelOverview(newContent); break;
+            case 'threats': loadSentinelThreats(newContent); break;
+            case 'users': loadSentinelUsers(newContent); break;
+            case 'ips': loadSentinelIps(newContent); break;
+            case 'blacklist': loadSentinelBlacklist(newContent); break;
+            case 'whitelist': loadSentinelWhitelist(newContent); break;
+          }
+        }
+      }, 200);
+    });
+    return;
+  }
+
   // Tab-Buttons aktualisieren
   document.querySelectorAll('.sentinel-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
-
-  const contentEl = document.getElementById('sentinel-content');
-  if (!contentEl) {
-    // Fallback: Öffne Sentinel und wechsle dann zum Tab
-    openSentinelDirect().then(() => {
-      setTimeout(() => {
-        const newContent = document.getElementById('sentinel-content');
-        if (newContent) {
-          document.querySelectorAll('.sentinel-tab').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-          });
-          const el = newContent;
-          newContent.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
-          switch (tabName) {
-            case 'overview': loadSentinelOverview(el); break;
-            case 'threats': loadSentinelThreats(el); break;
-            case 'users': loadSentinelUsers(el); break;
-            case 'ips': loadSentinelIps(el); break;
-            case 'blacklist': loadSentinelBlacklist(el); break;
-            case 'whitelist': loadSentinelWhitelist(el); break;
-          }
-        }
-      }, 100);
-    });
-    return;
-  }
 
   contentEl.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
 
@@ -10716,6 +10720,151 @@ async function renderAdminArea() {
 
   // Load default tab
   loadTab('sentinel');
+}
+
+// ================================================================
+// ADMIN-FAHRZEUG-KATALOG
+// ================================================================
+async function renderAdminVehicles(container) {
+  if (!container) return;
+  const isAdmin = checkAccess('admin');
+  if (!isAdmin) {
+    container.innerHTML = '<div class="alert alert-danger"><strong>Keine Berechtigung</strong> — Der Fahrzeug-Katalog ist nur für den Bot-Owner zugänglich.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="page-header page-enter">
+      <div class="page-header-content">
+        <h1 class="page-title">🚗 Globaler Fahrzeug-Katalog</h1>
+        <p class="page-description">Fahrzeuge, die allen Servern zur Verfügung stehen</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-primary" onclick="showAdminVehicleModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Neues Katalog-Fahrzeug
+        </button>
+      </div>
+    </div>
+    <div id="admin-vehicles-list" class="grid grid-3">
+      <div class="loading-center"><div class="loading-spinner"></div></div>
+    </div>
+  `;
+
+  try {
+    const { vehicles } = await api('admin_vehicles');
+    const list = document.getElementById('admin-vehicles-list');
+    if (!list) return;
+
+    if (!vehicles || vehicles.length === 0) {
+      list.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon">🚗</div><div class="empty-state-title">Keine Fahrzeuge</div><div class="empty-state-description">Im Katalog sind noch keine Fahrzeuge angelegt.</div></div>';
+      return;
+    }
+
+    list.innerHTML = vehicles.map(v => `
+      <div class="card fahrzeug-card" onclick="showAdminVehicleModal(${JSON.stringify(v).replace(/"/g, '&quot;')})">
+        <div class="fahrzeug-bild" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: flex; align-items: center; justify-content: center; font-size: 48px;">
+          ${v.icon || '🚗'}
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">${esc(v.name)}</h3>
+          <p class="text-sm text-muted">${esc(v.beschreibung || 'Keine Beschreibung')}</p>
+          <div class="flex gap-xs mt-md">
+            <span class="badge badge-primary">${esc(v.marke || 'Unbekannt')}</span>
+            <span class="badge badge-secondary">${esc(v.kategorie || 'Auto')}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    const list = document.getElementById('admin-vehicles-list');
+    if (list) list.innerHTML = '<div class="alert alert-danger">Fehler beim Laden: ' + esc(e.message) + '</div>';
+  }
+}
+
+function showAdminVehicleModal(vehicle = null) {
+  const isNew = !vehicle;
+  const title = isNew ? 'Neues Fahrzeug anlegen' : 'Fahrzeug bearbeiten';
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'vehicle-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>${title}</h2>
+        <button class="modal-close" onclick="closeVehicleModal()">&times;</button>
+      </div>
+      <form id="vehicle-form" onsubmit="submitAdminVehicle(event, ${vehicle ? vehicle.id : 'null'})">
+        <div class="form-group">
+          <label>Fahrzeugname *</label>
+          <input type="text" id="veh-name" value="${vehicle ? esc(vehicle.name) : ''}" required placeholder="z.B. BMW M5 Competition">
+        </div>
+        <div class="form-group">
+          <label>Marke</label>
+          <input type="text" id="veh-marke" value="${vehicle ? esc(vehicle.marke || '') : ''}" placeholder="z.B. BMW">
+        </div>
+        <div class="form-group">
+          <label>Kategorie</label>
+          <select id="veh-kategorie">
+            <option value="Auto" ${vehicle?.kategorie === 'Auto' ? 'selected' : ''}>🚗 Auto</option>
+            <option value="Motorrad" ${vehicle?.kategorie === 'Motorrad' ? 'selected' : ''}>🏍️ Motorrad</option>
+            <option value="LKW" ${vehicle?.kategorie === 'LKW' ? 'selected' : ''}>🚛 LKW</option>
+            <option value="Boot" ${vehicle?.kategorie === 'Boot' ? 'selected' : ''}>⛵ Boot</option>
+            <option value="Flugzeug" ${vehicle?.kategorie === 'Flugzeug' ? 'selected' : ''}>✈️ Flugzeug</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Beschreibung</label>
+          <textarea id="veh-beschreibung" rows="3" placeholder="Optionale Beschreibung">${vehicle ? esc(vehicle.beschreibung || '') : ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Icon</label>
+          <input type="text" id="veh-icon" value="${vehicle ? esc(vehicle.icon || '') : ''}" placeholder="🚗">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeVehicleModal()">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">${isNew ? 'Anlegen' : 'Speichern'}</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeVehicleModal(); });
+}
+
+function closeVehicleModal() {
+  document.getElementById('vehicle-modal')?.remove();
+}
+
+async function submitAdminVehicle(e, vehicleId) {
+  e.preventDefault();
+  const name = document.getElementById('veh-name').value.trim();
+  if (!name) { showError('Fehler', 'Bitte gib einen Fahrzeugnamen an'); return; }
+
+  const data = {
+    name,
+    marke: document.getElementById('veh-marke').value.trim(),
+    kategorie: document.getElementById('veh-kategorie').value,
+    beschreibung: document.getElementById('veh-beschreibung').value.trim(),
+    icon: document.getElementById('veh-icon').value.trim() || '🚗'
+  };
+
+  try {
+    if (vehicleId) {
+      await api('admin_vehicle_update', { vehicle_id: vehicleId, ...data });
+      showSuccess('Gespeichert', `Fahrzeug "${name}" wurde aktualisiert`);
+    } else {
+      await api('admin_vehicle_create', data);
+      showSuccess('Erstellt', `Fahrzeug "${name}" wurde im Katalog angelegt`);
+    }
+    closeVehicleModal();
+    if (state.activeView === 'admin') {
+      const tabContent = document.getElementById('admin-tab-content');
+      if (tabContent) renderAdminVehicles(tabContent);
+    }
+  } catch (err) {
+    showError('Fehler', err.message || 'Speichern fehlgeschlagen');
+  }
 }
 
 async function renderAdminSupport(container) {
