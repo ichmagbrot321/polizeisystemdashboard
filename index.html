@@ -10955,12 +10955,6 @@ function updateVehicleRoles() {
   const hiddenInput = document.getElementById('veh-rang-ids');
   if (hiddenInput) hiddenInput.value = ids.join(',');
 }
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeVehicleModal(); });
-}
 
 // Image upload handler
 function handleVehicleImageUpload(input) {
