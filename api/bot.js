@@ -236,6 +236,19 @@ module.exports = async (req, res) => {
   const cookies = parseCookies(req.headers.cookie);
   const session = verifySession(cookies.dash_session);
 
+  // CORS headers für Cross-Origin-Anfragen
+  res.setHeader('Access-Control-Allow-Origin', 'https://polizei-system-dashboard.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Preflight OPTIONS beantworten
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   // -- Lokal beantwortete Ressourcen (kein Bot-Kontakt nötig) --
   if (resource === 'me') {
     if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
@@ -296,6 +309,8 @@ module.exports = async (req, res) => {
   const query = Object.fromEntries(url.searchParams);
   const method = mapping.method || req.method;
 
+  console.log('[bot-proxy] Request:', method, resource, 'body present:', !!req.headers['content-length']);
+
   let botPath;
   try {
     botPath = mapping.path(guild, target, query);
@@ -335,13 +350,18 @@ module.exports = async (req, res) => {
   let body;
   if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
     let raw = '';
-    for await (const chunk of req) raw += chunk;
+    try {
+      raw = await req.text();
+    } catch (err) {
+      console.error('[bot-proxy] Error reading body:', err);
+    }
     let parsed = {};
     if (raw) {
       try {
         parsed = JSON.parse(raw);
       } catch {
-        return sendJson(res, 400, { error: 'Ungültiger JSON-Body' });
+        console.error('[bot-proxy] Invalid JSON:', raw);
+        return sendJson(res, 400, { error: 'Ungültiger JSON-Body', raw });
       }
     }
     // actor_id kommt IMMER aus der geprüften Session, nie vom Client — verhindert Spoofing.
