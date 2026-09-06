@@ -162,6 +162,27 @@ const RESOURCE_MAP = {
   sentinel_whitelist_add: { method: 'POST', global: true, path: () => `/api/sentinel/whitelist/add` },
   sentinel_whitelist_remove: { method: 'POST', global: true, path: () => `/api/sentinel/whitelist/remove` },
 
+  // -- NEU: Globaler Fahrzeug-Katalog --
+  // Bot-Owner pflegt den globalen Katalog im Admin-Bereich. Server-Admins
+  // weisen daraus Fahrzeuge Rängen zu. Vermeidet Doppel-Pflege pro Server.
+  // Hinweis: Die alten per-Server-Routen (/api/guilds/{g}/fahrzeuge) bleiben
+  // für Abwärtskompatibilität erhalten, bis der Bot vollständig migriert ist.
+  admin_vehicles: { method: 'GET', global: true, path: () => `/api/admin/vehicles` },
+  admin_vehicle_get: { method: 'GET', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
+  admin_vehicle_create: { method: 'POST', global: true, path: () => `/api/admin/vehicles` },
+  admin_vehicle_update: { method: 'PUT', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
+  admin_vehicle_delete: { method: 'DELETE', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
+
+  // Globaler Katalog lesen — alle eingeloggten User dürfen den Katalog
+  // sehen, damit Server-Admins die Fahrzeuge auswählen können.
+  vehicles_catalog: { method: 'GET', anyUser: true, path: () => `/api/vehicles` },
+
+  // Server-spezifische Rang-Zuordnung für Katalog-Fahrzeuge.
+  // Server-Admins pflegen hier, welche Ränge ihres Servers welche
+  // globalen Fahrzeuge fahren dürfen.
+  vehicle_assignments: { method: 'GET', path: (g) => `/api/guilds/${g}/vehicle-assignments` },
+  vehicle_assignment_save: { method: 'POST', path: (g) => `/api/guilds/${g}/vehicle-assignments` },
+
   // -- NEU: Dienstanweisungen --
   dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
   dienstanweisung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
