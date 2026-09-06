@@ -5212,7 +5212,7 @@ textarea:focus-visible {
 // KONFIGURATION
 // ================================================================
 
-const DISCORD_CLIENT_ID = "1528709772784963645";
+const DISCORD_CLIENT_ID = "1528709772784963635";
 
 const app = document.getElementById('app');
 
@@ -8719,7 +8719,7 @@ function switchSentinelTab(tabName) {
             case 'whitelist': loadSentinelWhitelist(newContent); break;
           }
         }
-      }, 200);
+      }, 300);
     });
     return;
   }
@@ -10173,10 +10173,10 @@ function renderAppWithLayout() {
       </div>
     </div>
   `;
-  
+
   renderSidebarFull();
   renderTopbarFull();
-  renderApp();
+  return Promise.resolve(renderApp());
 }
 
 function renderSidebarFull() {
@@ -10752,11 +10752,12 @@ async function renderAdminVehicles(container) {
   `;
 
   try {
-    const { vehicles } = await api('admin_vehicles');
+    const data = await api('admin_vehicles');
+    const vehicles = data?.vehicles || [];
     const list = document.getElementById('admin-vehicles-list');
     if (!list) return;
 
-    if (!vehicles || vehicles.length === 0) {
+    if (vehicles.length === 0) {
       list.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon">🚗</div><div class="empty-state-title">Keine Fahrzeuge</div><div class="empty-state-description">Im Katalog sind noch keine Fahrzeuge angelegt.</div></div>';
       return;
     }
@@ -10778,7 +10779,13 @@ async function renderAdminVehicles(container) {
     `).join('');
   } catch (e) {
     const list = document.getElementById('admin-vehicles-list');
-    if (list) list.innerHTML = '<div class="alert alert-danger">Fehler beim Laden: ' + esc(e.message) + '</div>';
+    if (list) list.innerHTML = `
+      <div class="alert alert-warning" style="grid-column: 1 / -1;">
+        <strong>Bot nicht erreichbar</strong><br>
+        Der Fahrzeug-Katalog konnte nicht geladen werden. Bitte stelle sicher, dass der Bot läuft.<br>
+        <small class="text-muted">${esc(e.message)}</small>
+      </div>
+    `;
   }
 }
 
@@ -10788,39 +10795,80 @@ function showAdminVehicleModal(vehicle = null) {
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.id = 'vehicle-modal';
+
+  // Vehicle image preview
+  const currentImage = vehicle?.bild_url || '';
+  const currentIcon = vehicle?.icon || '🚗';
+
   modal.innerHTML = `
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
       <div class="modal-header">
         <h2>${title}</h2>
         <button class="modal-close" onclick="closeVehicleModal()">&times;</button>
       </div>
       <form id="vehicle-form" onsubmit="submitAdminVehicle(event, ${vehicle ? vehicle.id : 'null'})">
+
+        <!-- Bild-Upload -->
         <div class="form-group">
-          <label>Fahrzeugname *</label>
-          <input type="text" id="veh-name" value="${vehicle ? esc(vehicle.name) : ''}" required placeholder="z.B. BMW M5 Competition">
+          <label>Fahrzeugbild</label>
+          <div class="vehicle-image-upload" id="vehicle-image-area">
+            <div class="vehicle-image-preview" id="veh-image-preview">
+              ${currentImage ? `<img src="${esc(currentImage)}" alt="Fahrzeugbild" style="max-width: 100%; max-height: 150px; border-radius: 8px;">` : `
+                <div style="text-align: center; color: var(--text-muted);">
+                  <div style="font-size: 48px;">${currentIcon}</div>
+                  <div style="margin-top: 8px;">Bild hochladen</div>
+                </div>
+              `}
+            </div>
+            <div class="vehicle-image-actions">
+              <input type="file" id="veh-image-input" accept="image/*" style="display: none;" onchange="handleVehicleImageUpload(this)">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('veh-image-input').click()">
+                📷 Bild auswählen
+              </button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="clearVehicleImage()">Entfernen</button>
+            </div>
+            <input type="hidden" id="veh-bild-url" value="${esc(currentImage)}">
+          </div>
+          <style>
+            .vehicle-image-upload { border: 2px dashed var(--border-color); border-radius: 12px; padding: 20px; text-align: center; background: var(--bg-secondary); }
+            .vehicle-image-preview { margin-bottom: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center; }
+            .vehicle-image-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+          </style>
         </div>
-        <div class="form-group">
-          <label>Marke</label>
-          <input type="text" id="veh-marke" value="${vehicle ? esc(vehicle.marke || '') : ''}" placeholder="z.B. BMW">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label>Fahrzeugname *</label>
+            <input type="text" id="veh-name" value="${vehicle ? esc(vehicle.name) : ''}" required placeholder="z.B. BMW M5 Competition">
+          </div>
+          <div class="form-group">
+            <label>Marke</label>
+            <input type="text" id="veh-marke" value="${vehicle ? esc(vehicle.marke || '') : ''}" placeholder="z.B. BMW">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Kategorie</label>
-          <select id="veh-kategorie">
-            <option value="Auto" ${vehicle?.kategorie === 'Auto' ? 'selected' : ''}>🚗 Auto</option>
-            <option value="Motorrad" ${vehicle?.kategorie === 'Motorrad' ? 'selected' : ''}>🏍️ Motorrad</option>
-            <option value="LKW" ${vehicle?.kategorie === 'LKW' ? 'selected' : ''}>🚛 LKW</option>
-            <option value="Boot" ${vehicle?.kategorie === 'Boot' ? 'selected' : ''}>⛵ Boot</option>
-            <option value="Flugzeug" ${vehicle?.kategorie === 'Flugzeug' ? 'selected' : ''}>✈️ Flugzeug</option>
-          </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label>Kategorie</label>
+            <select id="veh-kategorie">
+              <option value="Auto" ${vehicle?.kategorie === 'Auto' ? 'selected' : ''}>🚗 Auto</option>
+              <option value="Motorrad" ${vehicle?.kategorie === 'Motorrad' ? 'selected' : ''}>🏍️ Motorrad</option>
+              <option value="LKW" ${vehicle?.kategorie === 'LKW' ? 'selected' : ''}>🚛 LKW</option>
+              <option value="Boot" ${vehicle?.kategorie === 'Boot' ? 'selected' : ''}>⛵ Boot</option>
+              <option value="Flugzeug" ${vehicle?.kategorie === 'Flugzeug' ? 'selected' : ''}>✈️ Flugzeug</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Icon (Emoji)</label>
+            <input type="text" id="veh-icon" value="${vehicle ? esc(vehicle.icon || '🚗') : '🚗'}" placeholder="🚗" maxlength="4">
+          </div>
         </div>
+
         <div class="form-group">
           <label>Beschreibung</label>
           <textarea id="veh-beschreibung" rows="3" placeholder="Optionale Beschreibung">${vehicle ? esc(vehicle.beschreibung || '') : ''}</textarea>
         </div>
-        <div class="form-group">
-          <label>Icon</label>
-          <input type="text" id="veh-icon" value="${vehicle ? esc(vehicle.icon || '') : ''}" placeholder="🚗">
-        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeVehicleModal()">Abbrechen</button>
           <button type="submit" class="btn btn-primary">${isNew ? 'Anlegen' : 'Speichern'}</button>
@@ -10830,6 +10878,42 @@ function showAdminVehicleModal(vehicle = null) {
   `;
   document.body.appendChild(modal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeVehicleModal(); });
+}
+
+// Image upload handler
+function handleVehicleImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    showError('Fehler', 'Bild ist zu groß (max. 5MB)');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('veh-image-preview');
+    const urlInput = document.getElementById('veh-bild-url');
+    if (preview) {
+      preview.innerHTML = `<img src="${e.target.result}" alt="Fahrzeugbild" style="max-width: 100%; max-height: 150px; border-radius: 8px;">`;
+    }
+    if (urlInput) {
+      urlInput.value = e.target.result; // Base64 for now, or upload to server
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearVehicleImage() {
+  const preview = document.getElementById('veh-image-preview');
+  const urlInput = document.getElementById('veh-bild-url');
+  const fileInput = document.getElementById('veh-image-input');
+  const icon = document.getElementById('veh-icon');
+  if (preview) {
+    preview.innerHTML = `<div style="text-align: center; color: var(--text-muted);"><div style="font-size: 48px;">${icon?.value || '🚗'}</div><div style="margin-top: 8px;">Bild hochladen</div></div>`;
+  }
+  if (urlInput) urlInput.value = '';
+  if (fileInput) fileInput.value = '';
 }
 
 function closeVehicleModal() {
@@ -10846,7 +10930,8 @@ async function submitAdminVehicle(e, vehicleId) {
     marke: document.getElementById('veh-marke').value.trim(),
     kategorie: document.getElementById('veh-kategorie').value,
     beschreibung: document.getElementById('veh-beschreibung').value.trim(),
-    icon: document.getElementById('veh-icon').value.trim() || '🚗'
+    icon: document.getElementById('veh-icon').value.trim() || '🚗',
+    bild_url: document.getElementById('veh-bild-url').value.trim() || null
   };
 
   try {
