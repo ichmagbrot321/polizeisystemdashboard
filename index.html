@@ -10937,10 +10937,10 @@ async function submitAdminVehicle(e, vehicleId) {
 
   try {
     if (vehicleId) {
-      await api('admin_vehicle_update', { vehicle_id: vehicleId, ...data });
+      await api('admin_vehicle_update', { target: vehicleId, method: 'PUT', body: data });
       showSuccess('Gespeichert', `Fahrzeug "${name}" wurde aktualisiert`);
     } else {
-      await api('admin_vehicle_create', data);
+      await api('admin_vehicle_create', { method: 'POST', body: data });
       showSuccess('Erstellt', `Fahrzeug "${name}" wurde im Katalog angelegt`);
     }
     closeVehicleModal();
@@ -10949,6 +10949,7 @@ async function submitAdminVehicle(e, vehicleId) {
       if (tabContent) renderAdminVehicles(tabContent);
     }
   } catch (err) {
+    console.error('Fahrzeug speichern fehlgeschlagen:', err);
     showError('Fehler', err.message || 'Speichern fehlgeschlagen');
   }
 }
