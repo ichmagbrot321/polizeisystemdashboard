@@ -6434,9 +6434,10 @@ const NAVIGATION_ITEMS = [
 
 function checkAccess(level) {
   if (!level) return true;
+  // Bot-Owner hat immer Admin-Zugriff
+  if (state.isAdmin) return true;
   const tier = state.tier;
   if (!tier) return false;
-  if (state.isAdmin) return true;
   return tier[level] === true;
 }
 
