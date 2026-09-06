@@ -8700,7 +8700,30 @@ function switchSentinelTab(tabName) {
   });
 
   const contentEl = document.getElementById('sentinel-content');
-  if (!contentEl) return;
+  if (!contentEl) {
+    // Fallback: Öffne Sentinel und wechsle dann zum Tab
+    openSentinelDirect().then(() => {
+      setTimeout(() => {
+        const newContent = document.getElementById('sentinel-content');
+        if (newContent) {
+          document.querySelectorAll('.sentinel-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+          });
+          const el = newContent;
+          newContent.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
+          switch (tabName) {
+            case 'overview': loadSentinelOverview(el); break;
+            case 'threats': loadSentinelThreats(el); break;
+            case 'users': loadSentinelUsers(el); break;
+            case 'ips': loadSentinelIps(el); break;
+            case 'blacklist': loadSentinelBlacklist(el); break;
+            case 'whitelist': loadSentinelWhitelist(el); break;
+          }
+        }
+      }, 100);
+    });
+    return;
+  }
 
   contentEl.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
 
@@ -10620,6 +10643,11 @@ async function renderAdminArea() {
         <div class="admin-card-title">Sentinel Security</div>
         <div class="admin-card-desc">KI-gestützte Bedrohungserkennung</div>
       </div>
+      <div class="admin-card" data-tab="vehicles">
+        <div class="admin-card-icon">🚗</div>
+        <div class="admin-card-title">Fahrzeug-Katalog</div>
+        <div class="admin-card-desc">Globale Fahrzeuge verwalten</div>
+      </div>
       <div class="admin-card" data-tab="support">
         <div class="admin-card-icon">📨</div>
         <div class="admin-card-title">Support-Tickets</div>
@@ -10671,6 +10699,8 @@ async function renderAdminArea() {
       // rendert die Stats direkt in den Container, deshalb ist loadSentinelStats hier
       // nicht nötig (und würde ohnehin nichts tun, da das Element fehlt).
       renderSentinelOverview(tabContent);
+    } else if (tab === 'vehicles') {
+      renderAdminVehicles(tabContent);
     } else if (tab === 'support') {
       renderAdminSupport(tabContent);
     } else if (tab === 'guilds') {
