@@ -10765,7 +10765,10 @@ async function renderAdminVehicles(container) {
 
     list.innerHTML = vehicles.map(v => `
       <div class="card fahrzeug-card" onclick="showAdminVehicleModal(${JSON.stringify(v).replace(/"/g, '&quot;')})">
-        <div class="fahrzeug-bild" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: flex; align-items: center; justify-content: center; font-size: 48px;">
+        ${v.bild_url
+          ? `<img src="${esc(v.bild_url)}" class="fahrzeug-bild" alt="${esc(v.name)}" style="object-fit: cover; height: 160px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+          : ''}
+        <div class="fahrzeug-bild" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: ${v.bild_url ? 'none' : 'flex'}; align-items: center; justify-content: center; font-size: 48px;">
           ${v.icon || '🚗'}
         </div>
         <div class="card-body">
@@ -10774,6 +10777,7 @@ async function renderAdminVehicles(container) {
           <div class="flex gap-xs mt-md">
             <span class="badge badge-primary">${esc(v.marke || 'Unbekannt')}</span>
             <span class="badge badge-secondary">${esc(v.kategorie || 'Auto')}</span>
+            ${v.ps ? `<span class="badge badge-warning">⚡ ${v.ps} PS</span>` : ''}
           </div>
         </div>
       </div>
@@ -10870,10 +10874,87 @@ function showAdminVehicleModal(vehicle = null) {
           <textarea id="veh-beschreibung" rows="3" placeholder="Optionale Beschreibung">${vehicle ? esc(vehicle.beschreibung || '') : ''}</textarea>
         </div>
 
+        <!-- Rang-Zuordnung für Discord -->
+        <div class="form-group">
+          <label>Berechtigte Ränge (Discord)</label>
+          <p class="text-sm text-muted mb-sm">Wähle aus, welche Discord-Rollen dieses Fahrzeug fahren dürfen.</p>
+          <div id="veh-roles-container" class="roles-checkboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+            <div class="loading-text">Lade Ränge...</div>
+          </div>
+          <input type="hidden" id="veh-rang-ids" value="${vehicle?.rang_ids ? vehicle.rang_ids.join(',') : ''}">
+        </div>
+
+        <div class="form-group">
+          <label>PS / HP</label>
+          <input type="number" id="veh-ps" value="${vehicle?.ps || ''}" placeholder="z.B. 450">
+        </div>
+
+        <div class="form-group">
+          <label>Höchstgeschwindigkeit (km/h)</label>
+          <input type="number" id="veh-vmax" value="${vehicle?.vmax || ''}" placeholder="z.B. 280">
+        </div>
+
         <div class="modal-footer">
+          ${!isNew ? `<button type="button" class="btn btn-danger" onclick="deleteAdminVehicle(${vehicle?.id})">🗑️ Löschen</button>` : ''}
           <button type="button" class="btn btn-secondary" onclick="closeVehicleModal()">Abbrechen</button>
           <button type="submit" class="btn btn-primary">${isNew ? 'Anlegen' : 'Speichern'}</button>
         </div>
+
+        <style>
+          .roles-checkboxes label { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 13px; }
+          .roles-checkboxes label:hover { background: var(--bg-hover); }
+          .roles-checkboxes input[type="checkbox"]:checked + span { color: var(--primary); font-weight: 600; }
+        </style>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Lade Rollen für die Checkboxen
+  loadRolesForVehicleModal(vehicle);
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeVehicleModal(); });
+}
+
+async function loadRolesForVehicleModal(vehicle) {
+  const container = document.getElementById('veh-roles-container');
+  const hiddenInput = document.getElementById('veh-rang-ids');
+  if (!container) return;
+
+  try {
+    // Lade Rollen vom Server
+    if (!state.currentGuild) {
+      // Für Admin-Bereich: versuche einen默ample Guild zu laden
+      container.innerHTML = '<div class="text-sm text-muted">Wähle zuerst einen Server aus.</div>';
+      return;
+    }
+
+    const roles = await api('roles', { guild: state.currentGuild });
+    const serverRoles = roles || [];
+    const selectedIds = vehicle?.rang_ids || [];
+
+    if (serverRoles.length === 0) {
+      container.innerHTML = '<div class="text-sm text-muted">Keine Rollen gefunden.</div>';
+      return;
+    }
+
+    container.innerHTML = serverRoles.map(role => `
+      <label>
+        <input type="checkbox" value="${role.id}" ${selectedIds.includes(String(role.id)) ? 'checked' : ''} onchange="updateVehicleRoles()">
+        <span>${esc(role.name)}</span>
+      </label>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="text-sm text-danger">Fehler beim Laden der Rollen</div>';
+  }
+}
+
+function updateVehicleRoles() {
+  const checkboxes = document.querySelectorAll('#veh-roles-container input[type="checkbox"]:checked');
+  const ids = Array.from(checkboxes).map(cb => cb.value);
+  const hiddenInput = document.getElementById('veh-rang-ids');
+  if (hiddenInput) hiddenInput.value = ids.join(',');
+}
       </form>
     </div>
   `;
@@ -10932,7 +11013,10 @@ async function submitAdminVehicle(e, vehicleId) {
     kategorie: document.getElementById('veh-kategorie').value,
     beschreibung: document.getElementById('veh-beschreibung').value.trim(),
     icon: document.getElementById('veh-icon').value.trim() || '🚗',
-    bild_url: document.getElementById('veh-bild-url').value.trim() || null
+    bild_url: document.getElementById('veh-bild-url').value.trim() || null,
+    ps: parseInt(document.getElementById('veh-ps').value) || null,
+    vmax: parseInt(document.getElementById('veh-vmax').value) || null,
+    rang_ids: (document.getElementById('veh-rang-ids').value || '').split(',').filter(Boolean)
   };
 
   try {
@@ -10951,6 +11035,22 @@ async function submitAdminVehicle(e, vehicleId) {
   } catch (err) {
     console.error('Fahrzeug speichern fehlgeschlagen:', err);
     showError('Fehler', err.message || 'Speichern fehlgeschlagen');
+  }
+}
+
+async function deleteAdminVehicle(vehicleId) {
+  if (!confirm('Dieses Fahrzeug wirklich löschen?')) return;
+
+  try {
+    await api('admin_vehicle_delete', { target: vehicleId, method: 'DELETE' });
+    showSuccess('Gelöscht', 'Das Fahrzeug wurde aus dem Katalog entfernt.');
+    closeVehicleModal();
+    if (state.activeView === 'admin') {
+      const tabContent = document.getElementById('admin-tab-content');
+      if (tabContent) renderAdminVehicles(tabContent);
+    }
+  } catch (err) {
+    showError('Fehler', err.message || 'Löschen fehlgeschlagen');
   }
 }
 
