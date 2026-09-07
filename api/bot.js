@@ -183,7 +183,7 @@ const RESOURCE_MAP = {
   // Server-spezifische Rang-Zuordnung (Kurzname) — wird vom Dashboard für
   // die Fahrzeug-Konfiguration verwendet (klickbare Rang-Checkboxen pro
   // Fahrzeug-Name, gespeichert via POST mit body { name, rang_ids }).
-  fahrzeug_rang: { path: (g) => `/api/guilds/${g}/fahrzeug-rang` },
+  'fahrzeug-rang': { path: (g) => `/api/guilds/${g}/fahrzeug-rang` },
 
   // -- NEU: Dienstanweisungen --
   dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
