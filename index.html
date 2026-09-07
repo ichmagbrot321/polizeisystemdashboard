@@ -6425,6 +6425,8 @@ const NAVIGATION_ITEMS = [
   { id: 'reports', label: 'Meldungen', icon: '📝', section: 'reports', minLevel: 'staff' },
   { id: 'dienstanweisungen', label: 'Dienstanweisungen', icon: '📋', section: 'dienst', minLevel: 'staff' },
   { id: 'fahrzeuge', label: 'Fahrzeuge', icon: '🚗', section: 'fahrzeug', minLevel: 'staff' },
+  { id: 'fahrzeug-konfig', label: '🚗 Fahrzeugkonfiguration', icon: '🔧', section: 'fahrzeug', minLevel: 'staff' },
+  { id: 'setup-assistent', label: '🧭 Setup-Assistent', icon: '✨', section: 'dashboard', minLevel: 'admin' },
   { id: 'krankenmeldungen', label: 'Krankmeldungen', icon: '🏥', section: 'dienst', minLevel: null },
   { id: 'auditlog', label: 'Audit-Log', icon: '📜', section: 'logs', minLevel: 'admin' },
   { id: 'logs', label: 'Logs', icon: '🪵', section: 'logs', minLevel: 'dienstaufsicht' },
@@ -8002,6 +8004,245 @@ async function renderFahrzeuge() {
     `).join('');
   } catch (e) {
     showError('Fehler', e.message);
+  }
+}
+
+// ================================================================
+// SETUP-ASSISTENT (Schritt-für-Schritt-Einrichtung)
+// ================================================================
+
+async function renderSetupAssistent() {
+  const main = document.querySelector('.page-content');
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="page-header page-enter">
+      <div class="page-header-content">
+        <h1 class="page-title">🧭 Setup-Assistent</h1>
+        <p class="page-description">Schritt für Schritt durch die wichtigsten Einstellungen</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" onclick="renderDashboard()">
+          ← Zur Übersicht
+        </button>
+      </div>
+    </div>
+
+    <div id="setup-content" class="page-enter">
+      ${renderSkeleton('card', 3)}
+    </div>
+  `;
+
+  try {
+    // Schema + Config parallel laden
+    const [schemaData, configData] = await Promise.all([
+      api('schema', { guild: state.currentGuild }),
+      api('config', { guild: state.currentGuild })
+    ]);
+
+    const cfg = (configData && configData.config) || {};
+    const kats = (schemaData && schemaData.categories) || [];
+
+    // Pflicht-Felder definieren (sollte jeder Server haben)
+    const pflicht = [
+      { kat: 'allgemein', key: 'org_name', label: 'Servername' },
+      { kat: 'dienstnummer', key: 'panel_channel_id', label: 'Dienstnummer-Panel-Kanal' },
+      { kat: 'personalakte_kanaele', key: 'warn_channel_id', label: 'Verwarnungs-Kanal' },
+      { kat: 'personalakte_kanaele', key: 'suspension_channel_id', label: 'Suspendierungs-Kanal' },
+      { kat: 'personalakte_kanaele', key: 'termination_channel_id', label: 'Kündigungs-Kanal' },
+      { kat: 'bewerbung_kanaele', key: 'application_panel_channel_id', label: 'Bewerbungs-Panel' },
+      { kat: 'dienststatus_rollen', key: 'member_role_id', label: '🚓 Polizist-Rolle' },
+    ];
+
+    const fehlend = [];
+    for (const p of pflicht) {
+      const wert = cfg[p.key];
+      if (!wert || wert === '' || wert === null) {
+        fehlend.push(p);
+      }
+    }
+
+    // Auch Fahrzeug-Konfiguration prüfen
+    let fahrzeugHinweis = null;
+    try {
+      const fzData = await api('fahrzeug-rang', { guild: state.currentGuild });
+      const fahrzeuge = fzData.fahrzeuge || [];
+      const ohneRang = fahrzeuge.filter(f => !f.rang_ids || f.rang_ids.length === 0).length;
+      if (ohneRang > 0) {
+        fahrzeugHinweis = { total: fahrzeuge.length, ohneRang };
+      }
+    } catch (e) { /* ignorieren */ }
+
+    const fortschritt = pflicht.length - fehlend.length;
+    const prozent = Math.round((fortschritt / pflicht.length) * 100);
+
+    let html = `
+      <div class="card stagger-item" style="margin-bottom: 16px;">
+        <div class="card-body">
+          <h2 class="card-title">📊 Fortschritt</h2>
+          <div class="progress" style="height:24px;background:var(--bg-secondary);border-radius:12px;overflow:hidden;margin:12px 0;">
+            <div style="width:${prozent}%;height:100%;background:linear-gradient(90deg, var(--primary), var(--success));transition:width 0.5s;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:13px;">
+              ${prozent}%
+            </div>
+          </div>
+          <p class="text-sm text-muted">${fortschritt} von ${pflicht.length} Pflicht-Feldern konfiguriert.</p>
+        </div>
+      </div>
+    `;
+
+    if (fehlend.length === 0 && !fahrzeugHinweis) {
+      html += `
+        <div class="card stagger-item" style="border-left:4px solid var(--success);">
+          <div class="card-body" style="text-align:center;padding:32px;">
+            <div style="font-size:48px;">🎉</div>
+            <h2 class="card-title">Alles eingerichtet!</h2>
+            <p class="text-muted">Dein Server ist vollständig konfiguriert. Du kannst die Konfiguration jederzeit in den Einstellungen anpassen.</p>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="card stagger-item" style="margin-bottom: 16px;">
+          <div class="card-header">
+            <h2 class="card-title">📋 Konfigurations-Checkliste</h2>
+            <span class="badge badge-${fehlend.length === 0 ? 'success' : 'warning'}">${fehlend.length} offen</span>
+          </div>
+          <div class="card-body">
+      `;
+
+      if (fehlend.length > 0) {
+        html += `<p class="text-sm text-muted mb-md">Klicke auf einen Eintrag, um direkt zur Einrichtung zu springen:</p>`;
+        html += `<div class="checklist" style="display:flex;flex-direction:column;gap:8px;">`;
+        for (let i = 0; i < fehlend.length; i++) {
+          const item = fehlend[i];
+          const kat = kats.find(k => k.id === item.kat);
+          const katLabel = kat ? kat.label : item.kat;
+          html += `
+            <div class="checklist-item" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;cursor:pointer;border:1px solid var(--border-color);" onclick="state.activeView='settings';renderApp();">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--warning-soft);color:var(--warning);display:flex;align-items:center;justify-content:center;font-weight:600;">${i+1}</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;">${item.label}</div>
+                <div class="text-xs text-muted">${katLabel}</div>
+              </div>
+              <span style="color:var(--warning);">→</span>
+            </div>
+          `;
+        }
+        html += `</div>`;
+      }
+
+      if (fahrzeugHinweis) {
+        html += `
+          <div class="checklist-item" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;cursor:pointer;border:1px solid var(--border-color);margin-top:8px;" onclick="state.activeView='fahrzeug-konfig';renderApp();">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--info-soft);color:var(--info);display:flex;align-items:center;justify-content:center;font-weight:600;">🚗</div>
+            <div style="flex:1;">
+              <div style="font-weight:600;">Fahrzeug-Ränge zuweisen</div>
+              <div class="text-xs text-muted">${fahrzeugHinweis.ohneRang} von ${fahrzeugHinweis.total} Fahrzeugen haben noch keine Ränge</div>
+            </div>
+            <span style="color:var(--info);">→</span>
+          </div>
+        `;
+      }
+
+      html += `</div></div>`;
+
+      // Quick-Action: Komplett einrichten mit /krp-setup
+      html += `
+        <div class="card stagger-item">
+          <div class="card-body">
+            <h3 class="card-title">🚀 Schnell-Einrichtung</h3>
+            <p class="text-sm text-muted">Nutze <code>/krp-setup</code> in Discord, um fehlende Kanäle und Rollen automatisch zu erstellen.</p>
+            <button class="btn btn-primary mt-sm" onclick="showSuccess('Hinweis', 'Führe /krp-setup in deinem Discord-Server aus, um fehlende Kanäle und Rollen automatisch zu erstellen.')">
+              Wie geht das?
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    const content = document.getElementById('setup-content');
+    if (content) content.innerHTML = html;
+  } catch (e) {
+    showError('Fehler', e.message);
+  }
+}
+
+// FAHRZEUG-KONFIGURATION VIEW (Server-Admin: Ränge + Bilder)
+// ================================================================
+
+async function renderFahrzeugKonfiguration() {
+  const main = document.querySelector('.page-content');
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="page-header page-enter">
+      <div class="page-header-content">
+        <h1 class="page-title">🚗 Fahrzeugkonfiguration</h1>
+        <p class="page-description">Ränge und Bilder für alle Fahrzeuge festlegen</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" onclick="renderFahrzeuge()">
+          ← Zurück zur Ansicht
+        </button>
+      </div>
+    </div>
+
+    <div id="fahrzeug-konfig-list" class="grid grid-2">
+      ${renderSkeleton('card', 6)}
+    </div>
+  `;
+
+  try {
+    const result = await api('fahrzeug-rang', { guild: state.currentGuild });
+    const list = document.getElementById('fahrzeug-konfig-list');
+    if (!list) return;
+
+    const fahrzeuge = result.fahrzeuge || [];
+    const serverRangIds = {};
+    for (const f of fahrzeuge) {
+      serverRangIds[f.name] = f.rang_ids || [];
+    }
+
+    list.innerHTML = fahrzeuge.map((f, idx) => `
+      <div class="card stagger-item" style="margin-bottom: 12px;">
+        <div class="card-header">
+          <h3 class="card-title">${f.bild_url ? `<img src="${esc(f.bild_url)}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;margin-right:8px;">` : '🚗'} ${esc(f.name)}</h3>
+          <span class="badge badge-${f.rang_ids && f.rang_ids.length > 0 ? 'success' : 'secondary'}">${f.rang_ids && f.rang_ids.length > 0 ? f.rang_ids.length + ' Ränge' : 'Keine Ränge'}</span>
+        </div>
+        <div class="card-body">
+          <p class="text-sm text-muted">Ränge auswählen, die dieses Fahrzeug fahren dürfen:</p>
+          <div id="rang-container-${idx}" class="rang-checkboxes" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;">
+            ${(state.roles || []).map(r => `
+              <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-secondary);border-radius:6px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" value="${r.id}" ${serverRangIds[f.name]?.includes(String(r.id)) ? 'checked' : ''} onchange="updateFahrzeugRang('${esc(f.name)}', this)">
+                <span>${esc(r.name)}</span>
+              </label>
+            `).join('')}
+          </div>
+          <div class="text-xs text-muted mt-sm">Bild-URL: ${f.bild_url ? `<a href="${esc(f.bild_url)}" target="_blank">✅ Bild vorhanden</a>` : '<span class="text-danger">Kein Bild</span>'}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    showError('Fehler', e.message);
+  }
+}
+
+async function updateFahrzeugRang(name, checkbox) {
+  const rangContainer = checkbox.closest('.rang-checkboxes');
+  if (!rangContainer) return;
+
+  const checked = Array.from(rangContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
+  try {
+    await api('fahrzeug-rang', {
+      guild: state.currentGuild,
+      method: 'POST',
+      body: { name, rang_ids: checked }
+    });
+    showSuccess('Gespeichert', `Ränge für ${name} aktualisiert.`);
+  } catch (e) {
+    showError('Fehler', 'Speichern fehlgeschlagen: ' + e.message);
   }
 }
 
@@ -9873,6 +10114,12 @@ function renderApp() {
       break;
     case 'fahrzeuge':
       renderFahrzeuge();
+      break;
+    case 'fahrzeug-konfig':
+      renderFahrzeugKonfiguration();
+      break;
+    case 'setup-assistent':
+      renderSetupAssistent();
       break;
     case 'auditlog':
       renderAuditLog();
