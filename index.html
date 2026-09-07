@@ -7925,85 +7925,72 @@ async function renderFahrzeuge() {
   main.innerHTML = `
     <div class="page-header page-enter">
       <div class="page-header-content">
-        <h1 class="page-title">🚗 Fahrzeugverwaltung</h1>
-        <p class="page-description">Alle Fahrzeuge der Dienststelle im Überblick</p>
+        <h1 class="page-title">🚗 Fuhrpark</h1>
+        <p class="page-description">Alle 29 Standard-Fahrzeuge mit Bildern und Rang-Zuordnungen</p>
       </div>
       <div class="page-actions">
-        ${state.tier?.admin ? `
-          <button class="btn btn-primary" onclick="showFahrzeugModal()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Neues Fahrzeug
+        ${state.tier?.staff ? `
+          <button class="btn btn-primary" onclick="state.activeView='fahrzeug-konfig';renderApp();">
+            ⚙️ Ränge verwalten
           </button>
         ` : ''}
       </div>
     </div>
 
     <div id="fahrzeuge-list" class="grid grid-3">
-      ${renderSkeleton('card', 3)}
+      ${renderSkeleton('card', 6)}
     </div>
   `;
 
   try {
-    const result = await api('fahrzeuge', { guild: state.currentGuild });
+    // Lade die 29 Standard-Fahrzeuge mit Bildern + server-spezifischen Rängen
+    const result = await api('fahrzeug-rang', { guild: state.currentGuild });
     const list = document.getElementById('fahrzeuge-list');
     if (!list) return;
 
-    if (!result.fahrzeuge || result.fahrzeuge.length === 0) {
+    const fahrzeuge = result.fahrzeuge || [];
+    if (fahrzeuge.length === 0) {
       list.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
           <div class="empty-state-icon">🚗</div>
           <div class="empty-state-title">Keine Fahrzeuge</div>
           <div class="empty-state-description">
-            ${state.tier?.admin
-              ? 'Noch keine Fahrzeuge angelegt. Klicke auf "Neues Fahrzeug", um das erste Fahrzeug hinzuzufügen.'
-              : 'Es wurden noch keine Fahrzeuge angelegt.'}
+            Die 29 Standard-Fahrzeuge werden vom Bot-Owner verwaltet.
           </div>
         </div>
       `;
       return;
     }
 
-    list.innerHTML = result.fahrzeuge.map(f => `
+    list.innerHTML = fahrzeuge.map(f => {
+      const ps = f.hp || f.sek_hp || '';
+      const kmh = f.kmh || '';
+      const preis = f.preis ? `${f.preis} $` : '';
+      const rangCount = f.rang_ids?.length || 0;
+      return `
       <div class="card stagger-item fahrzeug-card">
-        ${f.bild_url ? `<img src="${esc(f.bild_url)}" class="fahrzeug-bild" alt="${esc(f.name)}" />` : ''}
+        ${f.bild_url ? `<img src="${esc(f.bild_url)}" class="fahrzeug-bild" alt="${esc(f.name)}" style="height:160px;object-fit:cover;" onerror="this.style.display='none';" />` : ''}
         <div class="card-body">
-          <div class="flex items-start justify-between gap-sm mb-sm">
-            <h3 class="font-semibold">${esc(f.name)}</h3>
-            ${f.status ? `<span class="badge badge-sm badge-${f.status === 'verfuegbar' ? 'success' : f.status === 'im_einsatz' ? 'warning' : 'secondary'}">${esc(f.status)}</span>` : ''}
-          </div>
-
-          ${f.hersteller || f.typ ? `<p class="text-xs text-muted mb-sm">${esc(f.hersteller || '')} ${f.typ ? `· ${esc(f.typ)}` : ''}</p>` : ''}
-
-          ${f.beschreibung ? `<p class="text-sm text-muted mb-md">${esc(f.beschreibung)}</p>` : ''}
-
+          <h3 class="font-semibold mb-sm">${esc(f.name)}</h3>
           <div class="fahrzeug-specs">
-            ${f.ps ? `<span class="fahrzeug-spec-badge" title="PS">⚡ ${esc(String(f.ps))} PS</span>` : ''}
-            ${f.vmax ? `<span class="fahrzeug-spec-badge" title="Höchstgeschwindigkeit">🏎️ ${esc(String(f.vmax))} km/h</span>` : ''}
-            ${f.antrieb ? `<span class="fahrzeug-spec-badge" title="Antrieb">⛽ ${esc(f.antrieb)}</span>` : ''}
-            ${f.farbe ? `<span class="fahrzeug-spec-badge" title="Farbe">🎨 ${esc(f.farbe)}</span>` : ''}
-            ${f.sitze ? `<span class="fahrzeug-spec-badge" title="Sitzplätze">🪑 ${esc(String(f.sitze))} Sitze</span>` : ''}
+            ${ps ? `<span class="fahrzeug-spec-badge">⚡ ${ps} HP</span>` : ''}
+            ${kmh ? `<span class="fahrzeug-spec-badge">🏎️ ${kmh} km/h</span>` : ''}
+            ${preis ? `<span class="fahrzeug-spec-badge">💰 ${preis}</span>` : ''}
           </div>
-
-          <div class="fahrzeug-rang-info">
-            <strong class="text-xs text-muted">Berechtigte Ränge:</strong>
-            <div class="rang-tags">
-              ${f.rang_ids && f.rang_ids.length > 0
-                ? f.rang_ids.map(rid => {
-                    const rolle = (state.roles || []).find(r => r.id === String(rid));
-                    return rolle ? `<span class="rang-tag">${esc(rolle.name)}</span>` : '';
-                  }).join('')
-                : '<span class="text-xs text-muted">Keine Rollen zugewiesen</span>'
-              }
-            </div>
-          </div>
+          <p class="text-xs text-muted mt-sm">
+            ${rangCount > 0 ? `✅ ${rangCount} Ränge berechtigt` : '🔒 Keine Ränge zugewiesen'}
+          </p>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (e) {
-    showError('Fehler', e.message);
+    const list = document.getElementById('fahrzeuge-list');
+    if (list) list.innerHTML = `
+      <div class="alert alert-warning" style="grid-column: 1 / -1;">
+        <strong>Fehler:</strong> ${esc(e.message)}
+      </div>
+    `;
   }
 }
 
@@ -8178,7 +8165,7 @@ async function renderFahrzeugKonfiguration() {
     <div class="page-header page-enter">
       <div class="page-header-content">
         <h1 class="page-title">🚗 Fahrzeugkonfiguration</h1>
-        <p class="page-description">Ränge und Bilder für alle Fahrzeuge festlegen</p>
+        <p class="page-description">Ordne hier die Discord-Ränge zu, die jedes Fahrzeug fahren dürfen. Bilder werden vom Bot-Owner im Admin-Menü verwaltet.</p>
       </div>
       <div class="page-actions">
         <button class="btn btn-secondary" onclick="renderFahrzeuge()">
@@ -8219,7 +8206,7 @@ async function renderFahrzeugKonfiguration() {
               </label>
             `).join('')}
           </div>
-          <div class="text-xs text-muted mt-sm">Bild-URL: ${f.bild_url ? `<a href="${esc(f.bild_url)}" target="_blank">✅ Bild vorhanden</a>` : '<span class="text-danger">Kein Bild</span>'}</div>
+          <div class="text-xs text-muted mt-sm">📷 Bild: ${f.bild_url ? `<a href="${esc(f.bild_url)}" target="_blank">✅ Vorhanden</a> <span class="text-muted">(vom Bot-Owner verwaltet)</span>` : '<span class="text-danger">Noch kein Bild gesetzt</span>'}</div>
         </div>
       </div>
     `).join('');
@@ -8246,216 +8233,8 @@ async function updateFahrzeugRang(name, checkbox) {
   }
 }
 
-function showFahrzeugModal() {
-  // Admin-Check: nur Admins (oder Bot-Owner) dürfen Fahrzeuge anlegen.
-  // Falls jemand diese Funktion direkt aufruft (z. B. via Devtools),
-  // abbrechen statt stillschweigend fehlschlagen.
-  if (!checkAccess('admin')) {
-    showError('Keine Berechtigung', 'Fahrzeuge können nur von Admins angelegt werden.');
-    return;
-  }
+// HINWEIS: Fahrzeug-Anlegen ist deaktiviert — die 29 Standard-Fahrzeuge in dienst_system.py sind fix. Server-Admins ändern Ränge im Menü "Fahrzeugkonfiguration", der Bot-Owner pflegt Bilder im Admin-Menü.
 
-  showModal({
-    title: '🚗 Neues Fahrzeug anlegen',
-    content: `
-      <form id="fahrzeug-form" class="fahrzeug-form">
-        <div class="form-section">
-          <h4 class="form-section-title">📋 Grunddaten</h4>
-          <div class="form-group">
-            <label class="form-label">Name / Modell *</label>
-            <input type="text" class="form-input" name="name" required placeholder="z.B. Streifenwagen BMW i3" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Bild-URL (optional)</label>
-            <input type="url" class="form-input" name="bild_url" placeholder="https://i.imgur.com/beispiel.png" />
-            <span class="text-xs text-muted">Direktlink zu PNG/JPG/WebP (max. 5 MB empfohlen)</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Beschreibung</label>
-            <textarea class="form-input" name="beschreibung" rows="2" placeholder="Kurze Beschreibung des Fahrzeugs..."></textarea>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h4 class="form-section-title">⚙️ Technische Daten</h4>
-          <div class="form-grid form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Hersteller</label>
-              <input type="text" class="form-input" name="hersteller" placeholder="z.B. BMW, Mercedes, Audi" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Baujahr</label>
-              <input type="number" class="form-input" name="baujahr" min="1900" max="2100" placeholder="z.B. 2023" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Leistung (PS)</label>
-              <input type="number" class="form-input" name="ps" min="0" max="2000" placeholder="z.B. 184" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Höchstgeschwindigkeit (km/h)</label>
-              <input type="number" class="form-input" name="vmax" min="0" max="500" placeholder="z.B. 200" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Antrieb</label>
-              <select class="form-input" name="antrieb">
-                <option value="">— Bitte wählen —</option>
-                <option value="Verbrenner">Verbrenner (Benzin/Diesel)</option>
-                <option value="Hybrid">Hybrid</option>
-                <option value="Elektro">Elektro</option>
-                <option value="Wasserstoff">Wasserstoff</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Getriebe</label>
-              <select class="form-input" name="getriebe">
-                <option value="">— Bitte wählen —</option>
-                <option value="Automatik">Automatik</option>
-                <option value="Manuell">Manuell</option>
-                <option value="DSG">DSG (Doppelkupplung)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Sitzplätze</label>
-              <input type="number" class="form-input" name="sitze" min="1" max="50" placeholder="z.B. 5" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Farbe</label>
-              <input type="text" class="form-input" name="farbe" placeholder="z.B. Weiß, Blau, Schwarz" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Kennzeichen</label>
-              <input type="text" class="form-input" name="kennzeichen" placeholder="z.B. LPK-AB-1234" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Reichweite (km, optional)</label>
-              <input type="number" class="form-input" name="reichweite" min="0" placeholder="z.B. 350" />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h4 class="form-section-title">🏷️ Typ & Status</h4>
-          <div class="form-grid form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Fahrzeugtyp</label>
-              <select class="form-input" name="typ">
-                <option value="streifenwagen">Streifenwagen</option>
-                <option value="motorrad">Motorrad</option>
-                <option value="suv">SUV / Geländewagen</option>
-                <option value="lkw">LKW / Transporter</option>
-                <option value="zivil">Zivilfahrzeug</option>
-                <option value="sonder">Sonderfahrzeug</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Status</label>
-              <select class="form-input" name="status">
-                <option value="verfuegbar">Verfügbar</option>
-                <option value="im_einsatz">Im Einsatz</option>
-                <option value="werkstatt">In Werkstatt</option>
-                <option value="wartung">In Wartung</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h4 class="form-section-title">🔐 Zugriffsrechte</h4>
-          <div class="form-group">
-            <label class="form-label">Berechtigte Ränge (Mehrfachauswahl)</label>
-            <select class="form-input" name="rang_ids" multiple size="6">
-              ${(state.roles || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
-            </select>
-            <span class="text-xs text-muted">
-              ${(state.roles || []).length === 0
-                ? '⚠️ Keine Rollen geladen — bitte Server neu öffnen'
-                : 'Rollen, die dieses Fahrzeug fahren dürfen (Strg/Cmd + Klick für Mehrfachauswahl)'
-              }
-            </span>
-          </div>
-        </div>
-      </form>
-    `,
-    footerContent: `
-      <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
-      <button class="btn btn-primary" onclick="submitFahrzeug()">🚗 Fahrzeug erstellen</button>
-    `,
-    size: 'xl'
-  });
-}
-
-async function submitFahrzeug() {
-  const form = document.getElementById('fahrzeug-form');
-  if (!form) {
-    showError('Fehler', 'Formular nicht gefunden');
-    return;
-  }
-
-  // Clientseitiger Admin-Check: Bot-Owner oder Server-Admin.
-  // checkAccess('admin') prüft beides (state.isAdmin || tier.admin).
-  if (!checkAccess('admin')) {
-    showError('Keine Berechtigung', 'Nur Admins dürfen Fahrzeuge anlegen.');
-    return;
-  }
-
-  const formData = new FormData(form);
-
-  // Pflichtfeld Name
-  const name = (formData.get('name') || '').toString().trim();
-  if (!name) {
-    showError('Fehler', 'Bitte gib einen Fahrzeugnamen an');
-    return;
-  }
-
-  // Berechtigte Ränge (Mehrfachauswahl) — mit null-Check
-  const rangSelect = form.querySelector('[name="rang_ids"]');
-  const rang_ids = rangSelect
-    ? Array.from(rangSelect.selectedOptions).map(o => o.value).filter(Boolean)
-    : [];
-
-  // Hilfsfunktion: optionale Integer-Felder parsen (sonst null)
-  const intOrNull = (key) => {
-    const v = formData.get(key);
-    if (v === null || v === '' || v === undefined) return null;
-    const n = parseInt(v, 10);
-    return Number.isFinite(n) ? n : null;
-  };
-
-  try {
-    await api('fahrzeug_erstellen', {
-      guild: state.currentGuild,
-      method: 'POST',
-      body: {
-        name,
-        bild_url: formData.get('bild_url') || null,
-        beschreibung: formData.get('beschreibung') || '',
-        // Technische Daten
-        hersteller: formData.get('hersteller') || null,
-        baujahr: intOrNull('baujahr'),
-        ps: intOrNull('ps'),
-        vmax: intOrNull('vmax'),
-        antrieb: formData.get('antrieb') || null,
-        getriebe: formData.get('getriebe') || null,
-        sitze: intOrNull('sitze'),
-        farbe: formData.get('farbe') || null,
-        kennzeichen: formData.get('kennzeichen') || null,
-        reichweite: intOrNull('reichweite'),
-        // Typ & Status
-        typ: formData.get('typ') || 'streifenwagen',
-        status: formData.get('status') || 'verfuegbar',
-        // Zugriffsrechte
-        rang_ids,
-      }
-    });
-    closeModal();
-    showSuccess('Erstellt', `Fahrzeug "${name}" wurde angelegt!`);
-    renderFahrzeuge();
-  } catch (e) {
-    showError('Fehler', e.message);
-  }
-}
-
-// ================================================================
 // AUDIT-LOG VIEW
 // ================================================================
 
@@ -10975,24 +10754,22 @@ async function renderAdminArea() {
 // ================================================================
 async function renderAdminVehicles(container) {
   if (!container) return;
-  const isAdmin = checkAccess('admin');
-  if (!isAdmin) {
-    container.innerHTML = '<div class="alert alert-danger"><strong>Keine Berechtigung</strong> — Der Fahrzeug-Katalog ist nur für den Bot-Owner zugänglich.</div>';
+  // Bot-Owner-Check: nur der Bot-Owner (state.isAdmin) darf die globalen Bilder pflegen.
+  if (!state.isAdmin) {
+    container.innerHTML = '<div class="alert alert-danger"><strong>Keine Berechtigung</strong> — Fahrzeug-Bilder können nur vom Bot-Owner verwaltet werden.</div>';
     return;
   }
 
   container.innerHTML = `
     <div class="page-header page-enter">
       <div class="page-header-content">
-        <h1 class="page-title">🚗 Globaler Fahrzeug-Katalog</h1>
-        <p class="page-description">Fahrzeuge, die allen Servern zur Verfügung stehen</p>
+        <h1 class="page-title">🚗 Fahrzeug-Bilder (Bot-Owner)</h1>
+        <p class="page-description">Setze hier das Bild für jedes der 29 Standard-Fahrzeuge. Fahrzeuge können nicht hinzugefügt oder gelöscht werden — nur das Bild ist änderbar.</p>
       </div>
-      <div class="page-actions">
-        <button class="btn btn-primary" onclick="showAdminVehicleModal()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Neues Katalog-Fahrzeug
-        </button>
-      </div>
+    </div>
+    <div class="alert alert-info mb-md">
+      <strong>ℹ️ Hinweis:</strong> Die Fahrzeuge sind fix in <code>dienst_system.py</code> definiert.
+      Du kannst nur die Bild-URL pro Fahrzeug ändern — alles andere (Name, PS, km/h, Preis) wird vom Code vorgegeben.
     </div>
     <div id="admin-vehicles-list" class="grid grid-3">
       <div class="loading-center"><div class="loading-spinner"></div></div>
@@ -11006,294 +10783,68 @@ async function renderAdminVehicles(container) {
     if (!list) return;
 
     if (vehicles.length === 0) {
-      list.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon">🚗</div><div class="empty-state-title">Keine Fahrzeuge</div><div class="empty-state-description">Im Katalog sind noch keine Fahrzeuge angelegt.</div></div>';
+      list.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon">🚗</div><div class="empty-state-title">Keine Fahrzeuge</div><div class="empty-state-description">Es sind keine Fahrzeuge in dienst_system.py definiert.</div></div>';
       return;
     }
 
-    list.innerHTML = vehicles.map(v => `
-      <div class="card fahrzeug-card" onclick="showAdminVehicleModal(${JSON.stringify(v).replace(/"/g, '&quot;')})">
+    list.innerHTML = vehicles.map(v => {
+      const ps = v.hp || v.sek_hp || '';
+      const speed = v.kmh || '';
+      const preis = v.preis ? `${v.preis} $` : '';
+      const minRang = v.min_rang !== undefined ? `Min-Rang: ${v.min_rang}` : '';
+      return `
+      <div class="card fahrzeug-card">
         ${v.bild_url
           ? `<img src="${esc(v.bild_url)}" class="fahrzeug-bild" alt="${esc(v.name)}" style="object-fit: cover; height: 160px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
           : ''}
         <div class="fahrzeug-bild" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: ${v.bild_url ? 'none' : 'flex'}; align-items: center; justify-content: center; font-size: 48px;">
-          ${v.icon || '🚗'}
+          🚗
         </div>
         <div class="card-body">
           <h3 class="card-title">${esc(v.name)}</h3>
-          <p class="text-sm text-muted">${esc(v.beschreibung || 'Keine Beschreibung')}</p>
-          <div class="flex gap-xs mt-md">
-            <span class="badge badge-primary">${esc(v.marke || 'Unbekannt')}</span>
-            <span class="badge badge-secondary">${esc(v.kategorie || 'Auto')}</span>
-            ${v.ps ? `<span class="badge badge-warning">⚡ ${v.ps} PS</span>` : ''}
+          <p class="text-sm text-muted">${esc(v.beschreibung || 'Standard-Fahrzeug')}</p>
+          <div class="flex gap-xs mt-md" style="flex-wrap:wrap;">
+            ${ps ? `<span class="badge badge-warning">⚡ ${ps} HP</span>` : ''}
+            ${speed ? `<span class="badge badge-info">🏁 ${speed} km/h</span>` : ''}
+            ${preis ? `<span class="badge badge-success">💰 ${preis}</span>` : ''}
+            ${minRang ? `<span class="badge badge-secondary">${minRang}</span>` : ''}
+          </div>
+          <div class="form-group mt-md">
+            <label class="text-xs">📷 Bild-URL</label>
+            <input type="url" id="img-${esc(v.name).replace(/[^a-z0-9]/gi, '-')}" value="${esc(v.bild_url || '')}" placeholder="https://i.imgur.com/..." class="form-input form-input-sm">
+            <button type="button" class="btn btn-sm btn-primary mt-sm" onclick="saveAdminVehicleImage('${esc(v.name).replace(/'/g, "\\'")}')">💾 Bild speichern</button>
           </div>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (e) {
     const list = document.getElementById('admin-vehicles-list');
     if (list) list.innerHTML = `
       <div class="alert alert-warning" style="grid-column: 1 / -1;">
         <strong>Bot nicht erreichbar</strong><br>
-        Der Fahrzeug-Katalog konnte nicht geladen werden. Bitte stelle sicher, dass der Bot läuft.<br>
+        Die Fahrzeuge konnten nicht geladen werden. Bitte stelle sicher, dass der Bot läuft.<br>
         <small class="text-muted">${esc(e.message)}</small>
       </div>
     `;
   }
 }
 
-function showAdminVehicleModal(vehicle = null) {
-  const isNew = !vehicle;
-  const title = isNew ? 'Neues Fahrzeug anlegen' : 'Fahrzeug bearbeiten';
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'vehicle-modal';
-
-  // Vehicle image preview
-  const currentImage = vehicle?.bild_url || '';
-  const currentIcon = vehicle?.icon || '🚗';
-
-  modal.innerHTML = `
-    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-      <div class="modal-header">
-        <h2>${title}</h2>
-        <button class="modal-close" onclick="closeVehicleModal()">&times;</button>
-      </div>
-      <form id="vehicle-form" onsubmit="submitAdminVehicle(event, ${vehicle ? vehicle.id : 'null'})">
-
-        <!-- Bild-Upload -->
-        <div class="form-group">
-          <label>Fahrzeugbild</label>
-          <div class="vehicle-image-upload" id="vehicle-image-area">
-            <div class="vehicle-image-preview" id="veh-image-preview">
-              ${currentImage ? `<img src="${esc(currentImage)}" alt="Fahrzeugbild" style="max-width: 100%; max-height: 150px; border-radius: 8px;">` : `
-                <div style="text-align: center; color: var(--text-muted);">
-                  <div style="font-size: 48px;">${currentIcon}</div>
-                  <div style="margin-top: 8px;">Bild hochladen</div>
-                </div>
-              `}
-            </div>
-            <div class="vehicle-image-actions">
-              <input type="file" id="veh-image-input" accept="image/*" style="display: none;" onchange="handleVehicleImageUpload(this)">
-              <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('veh-image-input').click()">
-                📷 Bild auswählen
-              </button>
-              <button type="button" class="btn btn-sm btn-ghost" onclick="clearVehicleImage()">Entfernen</button>
-            </div>
-            <input type="hidden" id="veh-bild-url" value="${esc(currentImage)}">
-          </div>
-          <style>
-            .vehicle-image-upload { border: 2px dashed var(--border-color); border-radius: 12px; padding: 20px; text-align: center; background: var(--bg-secondary); }
-            .vehicle-image-preview { margin-bottom: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center; }
-            .vehicle-image-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-          </style>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="form-group">
-            <label>Fahrzeugname *</label>
-            <input type="text" id="veh-name" value="${vehicle ? esc(vehicle.name) : ''}" required placeholder="z.B. BMW M5 Competition">
-          </div>
-          <div class="form-group">
-            <label>Marke</label>
-            <input type="text" id="veh-marke" value="${vehicle ? esc(vehicle.marke || '') : ''}" placeholder="z.B. BMW">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="form-group">
-            <label>Kategorie</label>
-            <select id="veh-kategorie">
-              <option value="Auto" ${vehicle?.kategorie === 'Auto' ? 'selected' : ''}>🚗 Auto</option>
-              <option value="Motorrad" ${vehicle?.kategorie === 'Motorrad' ? 'selected' : ''}>🏍️ Motorrad</option>
-              <option value="LKW" ${vehicle?.kategorie === 'LKW' ? 'selected' : ''}>🚛 LKW</option>
-              <option value="Boot" ${vehicle?.kategorie === 'Boot' ? 'selected' : ''}>⛵ Boot</option>
-              <option value="Flugzeug" ${vehicle?.kategorie === 'Flugzeug' ? 'selected' : ''}>✈️ Flugzeug</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Icon (Emoji)</label>
-            <input type="text" id="veh-icon" value="${vehicle ? esc(vehicle.icon || '🚗') : '🚗'}" placeholder="🚗" maxlength="4">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Beschreibung</label>
-          <textarea id="veh-beschreibung" rows="3" placeholder="Optionale Beschreibung">${vehicle ? esc(vehicle.beschreibung || '') : ''}</textarea>
-        </div>
-
-        <!-- Rang-Zuordnung für Discord -->
-        <div class="form-group">
-          <label>Berechtigte Ränge (Discord)</label>
-          <p class="text-sm text-muted mb-sm">Wähle aus, welche Discord-Rollen dieses Fahrzeug fahren dürfen.</p>
-          <div id="veh-roles-container" class="roles-checkboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-            <div class="loading-text">Lade Ränge...</div>
-          </div>
-          <input type="hidden" id="veh-rang-ids" value="${vehicle?.rang_ids ? vehicle.rang_ids.join(',') : ''}">
-        </div>
-
-        <div class="form-group">
-          <label>PS / HP</label>
-          <input type="number" id="veh-ps" value="${vehicle?.ps || ''}" placeholder="z.B. 450">
-        </div>
-
-        <div class="form-group">
-          <label>Höchstgeschwindigkeit (km/h)</label>
-          <input type="number" id="veh-vmax" value="${vehicle?.vmax || ''}" placeholder="z.B. 280">
-        </div>
-
-        <div class="modal-footer">
-          ${!isNew ? `<button type="button" class="btn btn-danger" onclick="deleteAdminVehicle(${vehicle?.id})">🗑️ Löschen</button>` : ''}
-          <button type="button" class="btn btn-secondary" onclick="closeVehicleModal()">Abbrechen</button>
-          <button type="submit" class="btn btn-primary">${isNew ? 'Anlegen' : 'Speichern'}</button>
-        </div>
-
-        <style>
-          .roles-checkboxes label { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 13px; }
-          .roles-checkboxes label:hover { background: var(--bg-hover); }
-          .roles-checkboxes input[type="checkbox"]:checked + span { color: var(--primary); font-weight: 600; }
-        </style>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  // Lade Rollen für die Checkboxen
-  loadRolesForVehicleModal(vehicle);
-
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeVehicleModal(); });
-}
-
-async function loadRolesForVehicleModal(vehicle) {
-  const container = document.getElementById('veh-roles-container');
-  const hiddenInput = document.getElementById('veh-rang-ids');
-  if (!container) return;
+async function saveAdminVehicleImage(name) {
+  // Input-ID aus dem Namen ableiten
+  const id = `img-${name.replace(/[^a-z0-9]/gi, '-')}`;
+  const input = document.getElementById(id);
+  if (!input) return;
+  const url = input.value.trim();
 
   try {
-    // Lade Rollen vom Server
-    if (!state.currentGuild) {
-      // Für Admin-Bereich: versuche einen默ample Guild zu laden
-      container.innerHTML = '<div class="text-sm text-muted">Wähle zuerst einen Server aus.</div>';
-      return;
-    }
-
-    const roles = await api('roles', { guild: state.currentGuild });
-    const serverRoles = roles || [];
-    const selectedIds = vehicle?.rang_ids || [];
-
-    if (serverRoles.length === 0) {
-      container.innerHTML = '<div class="text-sm text-muted">Keine Rollen gefunden.</div>';
-      return;
-    }
-
-    container.innerHTML = serverRoles.map(role => `
-      <label>
-        <input type="checkbox" value="${role.id}" ${selectedIds.includes(String(role.id)) ? 'checked' : ''} onchange="updateVehicleRoles()">
-        <span>${esc(role.name)}</span>
-      </label>
-    `).join('');
-  } catch (e) {
-    container.innerHTML = '<div class="text-sm text-danger">Fehler beim Laden der Rollen</div>';
-  }
-}
-
-function updateVehicleRoles() {
-  const checkboxes = document.querySelectorAll('#veh-roles-container input[type="checkbox"]:checked');
-  const ids = Array.from(checkboxes).map(cb => cb.value);
-  const hiddenInput = document.getElementById('veh-rang-ids');
-  if (hiddenInput) hiddenInput.value = ids.join(',');
-}
-
-// Image upload handler
-function handleVehicleImageUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-
-  if (file.size > 5 * 1024 * 1024) {
-    showError('Fehler', 'Bild ist zu groß (max. 5MB)');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const preview = document.getElementById('veh-image-preview');
-    const urlInput = document.getElementById('veh-bild-url');
-    if (preview) {
-      preview.innerHTML = `<img src="${e.target.result}" alt="Fahrzeugbild" style="max-width: 100%; max-height: 150px; border-radius: 8px;">`;
-    }
-    if (urlInput) {
-      urlInput.value = e.target.result; // Base64 for now, or upload to server
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-function clearVehicleImage() {
-  const preview = document.getElementById('veh-image-preview');
-  const urlInput = document.getElementById('veh-bild-url');
-  const fileInput = document.getElementById('veh-image-input');
-  const icon = document.getElementById('veh-icon');
-  if (preview) {
-    preview.innerHTML = `<div style="text-align: center; color: var(--text-muted);"><div style="font-size: 48px;">${icon?.value || '🚗'}</div><div style="margin-top: 8px;">Bild hochladen</div></div>`;
-  }
-  if (urlInput) urlInput.value = '';
-  if (fileInput) fileInput.value = '';
-}
-
-function closeVehicleModal() {
-  document.getElementById('vehicle-modal')?.remove();
-}
-
-async function submitAdminVehicle(e, vehicleId) {
-  e.preventDefault();
-  const name = document.getElementById('veh-name').value.trim();
-  if (!name) { showError('Fehler', 'Bitte gib einen Fahrzeugnamen an'); return; }
-
-  const data = {
-    name,
-    marke: document.getElementById('veh-marke').value.trim(),
-    kategorie: document.getElementById('veh-kategorie').value,
-    beschreibung: document.getElementById('veh-beschreibung').value.trim(),
-    icon: document.getElementById('veh-icon').value.trim() || '🚗',
-    bild_url: document.getElementById('veh-bild-url').value.trim() || null,
-    ps: parseInt(document.getElementById('veh-ps').value) || null,
-    vmax: parseInt(document.getElementById('veh-vmax').value) || null,
-    rang_ids: (document.getElementById('veh-rang-ids').value || '').split(',').filter(Boolean)
-  };
-
-  try {
-    if (vehicleId) {
-      await api('admin_vehicle_update', { target: vehicleId, method: 'PUT', body: data });
-      showSuccess('Gespeichert', `Fahrzeug "${name}" wurde aktualisiert`);
-    } else {
-      await api('admin_vehicle_create', { method: 'POST', body: data });
-      showSuccess('Erstellt', `Fahrzeug "${name}" wurde im Katalog angelegt`);
-    }
-    closeVehicleModal();
-    if (state.activeView === 'admin') {
-      const tabContent = document.getElementById('admin-tab-content');
-      if (tabContent) renderAdminVehicles(tabContent);
-    }
+    await api('admin_vehicle_update', { target: name, method: 'PUT', body: { bild_url: url || null } });
+    showSuccess('Gespeichert', `Bild für "${name}" wurde aktualisiert.`);
   } catch (err) {
-    console.error('Fahrzeug speichern fehlgeschlagen:', err);
     showError('Fehler', err.message || 'Speichern fehlgeschlagen');
   }
 }
 
-async function deleteAdminVehicle(vehicleId) {
-  if (!confirm('Dieses Fahrzeug wirklich löschen?')) return;
-
-  try {
-    await api('admin_vehicle_delete', { target: vehicleId, method: 'DELETE' });
-    showSuccess('Gelöscht', 'Das Fahrzeug wurde aus dem Katalog entfernt.');
-    closeVehicleModal();
-    if (state.activeView === 'admin') {
-      const tabContent = document.getElementById('admin-tab-content');
-      if (tabContent) renderAdminVehicles(tabContent);
-    }
-  } catch (err) {
-    showError('Fehler', err.message || 'Löschen fehlgeschlagen');
-  }
-}
 
 async function renderAdminSupport(container) {
   try {
