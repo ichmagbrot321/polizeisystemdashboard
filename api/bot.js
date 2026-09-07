@@ -168,10 +168,7 @@ const RESOURCE_MAP = {
   // Hinweis: Die alten per-Server-Routen (/api/guilds/{g}/fahrzeuge) bleiben
   // für Abwärtskompatibilität erhalten, bis der Bot vollständig migriert ist.
   admin_vehicles: { method: 'GET', global: true, path: () => `/api/admin/vehicles` },
-  admin_vehicle_get: { method: 'GET', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
-  admin_vehicle_create: { method: 'POST', global: true, path: () => `/api/admin/vehicles` },
   admin_vehicle_update: { method: 'PUT', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
-  admin_vehicle_delete: { method: 'DELETE', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
 
   // Globaler Katalog lesen — alle eingeloggten User dürfen den Katalog
   // sehen, damit Server-Admins die Fahrzeuge auswählen können.
