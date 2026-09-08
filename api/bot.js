@@ -162,28 +162,9 @@ const RESOURCE_MAP = {
   sentinel_whitelist_add: { method: 'POST', global: true, path: () => `/api/sentinel/whitelist/add` },
   sentinel_whitelist_remove: { method: 'POST', global: true, path: () => `/api/sentinel/whitelist/remove` },
 
-  // -- NEU: Globaler Fahrzeug-Katalog --
-  // Bot-Owner pflegt den globalen Katalog im Admin-Bereich. Server-Admins
-  // weisen daraus Fahrzeuge Rängen zu. Vermeidet Doppel-Pflege pro Server.
-  // Hinweis: Die alten per-Server-Routen (/api/guilds/{g}/fahrzeuge) bleiben
-  // für Abwärtskompatibilität erhalten, bis der Bot vollständig migriert ist.
+  // -- Fahrzeug-Bilder Admin (Bot-Owner) --
   admin_vehicles: { method: 'GET', global: true, path: () => `/api/admin/vehicles` },
   admin_vehicle_update: { method: 'PUT', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
-
-  // Globaler Katalog lesen — alle eingeloggten User dürfen den Katalog
-  // sehen, damit Server-Admins die Fahrzeuge auswählen können.
-  vehicles_catalog: { method: 'GET', anyUser: true, path: () => `/api/vehicles` },
-
-  // Server-spezifische Rang-Zuordnung für Katalog-Fahrzeuge.
-  // Server-Admins pflegen hier, welche Ränge ihres Servers welche
-  // globalen Fahrzeuge fahren dürfen.
-  vehicle_assignments: { method: 'GET', path: (g) => `/api/guilds/${g}/vehicle-assignments` },
-  vehicle_assignment_save: { method: 'POST', path: (g) => `/api/guilds/${g}/vehicle-assignments` },
-
-  // Server-spezifische Rang-Zuordnung (Kurzname) — wird vom Dashboard für
-  // die Fahrzeug-Konfiguration verwendet (klickbare Rang-Checkboxen pro
-  // Fahrzeug-Name, gespeichert via POST mit body { name, rang_ids }).
-  'fahrzeug-rang': { path: (g) => `/api/guilds/${g}/fahrzeug-rang` },
 
   // -- NEU: Dienstanweisungen --
   dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
@@ -238,19 +219,6 @@ module.exports = async (req, res) => {
   const cookies = parseCookies(req.headers.cookie);
   const session = verifySession(cookies.dash_session);
 
-  // CORS headers für Cross-Origin-Anfragen
-  res.setHeader('Access-Control-Allow-Origin', 'https://polizei-system-dashboard.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-  // Preflight OPTIONS beantworten
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return;
-  }
-
   // -- Lokal beantwortete Ressourcen (kein Bot-Kontakt nötig) --
   if (resource === 'me') {
     if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
@@ -263,24 +231,6 @@ module.exports = async (req, res) => {
   if (resource === 'logout') {
     res.setHeader('Set-Cookie', 'dash_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
     return sendJson(res, 200, { ok: true });
-  }
-  // Health-Check: Ping an den Bot, um zu prüfen ob er erreichbar ist.
-  if (resource === 'health_check') {
-    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
-    if (!process.env.BOT_API_URL) return sendJson(res, 500, { ok: false, error: 'BOT_API_URL nicht gesetzt' });
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const r = await fetch(`${process.env.BOT_API_URL}/api/health`, {
-        headers: { 'X-API-Key': process.env.BOT_API_KEY || '' },
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (r.ok) return sendJson(res, 200, { ok: true });
-      return sendJson(res, 200, { ok: false, status: r.status });
-    } catch (err) {
-      return sendJson(res, 200, { ok: false, error: err.message });
-    }
   }
 
   if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt' });
@@ -311,8 +261,6 @@ module.exports = async (req, res) => {
   const query = Object.fromEntries(url.searchParams);
   const method = mapping.method || req.method;
 
-  console.log('[bot-proxy] Request:', method, resource, 'body present:', !!req.headers['content-length']);
-
   let botPath;
   try {
     botPath = mapping.path(guild, target, query);
@@ -335,10 +283,11 @@ module.exports = async (req, res) => {
   if (mapping.global) {
     extra.set('requester_id', session.u.id);
   }
-  // Ebenso bei "anyUser"-Ressourcen: der Bot muss wissen, WER die Anfrage
-  // stellt, um z. B. "nur mein eigenes Ticket" durchzusetzen — auch bei GET,
-  // wo es (anders als bei POST) keinen Body mit actor_id gibt.
-  if (mapping.anyUser) {
+  // Jede Ressource bekommt actor_id aus der Session — serverseitig wird
+  // geprüft, ob der Nutzer Berechtigungen hat (z. B. Fahrzeug-Verwaltung
+  // nur für Owner/Staff). Bei POST/PUT wird actor_id zusätzlich im Body
+  // gesetzt (siehe unten); bei GET alleine über Query-Parameter.
+  if (!mapping.global) {
     extra.set('actor_id', session.u.id);
   }
 
@@ -350,20 +299,15 @@ module.exports = async (req, res) => {
   }
 
   let body;
-  if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+  if (method === 'POST') {
     let raw = '';
-    try {
-      raw = await req.text();
-    } catch (err) {
-      console.error('[bot-proxy] Error reading body:', err);
-    }
+    for await (const chunk of req) raw += chunk;
     let parsed = {};
     if (raw) {
       try {
         parsed = JSON.parse(raw);
       } catch {
-        console.error('[bot-proxy] Invalid JSON:', raw);
-        return sendJson(res, 400, { error: 'Ungültiger JSON-Body', raw });
+        return sendJson(res, 400, { error: 'Ungültiger JSON-Body' });
       }
     }
     // actor_id kommt IMMER aus der geprüften Session, nie vom Client — verhindert Spoofing.
