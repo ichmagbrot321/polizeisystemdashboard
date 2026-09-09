@@ -90,6 +90,11 @@ function parseCookies(header) {
 // ---------------------------------------------------------------------------
 
 const RESOURCE_MAP = {
+  // Health-Check der Bot-API
+  // Wird vom Admin-Dashboard als /api/bot?resource=health_check aufgerufen.
+  health_check: { method: 'GET', global: true, path: () => `/api/health` },
+
+
   // -- Pro-Server-Ressourcen (dashboard_api.py, DashboardAPI-Cog) --
   schema: { method: 'GET', path: (g) => `/api/guilds/${g}/schema` },
   config: { path: (g) => `/api/guilds/${g}/config` },
