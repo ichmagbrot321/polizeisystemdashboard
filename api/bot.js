@@ -180,11 +180,20 @@ const RESOURCE_MAP = {
 
   // -- NEU: Fahrzeuge --
   fahrzeuge: { method: 'GET', path: (g) => `/api/guilds/${g}/fahrzeuge` },
-  'fahrzeug-rang': { method: 'GET', path: (g) => `/api/guilds/${g}/fahrzeuge` },
   fahrzeug_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/fahrzeuge` },
   fahrzeug_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
   fahrzeug_aktualisieren: { method: 'PUT', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
   fahrzeug_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
+
+  // -- NEU: Fahrzeug-Rang-Zuordnung (server-spezifisch, für die 29 fixen
+  //    Standard-Fahrzeuge aus dienst_system.py). Fehlte bisher komplett in
+  //    diesem Resource-Mapping, obwohl das Frontend (renderFahrzeuge,
+  //    renderFahrzeugKonfiguration, updateFahrzeugRang) längst darauf
+  //    zugreift — daher liefen alle Aufrufe bisher auf ein 404
+  //    "Unbekannte Ressource: fahrzeug-rang" und es wurden nie Fahrzeuge
+  //    angezeigt. Kein festes 'method' -> GET (Liste laden) und POST
+  //    (Ränge speichern) werden 1:1 durchgereicht, genau wie bei 'config'.
+  'fahrzeug-rang': { path: (g) => `/api/guilds/${g}/fahrzeug-rang` },
 
   // -- NEU: Audit-Log --
   audit_logs: { method: 'GET', path: (g) => `/api/guilds/${g}/audit-logs` },
