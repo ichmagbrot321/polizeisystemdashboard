@@ -169,7 +169,7 @@ const RESOURCE_MAP = {
 
   // -- Fahrzeug-Bilder Admin (Bot-Owner) --
   admin_vehicles: { method: 'GET', global: true, path: () => `/api/admin/vehicles` },
-  admin_vehicle_update: { method: 'PUT', global: true, path: (_g, t) => `/api/admin/vehicles/${t}` },
+  admin_vehicle_update: { method: 'PUT', global: true, path: (_g, t) => `/api/admin/vehicles/${encodeURIComponent(t || '')}` },
 
   // -- NEU: Dienstanweisungen --
   dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
@@ -304,25 +304,32 @@ module.exports = async (req, res) => {
   }
 
   let body;
-  if (method === 'POST') {
+
+  // POST, PUT und PATCH können einen JSON-Body enthalten.
+  // Wichtig: Die Fahrzeug-Bildverwaltung verwendet PUT. Die alte Version
+  // hat nur POST eingelesen, wodurch PUT ohne Body an die Bot-API ging und
+  // dashboard_api.py korrekt mit "Ungültiger JSON-Body" (400) antwortete.
+  if (['POST', 'PUT', 'PATCH'].includes(method)) {
     let raw = '';
     for await (const chunk of req) raw += chunk;
+
     let parsed = {};
-    if (raw) {
+    if (raw.trim()) {
       try {
         parsed = JSON.parse(raw);
       } catch {
         return sendJson(res, 400, { error: 'Ungültiger JSON-Body' });
       }
     }
-    // actor_id kommt IMMER aus der geprüften Session, nie vom Client — verhindert Spoofing.
+
+    // actor_id kommt IMMER aus der geprüften Session, nie vom Client.
     parsed.actor_id = session.u.id;
-    // Bei Sperr-Aktionen die tatsächliche Anfrager-IP mitschicken (nicht vom
-    // Client fälschbar), damit z. B. "security_lock_ip" ohne manuelle Eingabe
-    // aus dem Support-Fall heraus funktioniert, wenn keine IP übergeben wurde.
+
+    // Bei Sperr-Aktionen die tatsächliche Anfrager-IP mitschicken.
     if (resource.startsWith('security_') && !parsed.ip) {
       parsed.request_ip = getClientIp(req);
     }
+
     body = JSON.stringify(parsed);
   }
 
