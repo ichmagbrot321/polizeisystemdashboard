@@ -180,6 +180,7 @@ const RESOURCE_MAP = {
 
   // -- NEU: Fahrzeuge --
   fahrzeuge: { method: 'GET', path: (g) => `/api/guilds/${g}/fahrzeuge` },
+  'fahrzeug-rang': { method: 'GET', path: (g) => `/api/guilds/${g}/fahrzeuge` },
   fahrzeug_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/fahrzeuge` },
   fahrzeug_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
   fahrzeug_aktualisieren: { method: 'PUT', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
