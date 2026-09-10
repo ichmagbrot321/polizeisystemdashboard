@@ -90,6 +90,9 @@ function parseCookies(header) {
 // ---------------------------------------------------------------------------
 
 const RESOURCE_MAP = {
+  // Öffentliche Live-Statistiken für die Login-Seite (keine Session erforderlich).
+  public_stats: { method: 'GET', public: true, path: () => '/api/public/stats' },
+
   // Health-Check der Bot-API
   // Wird vom Admin-Dashboard als /api/bot?resource=health_check aufgerufen.
   health_check: { method: 'GET', global: true, path: () => `/api/health` },
@@ -185,16 +188,6 @@ const RESOURCE_MAP = {
   fahrzeug_aktualisieren: { method: 'PUT', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
   fahrzeug_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
 
-  // -- NEU: Fahrzeug-Rang-Zuordnung (server-spezifisch, für die 29 fixen
-  //    Standard-Fahrzeuge aus dienst_system.py). Fehlte bisher komplett in
-  //    diesem Resource-Mapping, obwohl das Frontend (renderFahrzeuge,
-  //    renderFahrzeugKonfiguration, updateFahrzeugRang) längst darauf
-  //    zugreift — daher liefen alle Aufrufe bisher auf ein 404
-  //    "Unbekannte Ressource: fahrzeug-rang" und es wurden nie Fahrzeuge
-  //    angezeigt. Kein festes 'method' -> GET (Liste laden) und POST
-  //    (Ränge speichern) werden 1:1 durchgereicht, genau wie bei 'config'.
-  'fahrzeug-rang': { path: (g) => `/api/guilds/${g}/fahrzeug-rang` },
-
   // -- NEU: Audit-Log --
   audit_logs: { method: 'GET', path: (g) => `/api/guilds/${g}/audit-logs` },
 
@@ -233,6 +226,32 @@ module.exports = async (req, res) => {
   const resource = url.searchParams.get('resource');
   const cookies = parseCookies(req.headers.cookie);
   const session = verifySession(cookies.dash_session);
+
+  // Öffentliche Live-Statistiken: nur aggregierte, nicht-private Werte.
+  if (resource === 'public_stats') {
+    const mapping = RESOURCE_MAP[resource];
+    if (!process.env.BOT_API_URL) {
+      return sendJson(res, 500, { error: 'BOT_API_URL ist auf dem Server nicht gesetzt.' });
+    }
+    try {
+      const botRes = await fetch(`${process.env.BOT_API_URL}${mapping.path()}`, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': process.env.BOT_API_KEY || '',
+          'Accept': 'application/json',
+        },
+      });
+      const text = await botRes.text();
+      res.statusCode = botRes.status;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(text);
+    } catch (err) {
+      return sendJson(res, 502, {
+        error: `Bot-API unter ${process.env.BOT_API_URL}${mapping.path()} nicht erreichbar (${err.cause?.code || err.message}).`,
+      });
+    }
+    return;
+  }
 
   // -- Lokal beantwortete Ressourcen (kein Bot-Kontakt nötig) --
   if (resource === 'me') {
