@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Polizei System — Dashboard</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta name="description" content="Professionelles Polizei-Dienststellen-Dashboard für Discord-Communities." />
 
 <meta property="og:type" content="website" />
@@ -23,7 +24,7 @@
 <style>
 /* ================================================================
    POLIZEI SYSTEM DASHBOARD — Professionelles Design System
-   ===============================================================aa= */
+   ================================================================ */
 
 /* === Design Tokens === */
 :root {
@@ -746,8 +747,6 @@ code {
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -759,7 +758,6 @@ code {
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-hover);
   border-color: var(--text-muted);
-  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -771,8 +769,6 @@ code {
 .btn-danger:hover:not(:disabled) {
   background: #dc2626;
   border-color: #dc2626;
-  box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);
-  transform: translateY(-1px);
 }
 
 .btn-success {
@@ -830,7 +826,7 @@ code {
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .card:hover {
@@ -842,18 +838,8 @@ code {
 }
 
 .card-clickable:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary);
-}
-
-.card-clickable:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
-}
-
-.card-clickable:active {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-header {
@@ -3455,26 +3441,15 @@ code {
 }
 
 /* === FOCUS STYLES === */
-/* Knapper, konsistenter Focus-Ring — gut sichtbar in beiden Themes */
 *:focus-visible {
-  outline: 2px solid var(--border-focus);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 button:focus-visible,
-.btn:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--border-focus);
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-/* Hochkontrast-Focus für bessere Tastaturnavigation */
-*:focus:not(:focus-visible) {
-  outline: none;
 }
 
 /* === TOOLTIP === */
@@ -4580,82 +4555,6 @@ textarea:focus-visible {
   color: var(--text-secondary);
 }
 
-/* === FAHRZEUG SPECS === */
-.fahrzeug-specs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: var(--spacing-sm);
-}
-
-.fahrzeug-spec-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 8px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.fahrzeug-card {
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-.fahrzeug-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary);
-}
-
-/* === FORM SECTIONS === */
-.form-section {
-  padding: var(--spacing-md) 0;
-  border-bottom: 1px solid var(--border-secondary);
-}
-
-.form-section:last-of-type {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.form-section-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--spacing-md);
-  padding-bottom: var(--spacing-xs);
-  border-bottom: 1px dashed var(--border-secondary);
-}
-
-/* === FORM GRID === */
-.form-grid {
-  display: grid;
-  gap: var(--spacing-md);
-}
-
-.form-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (max-width: 600px) {
-  .form-grid-2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* === SMALL BADGE === */
-.badge-sm {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 4px;
-}
-
 /* === AUDIT LOG STYLES === */
 .audit-log-list {
   display: flex;
@@ -4995,39 +4894,6 @@ textarea:focus-visible {
   min-height: 400px;
 }
 
-/* Bot-Status-Anzeige im Admin-Bereich */
-.admin-bot-status {
-  margin: 0 0 16px 0;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.bot-status-checking {
-  background: rgba(107, 114, 128, 0.1);
-  color: var(--text-muted);
-  border: 1px solid rgba(107, 114, 128, 0.2);
-}
-
-.bot-status-online {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.bot-status-offline {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--danger);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  animation: pulse-red 2s ease-in-out infinite;
-}
-
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
-  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-}
-
 /* Sentinel Overview Grid for Admin */
 .sentinel-overview-grid {
   display: grid;
@@ -5203,6 +5069,162 @@ textarea:focus-visible {
   }
 }
 </style>
+<style>
+
+/* ================================================================
+   POLIZEI SYSTEM — UI/UX MASTER REDESIGN
+   Single-file enhancement layer
+   ================================================================ */
+:root {
+  --border-color: var(--border-primary);
+  --border-default: var(--border-primary);
+  --border-subtle: var(--border-secondary);
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --orange: #f97316;
+  --text-faint: var(--text-muted);
+}
+
+/* Cleaner global surfaces */
+body { background:
+  radial-gradient(circle at 10% -10%, rgba(59,130,246,.08), transparent 32%),
+  radial-gradient(circle at 90% 0%, rgba(124,58,237,.06), transparent 28%),
+  var(--bg-primary);
+}
+.full-page-layout { background: transparent; }
+.card {
+  border-color: color-mix(in srgb, var(--border-primary) 88%, transparent);
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.card:hover { border-color: color-mix(in srgb, var(--primary) 38%, var(--border-primary)); }
+.card-clickable:hover { transform: translateY(-2px); box-shadow: 0 14px 38px rgba(0,0,0,.14); }
+.btn, .icon-btn, .nav-item, .guild-card { -webkit-tap-highlight-color: transparent; }
+.btn { min-height: 40px; }
+.icon-btn { min-width: 40px; min-height: 40px; }
+.form-input, .filter-select { min-height: 42px; }
+
+/* Premium topbar */
+.topbar {
+  backdrop-filter: blur(18px) saturate(150%);
+  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
+  border-bottom: 1px solid var(--border-secondary);
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+}
+.topbar-breadcrumb a { color: var(--primary-text); font-weight: 650; }
+.topbar-breadcrumb a:hover { text-decoration: none; }
+.topbar-server-switch {
+  display:inline-flex; align-items:center; gap:7px; padding:7px 10px;
+  border:1px solid var(--border-primary); border-radius:10px;
+  background:var(--bg-card); color:var(--text-primary); cursor:pointer;
+}
+.topbar-server-switch:hover { border-color:var(--primary); background:var(--bg-hover); }
+
+/* Mobile drawer */
+.mobile-menu-btn { display:none; }
+.mobile-sidebar-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.58); backdrop-filter:blur(3px);
+  z-index:998; opacity:0; pointer-events:none; transition:opacity .2s ease;
+}
+.mobile-sidebar-overlay.open { opacity:1; pointer-events:auto; }
+
+/* Server picker */
+.guild-picker-hero {
+  position:relative; overflow:hidden; padding:32px; border-radius:24px;
+  background:linear-gradient(135deg, color-mix(in srgb,var(--primary) 14%,var(--bg-card)), var(--bg-card));
+  border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border-primary));
+  margin-bottom:24px;
+}
+.guild-picker-hero::after { content:''; position:absolute; width:240px; height:240px; right:-80px; top:-120px;
+  border-radius:50%; background:var(--primary-glow); filter:blur(12px); opacity:.35; }
+.guild-picker-hero-content { position:relative; z-index:1; max-width:760px; }
+.guild-picker-eyebrow { font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--primary-text); margin-bottom:8px; }
+.guild-picker-title { font-size:clamp(26px,4vw,40px); line-height:1.08; letter-spacing:-.03em; margin-bottom:10px; }
+.guild-picker-subtitle { color:var(--text-secondary); max-width:650px; }
+.guild-picker-toolbar { display:flex; gap:12px; align-items:center; margin:0 0 20px; flex-wrap:wrap; }
+.guild-picker-search { position:relative; flex:1; min-width:220px; }
+.guild-picker-search input { width:100%; padding-left:42px; }
+.guild-picker-search span { position:absolute; left:14px; top:50%; transform:translateY(-50%); opacity:.7; }
+.guild-picker-count { color:var(--text-muted); font-size:13px; white-space:nowrap; }
+.guild-grid { grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.guild-card { position:relative; overflow:hidden; }
+.guild-card .card-body { min-height:126px; }
+.guild-card .avatar-lg { width:64px; height:64px; flex:0 0 64px; border-radius:18px; box-shadow:0 8px 22px rgba(0,0,0,.14); }
+.guild-card .favorite-btn { margin-left:auto; }
+.guild-card .favorite-star { color:#f5b301; }
+.guild-card[data-hidden="true"] { display:none !important; }
+.guild-card-open-hint { margin-top:8px; color:var(--primary-text); font-size:12px; font-weight:700; }
+.guild-empty-search { grid-column:1/-1; }
+
+/* Better sidebar */
+.sidebar { border-right:1px solid var(--border-secondary); box-shadow:10px 0 30px rgba(0,0,0,.06); }
+.sidebar-brand-icon { box-shadow:0 8px 24px var(--primary-glow); }
+.nav-item { margin:2px 10px; border-radius:10px; }
+.nav-item.active { box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 24%,transparent); }
+.sidebar-footer { border-top-color:var(--border-secondary); }
+#back-to-servers { cursor:pointer; }
+
+/* Dashboard */
+.page-header { margin-bottom:22px; }
+.page-title { letter-spacing:-.025em; }
+.kpi-card { position:relative; overflow:hidden; }
+.kpi-card::after { content:''; position:absolute; width:90px; height:90px; right:-35px; top:-35px; border-radius:50%; background:var(--primary-soft); pointer-events:none; }
+.quick-actions .btn, .quick-action { transition:transform .16s ease, box-shadow .16s ease; }
+.quick-actions .btn:hover, .quick-action:hover { transform:translateY(-1px); }
+
+/* Vehicles */
+.vehicle-card, .fahrzeug-card { overflow:hidden; }
+.vehicle-card img, .fahrzeug-card img { width:100%; object-fit:cover; }
+
+/* Tables on narrow screens */
+.table-container, .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table { min-width:620px; }
+
+/* Modals */
+.modal-overlay { padding:16px; }
+.modal { box-shadow:0 30px 80px rgba(0,0,0,.35); border:1px solid var(--border-primary); }
+
+/* Better focus accessibility */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline:3px solid color-mix(in srgb,var(--primary) 38%,transparent); outline-offset:2px;
+}
+
+@media (max-width: 992px) {
+  .topbar { padding-left:12px; padding-right:12px; }
+  .search-box { min-width:180px; }
+  .guild-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 768px) {
+  .mobile-menu-btn { display:inline-flex !important; }
+  .topbar { height:auto; min-height:64px; }
+  .topbar-left { min-width:0; }
+  .topbar-breadcrumb .separator, .topbar-breadcrumb > span:not(:last-child) { display:none; }
+  .topbar-breadcrumb { max-width:48vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topbar-right .search-box { display:none; }
+  .guild-picker-hero { padding:24px 20px; border-radius:18px; }
+  .guild-grid { grid-template-columns:1fr; }
+  .guild-picker-toolbar { align-items:stretch; }
+  .guild-picker-count { width:100%; }
+  .page-content { padding-left:14px; padding-right:14px; }
+  .sidebar { z-index:999; box-shadow:18px 0 60px rgba(0,0,0,.35); }
+}
+@media (max-width: 480px) {
+  .guild-picker-hero { padding:20px 16px; }
+  .guild-picker-title { font-size:27px; }
+  .guild-card .card-body { padding:16px; min-height:112px; }
+  .guild-card .avatar-lg { width:54px; height:54px; flex-basis:54px; border-radius:15px; }
+  .topbar-right { gap:5px; }
+  .topbar .icon-btn { min-width:38px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
+
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -5212,7 +5234,7 @@ textarea:focus-visible {
 // KONFIGURATION
 // ================================================================
 
-const DISCORD_CLIENT_ID = "1528709772784963645";
+const DISCORD_CLIENT_ID = "1528709772784963635";
 
 const app = document.getElementById('app');
 
@@ -5242,13 +5264,7 @@ const state = {
   autoRefreshHandle: null,
   commandPaletteOpen: false,
   theme: 'auto', // 'auto', 'light', 'dark'
-  lastUpdate: null,
-  // Ergänzt: wurden dynamisch gesetzt, aber nie initialisiert
-  officerPermission: null,
-  bewerbungsfragenArten: null,
-  clientVpn: false,
-  clientIpInfo: null,
-  vpnWarningDismissed: false,
+  lastUpdate: null
 };
 
 // ================================================================
@@ -5342,13 +5358,11 @@ function inviteUrl(guildId) {
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
-async function api(resource, { guild, target, search, method = 'GET', body, limit, extraParams } = {}) {
+async function api(resource, { guild, target, search, method = 'GET', body, extraParams } = {}) {
   const params = new URLSearchParams({ resource });
   if (guild) params.set('guild', guild);
   if (target) params.set('target', target);
   if (search) params.set('search', search);
-  // limit wird als Query-Param durchgereicht (z.B. sentinel_threat_log)
-  if (limit !== undefined) params.set('limit', String(limit));
   if (extraParams) {
     for (const [k, v] of Object.entries(extraParams)) {
       if (v !== undefined && v !== null) params.set(k, v);
@@ -5376,19 +5390,6 @@ async function robloxApi(action, params, signal) {
 function avatarUrl(user) {
   if (!user?.avatar) return null;
   return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
-}
-
-// Prüft, ob der Bot erreichbar ist. Nutzt einen einfachen Health-Check via
-// /api/bot?resource=health_check. Wenn der Bot down ist, sehen User sofort,
-// dass die Sperren/Stats nicht aktuell sind.
-async function checkBotStatus() {
-  try {
-    const data = await api('health_check');
-    if (data && data.ok) return 'online';
-    return 'offline';
-  } catch {
-    return 'offline';
-  }
 }
 
 // ================================================================
@@ -5525,35 +5526,7 @@ function showSuccessWithAction(title, message, actionText, onAction) {
 // MODAL SYSTEM
 // ================================================================
 
-// Globaler Verweis auf das aktuell offene Modal, damit onclick="closeModal()"
-// in den Footer-Buttons (Fahrzeug, Dienstanweisung, Krankenmeldung) zuverlässig
-// funktioniert. Vorher war closeModal nur lokal in showModal definiert — die
-// inline-Handler haben dann "closeModal is not defined" geworfen.
-let _activeModal = null;
-function closeModal() {
-  if (_activeModal && typeof _activeModal.close === 'function') {
-    _activeModal.close();
-  } else {
-    // Fallback: alle modal-overlays entfernen (z. B. wenn showModal gerade
-    // nicht aufgerufen wurde, das Modal aber offen ist)
-    document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
-  }
-}
-// Auf window exposen, damit onclick-Handler im HTML-Markup es finden
-window.closeModal = closeModal;
-
-function showModal(arg1, arg2, arg3) {
-  // Backward-kompatibel: akzeptiert sowohl (title, content, options) als auch ({title, content, ...}).
-  let title, content, options;
-  if (typeof arg1 === 'object' && arg1 !== null) {
-    options = arg1;
-    title = options.title;
-    content = options.content;
-  } else {
-    title = arg1;
-    content = arg2;
-    options = arg3 || {};
-  }
+function showModal(title, content, options = {}) {
   const {
     size = 'default',
     showFooter = true,
@@ -5561,53 +5534,50 @@ function showModal(arg1, arg2, arg3) {
     onClose = () => {},
     closeOnOverlay = true
   } = options;
-
+  
   const sizeClass = size === 'lg' ? 'modal-lg' : size === 'xl' ? 'modal-xl' : '';
-
+  
   const modal = el(`
     <div class="modal-overlay">
       <div class="modal ${sizeClass}">
         <div class="modal-header">
-          <h3 class="modal-title">${esc(title || '')}</h3>
-          <button class="modal-close" aria-label="Schließen">✕</button>
+          <h3 class="modal-title">${title}</h3>
+          <button class="modal-close">✕</button>
         </div>
-        <div class="modal-body">${content || ''}</div>
+        <div class="modal-body">${content}</div>
         ${showFooter ? `<div class="modal-footer">${footerContent}</div>` : ''}
       </div>
     </div>
   `);
-
+  
   document.body.appendChild(modal);
-
-  // ESC-Handler: jetzt IMMER beim Schließen entfernt, damit kein Listener-Leck entsteht
-  // (vorher wurde er nur bei Escape entfernt — Schließen über X/Overlay ließ ihn hängen).
-  const escHandler = (e) => {
-    if (e.key === 'Escape') closeModal();
-  };
-  document.addEventListener('keydown', escHandler);
-
+  
   const closeModal = () => {
-    document.removeEventListener('keydown', escHandler);
-    if (_activeModal && _activeModal.element === modal) _activeModal = null;
     modal.style.animation = 'fadeIn 0.2s ease reverse';
     setTimeout(() => {
       modal.remove();
       onClose();
     }, 200);
   };
-
+  
   modal.querySelector('.modal-close').onclick = closeModal;
-
+  
   if (closeOnOverlay) {
     modal.onclick = (e) => {
       if (e.target === modal) closeModal();
     };
   }
-
-  // Aktives Modal registrieren, damit die globale closeModal()-Funktion darauf zugreifen kann
-  const handle = { close: closeModal, element: modal };
-  _activeModal = handle;
-  return handle;
+  
+  // ESC key to close
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+  
+  return { close: closeModal, element: modal };
 }
 
 function showConfirm(title, message, options = {}) {
@@ -5944,12 +5914,10 @@ document.addEventListener('keydown', (e) => {
       closeCommandPalette();
       return;
     }
-    // Close any open modals — sucht nach .modal-overlay (korrekte Klasse, nicht .modal-backdrop).
-    const modal = document.querySelector('.modal-overlay');
+    // Close any open modals
+    const modal = document.querySelector('.modal-backdrop');
     if (modal) {
-      // Direkt die Close-Funktion aufrufen statt .click(), damit der Animation-Reverse sauber durchläuft.
-      const closeBtn = modal.querySelector('.modal-close');
-      if (closeBtn) closeBtn.click();
+      modal.click();
       return;
     }
   }
@@ -6168,14 +6136,7 @@ function toggleFavorite(guildId) {
     showInfo('Entfernt', 'Server aus Favoriten entfernt');
   }
   saveFavorites(state.favorites);
-  // FIX: renderServerList() existierte nicht — wir aktualisieren den Guild-Picker,
-  // wenn der Nutzer gerade dort ist, und sonst die Sidebar (Favoriten-Stern).
-  if (state.activeView === 'servers') {
-    renderGuildPicker();
-  } else {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar && typeof renderSidebarFull === 'function') renderSidebarFull();
-  }
+  renderServerList();
 }
 
 function isFavorite(guildId) {
@@ -6418,15 +6379,15 @@ const NAVIGATION_ITEMS = [
   { id: 'activity', label: 'Aktivität', icon: '📋', section: 'main', minLevel: null },
   { id: 'users', label: 'Benutzer', icon: '🧑', section: 'main', minLevel: 'staff' },
   { id: 'einsatz', label: 'Einsatzverwaltung', icon: '🚨', section: 'einsatz', minLevel: 'staff' },
+  { id: 'vehicles', label: 'Fahrzeugverwaltung', icon: '🚗', section: 'fahrzeug', minLevel: 'staff' },
   { id: 'officers', label: 'Beamtenverwaltung', icon: '👮', section: 'beamte', minLevel: 'staff' },
   { id: 'dienst', label: 'Dienstverwaltung', icon: '⏰', section: 'dienst', minLevel: 'staff' },
   { id: 'personalakten', label: 'Personalakten', icon: '📁', section: 'personalakten', minLevel: null },
   { id: 'buergerakten', label: 'Bürgerakten', icon: '🧑‍🤝‍🧑', section: 'buergerakten', minLevel: null },
   { id: 'reports', label: 'Meldungen', icon: '📝', section: 'reports', minLevel: 'staff' },
+  // Neue Features
   { id: 'dienstanweisungen', label: 'Dienstanweisungen', icon: '📋', section: 'dienst', minLevel: 'staff' },
-  { id: 'fahrzeuge', label: 'Fahrzeuge', icon: '🚗', section: 'fahrzeug', minLevel: 'staff' },
-  { id: 'fahrzeug-konfig', label: '🚗 Fahrzeugkonfiguration', icon: '🔧', section: 'fahrzeug', minLevel: 'staff' },
-  { id: 'setup-assistent', label: '🧭 Setup-Assistent', icon: '✨', section: 'dashboard', minLevel: 'admin' },
+  { id: 'fahrzeuge', label: 'Fahrzeuge', icon: '🚙', section: 'fahrzeug', minLevel: 'staff' },
   { id: 'krankenmeldungen', label: 'Krankmeldungen', icon: '🏥', section: 'dienst', minLevel: null },
   { id: 'auditlog', label: 'Audit-Log', icon: '📜', section: 'logs', minLevel: 'admin' },
   { id: 'logs', label: 'Logs', icon: '🪵', section: 'logs', minLevel: 'dienstaufsicht' },
@@ -6436,10 +6397,9 @@ const NAVIGATION_ITEMS = [
 
 function checkAccess(level) {
   if (!level) return true;
-  // Bot-Owner hat immer Admin-Zugriff
-  if (state.isAdmin) return true;
   const tier = state.tier;
   if (!tier) return false;
+  if (state.isAdmin) return true;
   return tier[level] === true;
 }
 
@@ -7305,10 +7265,64 @@ async function loadActivity() {
 // ================================================================
 
 function renderVehicles() {
-  // Alias: Die alte "Info-Seite" wurde durch die interaktive
-  // Fahrzeug-Verwaltung ersetzt. Beide Sidebar-Links ('vehicles' und
-  // 'fahrzeuge') zeigen jetzt auf dieselbe Ansicht.
-  return renderFahrzeuge();
+  const main = document.querySelector('.page-content');
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="page-header">
+      <div class="page-header-content">
+        <h1 class="page-title">Fahrzeugverwaltung</h1>
+        <p class="page-description">Kennzeichen-Präfix und Fahrzeug-Konfiguration</p>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">💡</span>
+      <div>
+        <strong>Hinweis:</strong> Die Fahrzeugverwaltung erfolgt über Discord-Befehle.
+        Hier siehst du die aktuelle Fahrzeug-Konfiguration deines Servers.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🚗 Fahrzeug-Konfiguration</h3>
+      </div>
+      <div class="card-body" id="vehicle-config">
+        <div class="loading-center">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Lade Konfiguration...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-lg">
+      <div class="card-header">
+        <h3 class="card-title">📋 Verfügbare Discord-Befehle</h3>
+      </div>
+      <div class="card-body">
+        <div class="command-list">
+          <div class="command-item">
+            <code>/fahrzeuge</code>
+            <span>Liste aller Fahrzeuge anzeigen</span>
+          </div>
+          <div class="command-item">
+            <code>/fahrzeug hinzufügen</code>
+            <span>Neues Fahrzeug registrieren</span>
+          </div>
+          <div class="command-item">
+            <code>/fahrzeug entfernen</code>
+            <span>Fahrzeug aus dem Register löschen</span>
+          </div>
+          <div class="command-item">
+            <code>/kennzeichen suchen</code>
+            <span>Nach Fahrzeug per Kennzeichen suchen</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  loadVehicleConfig();
 }
 
 async function loadVehicleConfig() {
@@ -7832,7 +7846,7 @@ function showDienstanweisungModal() {
         <div class="form-group">
           <label class="form-label">Rollen (für Lesebestätigung)</label>
           <select class="form-input" name="rollen_ids" multiple size="4">
-            ${(state.roles || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
+            ${(state.config?.rollen || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
           </select>
           <span class="text-xs text-muted">Mehrere mit Strg/Cmd auswählen</span>
         </div>
@@ -7844,7 +7858,7 @@ function showDienstanweisungModal() {
         </div>
       </form>
     `,
-    footerContent: `
+    footer: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="submitDienstanweisung()">Erstellen</button>
     `,
@@ -7854,19 +7868,7 @@ function showDienstanweisungModal() {
 
 async function submitDienstanweisung() {
   const form = document.getElementById('dienstanweisung-form');
-  if (!form) {
-    showError('Fehler', 'Formular nicht gefunden');
-    return;
-  }
   const formData = new FormData(form);
-
-  // Titel ist Pflichtfeld
-  const titel = (formData.get('titel') || '').toString().trim();
-  if (!titel) {
-    showError('Fehler', 'Bitte gib einen Titel ein');
-    return;
-  }
-
   const anhaengeText = formData.get('anhaenge') || '';
   const anhaenge = anhaengeText
     .split('\n')
@@ -7875,17 +7877,15 @@ async function submitDienstanweisung() {
     .map(url => ({ name: url.split('/').pop() || 'Anhang', url }));
 
   const rollenSelect = form.querySelector('[name="rollen_ids"]');
-  const rollen_ids = rollenSelect
-    ? Array.from(rollenSelect.selectedOptions).map(o => o.value).filter(Boolean)
-    : [];
+  const rollen_ids = Array.from(rollenSelect.selectedOptions).map(o => o.value);
 
   try {
     await api('dienstanweisung_erstellen', {
       guild: state.currentGuild,
       method: 'POST',
       body: {
-        titel,
-        inhalt: formData.get('inhalt') || '',
+        titel: formData.get('titel'),
+        inhalt: formData.get('inhalt'),
         bild_url: formData.get('bild_url') || null,
         anhaenge,
         rollen_ids,
@@ -7925,288 +7925,59 @@ async function renderFahrzeuge() {
   main.innerHTML = `
     <div class="page-header page-enter">
       <div class="page-header-content">
-        <h1 class="page-title">🚗 Fuhrpark</h1>
-        <p class="page-description">Alle 29 Standard-Fahrzeuge mit Bildern und Rang-Zuordnungen</p>
+        <h1 class="page-title">🚗 Fahrzeugverwaltung</h1>
+        <p class="page-description">Fahrzeuge und ihre Rang-Zuordnungen</p>
       </div>
       <div class="page-actions">
-        ${state.tier?.staff ? `
-          <button class="btn btn-primary" onclick="state.activeView='fahrzeug-konfig';renderApp();">
-            ⚙️ Ränge verwalten
-          </button>
-        ` : ''}
-      </div>
-    </div>
-
-    <div id="fahrzeuge-list" class="grid grid-3">
-      ${renderSkeleton('card', 6)}
-    </div>
-  `;
-
-  try {
-    // Lade die 29 Standard-Fahrzeuge mit Bildern + server-spezifischen Rängen
-    const result = await api('fahrzeug-rang', { guild: state.currentGuild });
-    const list = document.getElementById('fahrzeuge-list');
-    if (!list) return;
-
-    const fahrzeuge = result.fahrzeuge || [];
-    if (fahrzeuge.length === 0) {
-      list.innerHTML = `
-        <div class="empty-state" style="grid-column: 1 / -1;">
-          <div class="empty-state-icon">🚗</div>
-          <div class="empty-state-title">Keine Fahrzeuge</div>
-          <div class="empty-state-description">
-            Die 29 Standard-Fahrzeuge werden vom Bot-Owner verwaltet.
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    list.innerHTML = fahrzeuge.map(f => {
-      const ps = f.hp || f.sek_hp || '';
-      const kmh = f.kmh || '';
-      const preis = f.preis ? `${f.preis} $` : '';
-      const rangCount = f.rang_ids?.length || 0;
-      return `
-      <div class="card stagger-item fahrzeug-card">
-        ${f.bild_url ? `<img src="${esc(f.bild_url)}" class="fahrzeug-bild" alt="${esc(f.name)}" style="height:160px;object-fit:cover;" onerror="this.style.display='none';" />` : ''}
-        <div class="card-body">
-          <h3 class="font-semibold mb-sm">${esc(f.name)}</h3>
-          <div class="fahrzeug-specs">
-            ${ps ? `<span class="fahrzeug-spec-badge">⚡ ${ps} HP</span>` : ''}
-            ${kmh ? `<span class="fahrzeug-spec-badge">🏎️ ${kmh} km/h</span>` : ''}
-            ${preis ? `<span class="fahrzeug-spec-badge">💰 ${preis}</span>` : ''}
-          </div>
-          <p class="text-xs text-muted mt-sm">
-            ${rangCount > 0 ? `✅ ${rangCount} Ränge berechtigt` : '🔒 Keine Ränge zugewiesen'}
-          </p>
-        </div>
-      </div>
-      `;
-    }).join('');
-  } catch (e) {
-    const list = document.getElementById('fahrzeuge-list');
-    if (list) list.innerHTML = `
-      <div class="alert alert-warning" style="grid-column: 1 / -1;">
-        <strong>Fehler:</strong> ${esc(e.message)}
-      </div>
-    `;
-  }
-}
-
-// ================================================================
-// SETUP-ASSISTENT (Schritt-für-Schritt-Einrichtung)
-// ================================================================
-
-async function renderSetupAssistent() {
-  const main = document.querySelector('.page-content');
-  if (!main) return;
-
-  main.innerHTML = `
-    <div class="page-header page-enter">
-      <div class="page-header-content">
-        <h1 class="page-title">🧭 Setup-Assistent</h1>
-        <p class="page-description">Schritt für Schritt durch die wichtigsten Einstellungen</p>
-      </div>
-      <div class="page-actions">
-        <button class="btn btn-secondary" onclick="renderDashboard()">
-          ← Zur Übersicht
+        <button class="btn btn-primary" onclick="showFahrzeugModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Neues Fahrzeug
         </button>
       </div>
     </div>
 
-    <div id="setup-content" class="page-enter">
+    <div id="fahrzeuge-list" class="grid grid-3">
       ${renderSkeleton('card', 3)}
     </div>
   `;
 
   try {
-    // Schema + Config parallel laden
-    const [schemaData, configData] = await Promise.all([
-      api('schema', { guild: state.currentGuild }),
-      api('config', { guild: state.currentGuild })
-    ]);
-
-    const cfg = (configData && configData.config) || {};
-    const kats = (schemaData && schemaData.categories) || [];
-
-    // Pflicht-Felder definieren (sollte jeder Server haben)
-    const pflicht = [
-      { kat: 'allgemein', key: 'org_name', label: 'Servername' },
-      { kat: 'dienstnummer', key: 'panel_channel_id', label: 'Dienstnummer-Panel-Kanal' },
-      { kat: 'personalakte_kanaele', key: 'warn_channel_id', label: 'Verwarnungs-Kanal' },
-      { kat: 'personalakte_kanaele', key: 'suspension_channel_id', label: 'Suspendierungs-Kanal' },
-      { kat: 'personalakte_kanaele', key: 'termination_channel_id', label: 'Kündigungs-Kanal' },
-      { kat: 'bewerbung_kanaele', key: 'application_panel_channel_id', label: 'Bewerbungs-Panel' },
-      { kat: 'dienststatus_rollen', key: 'member_role_id', label: '🚓 Polizist-Rolle' },
-    ];
-
-    const fehlend = [];
-    for (const p of pflicht) {
-      const wert = cfg[p.key];
-      if (!wert || wert === '' || wert === null) {
-        fehlend.push(p);
-      }
-    }
-
-    // Auch Fahrzeug-Konfiguration prüfen
-    let fahrzeugHinweis = null;
-    try {
-      const fzData = await api('fahrzeug-rang', { guild: state.currentGuild });
-      const fahrzeuge = fzData.fahrzeuge || [];
-      const ohneRang = fahrzeuge.filter(f => !f.rang_ids || f.rang_ids.length === 0).length;
-      if (ohneRang > 0) {
-        fahrzeugHinweis = { total: fahrzeuge.length, ohneRang };
-      }
-    } catch (e) { /* ignorieren */ }
-
-    const fortschritt = pflicht.length - fehlend.length;
-    const prozent = Math.round((fortschritt / pflicht.length) * 100);
-
-    let html = `
-      <div class="card stagger-item" style="margin-bottom: 16px;">
-        <div class="card-body">
-          <h2 class="card-title">📊 Fortschritt</h2>
-          <div class="progress" style="height:24px;background:var(--bg-secondary);border-radius:12px;overflow:hidden;margin:12px 0;">
-            <div style="width:${prozent}%;height:100%;background:linear-gradient(90deg, var(--primary), var(--success));transition:width 0.5s;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:13px;">
-              ${prozent}%
-            </div>
-          </div>
-          <p class="text-sm text-muted">${fortschritt} von ${pflicht.length} Pflicht-Feldern konfiguriert.</p>
-        </div>
-      </div>
-    `;
-
-    if (fehlend.length === 0 && !fahrzeugHinweis) {
-      html += `
-        <div class="card stagger-item" style="border-left:4px solid var(--success);">
-          <div class="card-body" style="text-align:center;padding:32px;">
-            <div style="font-size:48px;">🎉</div>
-            <h2 class="card-title">Alles eingerichtet!</h2>
-            <p class="text-muted">Dein Server ist vollständig konfiguriert. Du kannst die Konfiguration jederzeit in den Einstellungen anpassen.</p>
-          </div>
-        </div>
-      `;
-    } else {
-      html += `
-        <div class="card stagger-item" style="margin-bottom: 16px;">
-          <div class="card-header">
-            <h2 class="card-title">📋 Konfigurations-Checkliste</h2>
-            <span class="badge badge-${fehlend.length === 0 ? 'success' : 'warning'}">${fehlend.length} offen</span>
-          </div>
-          <div class="card-body">
-      `;
-
-      if (fehlend.length > 0) {
-        html += `<p class="text-sm text-muted mb-md">Klicke auf einen Eintrag, um direkt zur Einrichtung zu springen:</p>`;
-        html += `<div class="checklist" style="display:flex;flex-direction:column;gap:8px;">`;
-        for (let i = 0; i < fehlend.length; i++) {
-          const item = fehlend[i];
-          const kat = kats.find(k => k.id === item.kat);
-          const katLabel = kat ? kat.label : item.kat;
-          html += `
-            <div class="checklist-item" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;cursor:pointer;border:1px solid var(--border-color);" onclick="state.activeView='settings';renderApp();">
-              <div style="width:28px;height:28px;border-radius:50%;background:var(--warning-soft);color:var(--warning);display:flex;align-items:center;justify-content:center;font-weight:600;">${i+1}</div>
-              <div style="flex:1;">
-                <div style="font-weight:600;">${item.label}</div>
-                <div class="text-xs text-muted">${katLabel}</div>
-              </div>
-              <span style="color:var(--warning);">→</span>
-            </div>
-          `;
-        }
-        html += `</div>`;
-      }
-
-      if (fahrzeugHinweis) {
-        html += `
-          <div class="checklist-item" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;cursor:pointer;border:1px solid var(--border-color);margin-top:8px;" onclick="state.activeView='fahrzeug-konfig';renderApp();">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--info-soft);color:var(--info);display:flex;align-items:center;justify-content:center;font-weight:600;">🚗</div>
-            <div style="flex:1;">
-              <div style="font-weight:600;">Fahrzeug-Ränge zuweisen</div>
-              <div class="text-xs text-muted">${fahrzeugHinweis.ohneRang} von ${fahrzeugHinweis.total} Fahrzeugen haben noch keine Ränge</div>
-            </div>
-            <span style="color:var(--info);">→</span>
-          </div>
-        `;
-      }
-
-      html += `</div></div>`;
-
-      // Quick-Action: Komplett einrichten mit /krp-setup
-      html += `
-        <div class="card stagger-item">
-          <div class="card-body">
-            <h3 class="card-title">🚀 Schnell-Einrichtung</h3>
-            <p class="text-sm text-muted">Nutze <code>/krp-setup</code> in Discord, um fehlende Kanäle und Rollen automatisch zu erstellen.</p>
-            <button class="btn btn-primary mt-sm" onclick="showSuccess('Hinweis', 'Führe /krp-setup in deinem Discord-Server aus, um fehlende Kanäle und Rollen automatisch zu erstellen.')">
-              Wie geht das?
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    const content = document.getElementById('setup-content');
-    if (content) content.innerHTML = html;
-  } catch (e) {
-    showError('Fehler', e.message);
-  }
-}
-
-// FAHRZEUG-KONFIGURATION VIEW (Server-Admin: Ränge + Bilder)
-// ================================================================
-
-async function renderFahrzeugKonfiguration() {
-  const main = document.querySelector('.page-content');
-  if (!main) return;
-
-  main.innerHTML = `
-    <div class="page-header page-enter">
-      <div class="page-header-content">
-        <h1 class="page-title">🚗 Fahrzeugkonfiguration</h1>
-        <p class="page-description">Ordne hier die Discord-Ränge zu, die jedes Fahrzeug fahren dürfen. Bilder werden vom Bot-Owner im Admin-Menü verwaltet.</p>
-      </div>
-      <div class="page-actions">
-        <button class="btn btn-secondary" onclick="renderFahrzeuge()">
-          ← Zurück zur Ansicht
-        </button>
-      </div>
-    </div>
-
-    <div id="fahrzeug-konfig-list" class="grid grid-2">
-      ${renderSkeleton('card', 6)}
-    </div>
-  `;
-
-  try {
-    const result = await api('fahrzeug-rang', { guild: state.currentGuild });
-    const list = document.getElementById('fahrzeug-konfig-list');
+    const result = await api('fahrzeuge', { guild: state.currentGuild });
+    const list = document.getElementById('fahrzeuge-list');
     if (!list) return;
 
-    const fahrzeuge = result.fahrzeuge || [];
-    const serverRangIds = {};
-    for (const f of fahrzeuge) {
-      serverRangIds[f.name] = f.rang_ids || [];
+    if (!result.fahrzeuge || result.fahrzeuge.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state-icon">🚗</div>
+          <div class="empty-state-title">Keine Fahrzeuge</div>
+          <div class="empty-state-description">Es wurden noch keine Fahrzeuge angelegt.</div>
+        </div>
+      `;
+      return;
     }
 
-    list.innerHTML = fahrzeuge.map((f, idx) => `
-      <div class="card stagger-item" style="margin-bottom: 12px;">
-        <div class="card-header">
-          <h3 class="card-title">${f.bild_url ? `<img src="${esc(f.bild_url)}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;margin-right:8px;">` : '🚗'} ${esc(f.name)}</h3>
-          <span class="badge badge-${f.rang_ids && f.rang_ids.length > 0 ? 'success' : 'secondary'}">${f.rang_ids && f.rang_ids.length > 0 ? f.rang_ids.length + ' Ränge' : 'Keine Ränge'}</span>
-        </div>
+    list.innerHTML = result.fahrzeuge.map(f => `
+      <div class="card stagger-item">
         <div class="card-body">
-          <p class="text-sm text-muted">Ränge auswählen, die dieses Fahrzeug fahren dürfen:</p>
-          <div id="rang-container-${idx}" class="rang-checkboxes" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;">
-            ${(state.roles || []).map(r => `
-              <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-secondary);border-radius:6px;cursor:pointer;font-size:13px;">
-                <input type="checkbox" value="${r.id}" ${serverRangIds[f.name]?.includes(String(r.id)) ? 'checked' : ''} onchange="updateFahrzeugRang('${esc(f.name)}', this)">
-                <span>${esc(r.name)}</span>
-              </label>
-            `).join('')}
+          ${f.bild_url ? `<img src="${esc(f.bild_url)}" class="fahrzeug-bild" alt="${esc(f.name)}" />` : ''}
+          <h3 class="font-semibold mb-sm">🚗 ${esc(f.name)}</h3>
+          <p class="text-sm text-muted mb-md">${esc(f.beschreibung) || 'Keine Beschreibung'}</p>
+          <div class="fahrzeug-rang-info">
+            <strong class="text-xs">Berechtigte Ränge:</strong>
+            <div class="rang-tags">
+              ${f.rang_ids && f.rang_ids.length > 0
+                ? f.rang_ids.map(rid => {
+                    const rolle = (state.config?.rollen || []).find(r => r.id === String(rid));
+                    return rolle ? `<span class="rang-tag">${esc(rolle.name)}</span>` : '';
+                  }).join('')
+                : '<span class="text-xs text-muted">Keine Rollen zugewiesen</span>'
+              }
+            </div>
           </div>
-          <div class="text-xs text-muted mt-sm">📷 Bild: ${f.bild_url ? `<a href="${esc(f.bild_url)}" target="_blank">✅ Vorhanden</a> <span class="text-muted">(vom Bot-Owner verwaltet)</span>` : '<span class="text-danger">Noch kein Bild gesetzt</span>'}</div>
         </div>
       </div>
     `).join('');
@@ -8215,26 +7986,66 @@ async function renderFahrzeugKonfiguration() {
   }
 }
 
-async function updateFahrzeugRang(name, checkbox) {
-  const rangContainer = checkbox.closest('.rang-checkboxes');
-  if (!rangContainer) return;
+function showFahrzeugModal() {
+  showModal({
+    title: 'Neues Fahrzeug',
+    content: `
+      <form id="fahrzeug-form" class="fahrzeug-form">
+        <div class="form-group">
+          <label class="form-label">Name *</label>
+          <input type="text" class="form-input" name="name" required placeholder="z.B. Streifenwagen BMW i3" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bild-URL (optional)</label>
+          <input type="url" class="form-input" name="bild_url" placeholder="https://..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Beschreibung</label>
+          <textarea class="form-input" name="beschreibung" rows="3" placeholder="Beschreibung des Fahrzeugs..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Berechtigte Ränge (Mehrfachauswahl)</label>
+          <select class="form-input" name="rang_ids" multiple size="5">
+            ${(state.config?.rollen || []).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
+          </select>
+          <span class="text-xs text-muted">Rollen, die dieses Fahrzeug fahren dürfen</span>
+        </div>
+      </form>
+    `,
+    footer: `
+      <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="submitFahrzeug()">Erstellen</button>
+    `,
+    size: 'md'
+  });
+}
 
-  const checked = Array.from(rangContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+async function submitFahrzeug() {
+  const form = document.getElementById('fahrzeug-form');
+  const formData = new FormData(form);
+  const rangSelect = form.querySelector('[name="rang_ids"]');
+  const rang_ids = Array.from(rangSelect.selectedOptions).map(o => o.value);
 
   try {
-    await api('fahrzeug-rang', {
+    await api('fahrzeug_erstellen', {
       guild: state.currentGuild,
       method: 'POST',
-      body: { name, rang_ids: checked }
+      body: {
+        name: formData.get('name'),
+        bild_url: formData.get('bild_url') || null,
+        beschreibung: formData.get('beschreibung') || '',
+        rang_ids,
+      }
     });
-    showSuccess('Gespeichert', `Ränge für ${name} aktualisiert.`);
+    closeModal();
+    showSuccess('Erstellt', 'Fahrzeug wurde angelegt!');
+    renderFahrzeuge();
   } catch (e) {
-    showError('Fehler', 'Speichern fehlgeschlagen: ' + e.message);
+    showError('Fehler', e.message);
   }
 }
 
-// HINWEIS: Fahrzeug-Anlegen ist deaktiviert — die 29 Standard-Fahrzeuge in dienst_system.py sind fix. Server-Admins ändern Ränge im Menü "Fahrzeugkonfiguration", der Bot-Owner pflegt Bilder im Admin-Menü.
-
+// ================================================================
 // AUDIT-LOG VIEW
 // ================================================================
 
@@ -8430,34 +8241,23 @@ function showKrankmeldungModal() {
         </div>
       </form>
     `,
-    footerContent: `
+    footer: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="submitKrankenmeldung()">Einreichen</button>
     `
   });
 }
 
-async function submitKrankmeldung() {
+async function submitKrankenmeldung() {
   const form = document.getElementById('krankenmeldung-form');
-  if (!form) {
-    showError('Fehler', 'Formular nicht gefunden');
-    return;
-  }
   const formData = new FormData(form);
-
-  // Pflichtfelder clientseitig prüfen für bessere UX
-  const grund = (formData.get('grund') || '').toString().trim();
-  if (!grund) {
-    showError('Fehler', 'Bitte gib einen Grund an');
-    return;
-  }
 
   try {
     await api('krankenmeldung_erstellen', {
       guild: state.currentGuild,
       method: 'POST',
       body: {
-        grund,
+        grund: formData.get('grund'),
         von_datum: formData.get('von_datum'),
         bis_datum: formData.get('bis_datum'),
         attest_url: formData.get('attest_url') || null,
@@ -8496,7 +8296,7 @@ async function lehneKrankenmeldungAb(kmId) {
         </div>
       </form>
     `,
-    footerContent: `
+    footer: `
       <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-danger" onclick="submitAblehnen('${kmId}')">Ablehnen</button>
     `
@@ -8656,7 +8456,7 @@ async function renderSentinelSecurity() {
 
 async function loadSentinelStats() {
   const statsEl = document.getElementById('sentinel-stats');
-  if (!statsEl) return null;  // Sentinel-Übersicht wird separat gerendert
+  if (!statsEl) return;
 
   try {
     const stats = await api('sentinel_stats');
@@ -8715,40 +8515,13 @@ async function loadSentinelStats() {
 }
 
 function switchSentinelTab(tabName) {
-  const contentEl = document.getElementById('sentinel-content');
-
-  if (!contentEl || state.activeView !== 'sentinel') {
-    // Sentinel ist nicht offen - öffne es erst und wechsle dann zum Tab
-    state.activeView = 'sentinel';
-    renderAppWithLayout().then(() => {
-      // Warte bis Sentinel gerendert wurde
-      setTimeout(() => {
-        const newContent = document.getElementById('sentinel-content');
-        if (newContent) {
-          // Tab-Buttons aktualisieren
-          document.querySelectorAll('.sentinel-tab').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-          });
-          // Content laden
-          newContent.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
-          switch (tabName) {
-            case 'overview': loadSentinelOverview(newContent); break;
-            case 'threats': loadSentinelThreats(newContent); break;
-            case 'users': loadSentinelUsers(newContent); break;
-            case 'ips': loadSentinelIps(newContent); break;
-            case 'blacklist': loadSentinelBlacklist(newContent); break;
-            case 'whitelist': loadSentinelWhitelist(newContent); break;
-          }
-        }
-      }, 300);
-    });
-    return;
-  }
-
   // Tab-Buttons aktualisieren
   document.querySelectorAll('.sentinel-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
+
+  const contentEl = document.getElementById('sentinel-content');
+  if (!contentEl) return;
 
   contentEl.innerHTML = '<div class="loading-state">' + renderSkeleton('card', 3) + '</div>';
 
@@ -8889,10 +8662,6 @@ async function loadSentinelOverview(el) {
       api('sentinel_threat_log', { limit: 10 }),
       api('sentinel_stats')
     ]);
-    if (!stats || !threats) {
-      el.innerHTML = '<div class="error-state">Sentinel-Daten konnten nicht geladen werden.</div>';
-      return;
-    }
 
     el.innerHTML = `
       <div class="sentinel-grid-2">
@@ -9644,12 +9413,12 @@ async function renderPersonalakteDetail(container, userId) {
             </div>
             <div class="field-actions flex gap-sm">
               ${kannWiderrufen && !e.widerrufen && (e.typ === 'verwarnung' || e.typ === 'suspendierung') ? `
-                <button class="btn btn-secondary btn-sm" data-widerrufen-user="${esc(userId)}" data-widerrufen-az="${esc(e.aktenzeichen)}">
+                <button class="btn btn-secondary btn-sm" onclick="widerrufenEintrag('${userId}', '${e.aktenzeichen}')">
                   Widerrufen
                 </button>
               ` : ''}
               ${kannWiderrufen ? `
-                <button class="btn btn-link btn-sm text-danger p-0" data-loeschen-user="${esc(userId)}" data-loeschen-az="${esc(e.aktenzeichen)}">
+                <button class="btn btn-link btn-sm text-danger p-0" onclick="loescheEintrag('${userId}', '${e.aktenzeichen}')">
                   Löschen
                 </button>
               ` : ''}
@@ -9659,51 +9428,28 @@ async function renderPersonalakteDetail(container, userId) {
         </div>
       `;
     }
-
+    
     container.appendChild(panel);
-
-    // Event-Delegation: Aktions-Buttons (Verwarnen/Suspendieren/...) sicher binden,
-    // ohne inline onclick-Attribute mit potenziell unsicheren Werten.
-    panel.addEventListener('click', (ev) => {
-      const btn = ev.target.closest('[data-aktion]');
-      if (btn) {
-        openAktionModal(btn.dataset.aktion, btn.dataset.userId, btn.dataset.userName);
-        return;
-      }
-      const widerBtn = ev.target.closest('[data-widerrufen-az]');
-      if (widerBtn) {
-        widerrufenEintrag(widerBtn.dataset.widerrufenUser, widerBtn.dataset.widerrufenAz);
-        return;
-      }
-      const delBtn = ev.target.closest('[data-loeschen-az]');
-      if (delBtn) {
-        loescheEintrag(delBtn.dataset.loeschenUser, delBtn.dataset.loeschenAz);
-        return;
-      }
-    });
   } catch (e) {
     container.innerHTML = `<div class="alert alert-danger">${esc(e.message)}</div>`;
   }
 }
 
 function renderPersonalakteAktionen(container, userId, akte) {
-  // User-ID und Name escapen — landen in data-Attributen, die der
-  // Event-Handler unten liest. Vorher direkt in onclick-String eingefügt
-  // (XSS-Risiko bei Namen mit Anführungszeichen).
   return `
     <div class="field-group mb-md">
       <label class="form-label">Personalakte verwalten</label>
       <div class="flex flex-wrap gap-sm">
-        <button class="btn btn-warning btn-sm" data-aktion="verwarnen" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
+        <button class="btn btn-warning btn-sm" onclick="openAktionModal('verwarnen', ${userId}, '${akte.name}')">
           ⚠️ Verwarnen
         </button>
-        <button class="btn btn-info btn-sm" data-aktion="suspendieren" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
+        <button class="btn btn-info btn-sm" onclick="openAktionModal('suspendieren', ${userId}, '${akte.name}')">
           ⏸️ Suspendieren
         </button>
-        <button class="btn btn-info btn-sm" data-aktion="aufheben" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
+        <button class="btn btn-info btn-sm" onclick="openAktionModal('aufheben', ${userId}, '${akte.name}')">
           ✅ Suspendierung aufheben
         </button>
-        <button class="btn btn-danger btn-sm" data-aktion="kuendigen" data-user-id="${esc(userId)}" data-user-name="${esc(akte.name)}">
+        <button class="btn btn-danger btn-sm" onclick="openAktionModal('kuendigen', ${userId}, '${akte.name}')">
           ⛔ Kündigen
         </button>
       </div>
@@ -9893,12 +9639,6 @@ function renderApp() {
       break;
     case 'fahrzeuge':
       renderFahrzeuge();
-      break;
-    case 'fahrzeug-konfig':
-      renderFahrzeugKonfiguration();
-      break;
-    case 'setup-assistent':
-      renderSetupAssistent();
       break;
     case 'auditlog':
       renderAuditLog();
@@ -10155,18 +9895,14 @@ async function openGuild(guildId) {
       api('modules', { guild: state.currentGuild })
         .then(r => state.modules = r.module)
         .catch(() => state.modules = { buergerakten: true, bewerbungsfragen: true }),
-      // Rollen für ALLE Nutzer laden — werden für Fahrzeug-Formulare,
-      // Dienstanweisungen und mehr gebraucht (nicht nur Admins).
-      api('roles', { guild: state.currentGuild })
-        .then(r => state.roles = r.roles || [])
-        .catch(() => state.roles = []),
     ];
-
+    
     if (state.tier?.admin) {
       calls.push(
         api('schema', { guild: state.currentGuild }).then(r => state.schema = r.categories),
         api('config', { guild: state.currentGuild }).then(r => state.config = r.config),
         api('channels', { guild: state.currentGuild }).then(r => state.channels = r.channels),
+        api('roles', { guild: state.currentGuild }).then(r => state.roles = r.roles),
         api('stats', { guild: state.currentGuild }).then(r => state.stats = r),
         api('officer_permission', { guild: state.currentGuild })
           .then(r => state.officerPermission = r.enabled)
@@ -10200,10 +9936,10 @@ function renderAppWithLayout() {
       </div>
     </div>
   `;
-
+  
   renderSidebarFull();
   renderTopbarFull();
-  return Promise.resolve(renderApp());
+  renderApp();
 }
 
 function renderSidebarFull() {
@@ -10674,11 +10410,6 @@ async function renderAdminArea() {
         <div class="admin-card-title">Sentinel Security</div>
         <div class="admin-card-desc">KI-gestützte Bedrohungserkennung</div>
       </div>
-      <div class="admin-card" data-tab="vehicles">
-        <div class="admin-card-icon">🚗</div>
-        <div class="admin-card-title">Fahrzeug-Katalog</div>
-        <div class="admin-card-desc">Globale Fahrzeuge verwalten</div>
-      </div>
       <div class="admin-card" data-tab="support">
         <div class="admin-card-icon">📨</div>
         <div class="admin-card-title">Support-Tickets</div>
@@ -10699,23 +10430,6 @@ async function renderAdminArea() {
     <div id="admin-tab-content" class="admin-content-area"></div>
   `;
 
-  // Bot-Status prüfen und anzeigen
-  const statusEl = document.createElement('div');
-  statusEl.className = 'admin-bot-status';
-  statusEl.id = 'admin-bot-status';
-  statusEl.innerHTML = '<div class="bot-status-checking">🔄 Bot-Verbindung wird geprüft...</div>';
-  container.appendChild(statusEl);
-
-  checkBotStatus().then(status => {
-    if (status === 'online') {
-      statusEl.innerHTML = '<div class="bot-status-online">🟢 Bot erreichbar</div>';
-    } else {
-      statusEl.innerHTML = '<div class="bot-status-offline">🔴 Bot nicht erreichbar — Sperren/Stats können nicht geladen werden</div>';
-    }
-  }).catch(() => {
-    statusEl.innerHTML = '<div class="bot-status-offline">🔴 Bot nicht erreichbar</div>';
-  });
-
   // Card-based navigation
   const cards = container.querySelectorAll('.admin-card');
   const tabContent = container.querySelector('#admin-tab-content');
@@ -10726,12 +10440,7 @@ async function renderAdminArea() {
     tabContent.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
 
     if (tab === 'sentinel') {
-      // Im Admin-Bereich gibt es kein #sentinel-stats-Element — renderSentinelOverview
-      // rendert die Stats direkt in den Container, deshalb ist loadSentinelStats hier
-      // nicht nötig (und würde ohnehin nichts tun, da das Element fehlt).
-      renderSentinelOverview(tabContent);
-    } else if (tab === 'vehicles') {
-      renderAdminVehicles(tabContent);
+      loadSentinelStats().then(() => renderSentinelOverview(tabContent));
     } else if (tab === 'support') {
       renderAdminSupport(tabContent);
     } else if (tab === 'guilds') {
@@ -10748,103 +10457,6 @@ async function renderAdminArea() {
   // Load default tab
   loadTab('sentinel');
 }
-
-// ================================================================
-// ADMIN-FAHRZEUG-KATALOG
-// ================================================================
-async function renderAdminVehicles(container) {
-  if (!container) return;
-  // Bot-Owner-Check: nur der Bot-Owner (state.isAdmin) darf die globalen Bilder pflegen.
-  if (!state.isAdmin) {
-    container.innerHTML = '<div class="alert alert-danger"><strong>Keine Berechtigung</strong> — Fahrzeug-Bilder können nur vom Bot-Owner verwaltet werden.</div>';
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="page-header page-enter">
-      <div class="page-header-content">
-        <h1 class="page-title">🚗 Fahrzeug-Bilder (Bot-Owner)</h1>
-        <p class="page-description">Setze hier das Bild für jedes der 29 Standard-Fahrzeuge. Fahrzeuge können nicht hinzugefügt oder gelöscht werden — nur das Bild ist änderbar.</p>
-      </div>
-    </div>
-    <div class="alert alert-info mb-md">
-      <strong>ℹ️ Hinweis:</strong> Die Fahrzeuge sind fix in <code>dienst_system.py</code> definiert.
-      Du kannst nur die Bild-URL pro Fahrzeug ändern — alles andere (Name, PS, km/h, Preis) wird vom Code vorgegeben.
-    </div>
-    <div id="admin-vehicles-list" class="grid grid-3">
-      <div class="loading-center"><div class="loading-spinner"></div></div>
-    </div>
-  `;
-
-  try {
-    const data = await api('admin_vehicles');
-    const vehicles = data?.vehicles || [];
-    const list = document.getElementById('admin-vehicles-list');
-    if (!list) return;
-
-    if (vehicles.length === 0) {
-      list.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon">🚗</div><div class="empty-state-title">Keine Fahrzeuge</div><div class="empty-state-description">Es sind keine Fahrzeuge in dienst_system.py definiert.</div></div>';
-      return;
-    }
-
-    list.innerHTML = vehicles.map(v => {
-      const ps = v.hp || v.sek_hp || '';
-      const speed = v.kmh || '';
-      const preis = v.preis ? `${v.preis} $` : '';
-      const minRang = v.min_rang !== undefined ? `Min-Rang: ${v.min_rang}` : '';
-      return `
-      <div class="card fahrzeug-card">
-        ${v.bild_url
-          ? `<img src="${esc(v.bild_url)}" class="fahrzeug-bild" alt="${esc(v.name)}" style="object-fit: cover; height: 160px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
-          : ''}
-        <div class="fahrzeug-bild" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: ${v.bild_url ? 'none' : 'flex'}; align-items: center; justify-content: center; font-size: 48px;">
-          🚗
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">${esc(v.name)}</h3>
-          <p class="text-sm text-muted">${esc(v.beschreibung || 'Standard-Fahrzeug')}</p>
-          <div class="flex gap-xs mt-md" style="flex-wrap:wrap;">
-            ${ps ? `<span class="badge badge-warning">⚡ ${ps} HP</span>` : ''}
-            ${speed ? `<span class="badge badge-info">🏁 ${speed} km/h</span>` : ''}
-            ${preis ? `<span class="badge badge-success">💰 ${preis}</span>` : ''}
-            ${minRang ? `<span class="badge badge-secondary">${minRang}</span>` : ''}
-          </div>
-          <div class="form-group mt-md">
-            <label class="text-xs">📷 Bild-URL</label>
-            <input type="url" id="img-${esc(v.name).replace(/[^a-z0-9]/gi, '-')}" value="${esc(v.bild_url || '')}" placeholder="https://i.imgur.com/..." class="form-input form-input-sm">
-            <button type="button" class="btn btn-sm btn-primary mt-sm" onclick="saveAdminVehicleImage('${esc(v.name).replace(/'/g, "\\'")}')">💾 Bild speichern</button>
-          </div>
-        </div>
-      </div>
-      `;
-    }).join('');
-  } catch (e) {
-    const list = document.getElementById('admin-vehicles-list');
-    if (list) list.innerHTML = `
-      <div class="alert alert-warning" style="grid-column: 1 / -1;">
-        <strong>Bot nicht erreichbar</strong><br>
-        Die Fahrzeuge konnten nicht geladen werden. Bitte stelle sicher, dass der Bot läuft.<br>
-        <small class="text-muted">${esc(e.message)}</small>
-      </div>
-    `;
-  }
-}
-
-async function saveAdminVehicleImage(name) {
-  // Input-ID aus dem Namen ableiten
-  const id = `img-${name.replace(/[^a-z0-9]/gi, '-')}`;
-  const input = document.getElementById(id);
-  if (!input) return;
-  const url = input.value.trim();
-
-  try {
-    await api('admin_vehicle_update', { target: name, method: 'PUT', body: { bild_url: url || null } });
-    showSuccess('Gespeichert', `Bild für "${name}" wurde aktualisiert.`);
-  } catch (err) {
-    showError('Fehler', err.message || 'Speichern fehlgeschlagen');
-  }
-}
-
 
 async function renderAdminSupport(container) {
   try {
@@ -11090,29 +10702,27 @@ async function renderAdminUserLocks(container) {
   
   async function ladeSperrliste() {
     const liste = container.querySelector('#locks-liste');
-    if (!liste) return;
     liste.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
     try {
       const data = await api('security_locks');
       console.log('[Admin Locks] API Response:', data);
-      const users = (data && data.users) || [];
-      const ips = (data && data.ips) || [];
+      const users = data.users || [];
+      const ips = data.ips || [];
       if (users.length === 0 && ips.length === 0) {
-        liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔓</div><div class="empty-state-title">Keine Sperren</div><div class="empty-state-description">Aktuell sind keine User oder IPs gesperrt.</div></div>';
+        liste.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔓</div><div class="empty-state-title">Keine Sperren</div></div>';
         return;
       }
       let html = '';
       if (users && users.length > 0) {
-        html += `<h4 class="text-sm text-muted mb-sm">Gesperrte User (${users.length})</h4>`;
+        html += '<h4 class="text-sm text-muted mb-sm">Gesperrte User</h4>';
         users.forEach(u => {
-          const ts = u.gesperrt_am ? new Date(u.gesperrt_am).toLocaleString('de-DE') : 'unbekannt';
           html += `
             <div class="card mb-sm">
               <div class="card-body flex items-center justify-between">
                 <div>
-                  <strong>User-ID: <code>${esc(u.user_id)}</code></strong>
-                  ${u.grund ? `<div class="text-xs text-muted mt-xs">📋 ${esc(u.grund)}</div>` : ''}
-                  <div class="text-xs text-muted mt-xs">⏱️ ${ts}</div>
+                  <strong>${esc(u.name || u.user_id)}</strong>
+                  <span class="text-muted text-xs">(${esc(u.user_id)})</span>
+                  ${u.grund ? `<div class="text-xs text-muted">Grund: ${esc(u.grund)}</div>` : ''}
                 </div>
                 <button class="btn btn-secondary btn-sm unlock-user-btn" data-id="${esc(u.user_id)}">Entsperren</button>
               </div>
@@ -11121,16 +10731,14 @@ async function renderAdminUserLocks(container) {
         });
       }
       if (ips && ips.length > 0) {
-        html += `<h4 class="text-sm text-muted mb-sm mt-lg">Gesperrte IPs (${ips.length})</h4>`;
+        html += '<h4 class="text-sm text-muted mb-sm mt-lg">Gesperrte IPs</h4>';
         ips.forEach(ip => {
-          const ts = ip.gesperrt_am ? new Date(ip.gesperrt_am).toLocaleString('de-DE') : 'unbekannt';
           html += `
             <div class="card mb-sm">
               <div class="card-body flex items-center justify-between">
                 <div>
                   <strong><code>${esc(ip.ip)}</code></strong>
-                  ${ip.grund ? `<div class="text-xs text-muted mt-xs">📋 ${esc(ip.grund)}</div>` : ''}
-                  <div class="text-xs text-muted mt-xs">⏱️ ${ts}</div>
+                  ${ip.grund ? `<div class="text-xs text-muted">Grund: ${esc(ip.grund)}</div>` : ''}
                 </div>
                 <button class="btn btn-secondary btn-sm unlock-ip-btn" data-ip="${esc(ip.ip)}">Entsperren</button>
               </div>
@@ -11139,7 +10747,7 @@ async function renderAdminUserLocks(container) {
         });
       }
       liste.innerHTML = html;
-
+      
       liste.querySelectorAll('.unlock-user-btn').forEach(btn => {
         btn.onclick = async () => {
           try {
@@ -11149,7 +10757,7 @@ async function renderAdminUserLocks(container) {
           } catch (err) { showError('Fehler', err.message); }
         };
       });
-
+      
       liste.querySelectorAll('.unlock-ip-btn').forEach(btn => {
         btn.onclick = async () => {
           try {
@@ -11160,7 +10768,7 @@ async function renderAdminUserLocks(container) {
         };
       });
     } catch (e) {
-      liste.innerHTML = `<div class="alert alert-danger"><strong>Fehler beim Laden:</strong> ${esc(e.message)}<br><small class="text-muted">Prüfe, ob der Bot läuft und der API-Key korrekt gesetzt ist.</small></div>`;
+      liste.innerHTML = `<div class="alert alert-danger">${esc(e.message)}</div>`;
     }
   }
   ladeSperrliste();
@@ -11186,9 +10794,6 @@ async function boot() {
 
     // Initialize tooltips
     initTooltips();
-
-    // Client-seitige VPN/Proxy-Erkennung (Browser-Check)
-    checkClientVpn();
 
     startNotificationPolling();
 
@@ -11225,29 +10830,12 @@ async function boot() {
 // ================================================================
 // VPN/PROXY ERKENNUNG
 // ================================================================
-// HINWEIS: ip-api.com blockt CORS / direkte Browser-Anfragen oft mit 403.
-// Der VPN-Check läuft jetzt ZUSÄTZLICH serverseitig in api/callback.js
-// (über denselben ip-api.com-Aufruf auf Vercel, wo es funktioniert).
-// Hier im Browser rufen wir die Daten stattdessen über unseren eigenen
-// API-Proxy ab, der den User-Agent korrekt setzen kann und nicht durch
-// Browser-CORS blockiert wird.
 
 async function checkClientVpn() {
   try {
-    // Über unseren Server proxyen — vermeidet 403 von ip-api.com
-    // und CORS-Probleme im Browser. Der Server hat den API-Key (falls nötig).
-    const resp = await fetch('/api/check-vpn', {
-      credentials: 'include',
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!resp.ok) {
-      // Server-Endpoint existiert noch nicht — silent fail, VPN-Check ist
-      // nicht kritisch (passiert sowieso serverseitig beim Login).
-      state.clientVpn = false;
-      return;
-    }
+    const resp = await fetch('https://ip-api.com/json/?fields=status,proxy,hosting,countryCode,isp');
     const data = await resp.json();
-    if (data && data.status === 'success') {
+    if (data.status === 'success') {
       state.clientVpn = !!(data.proxy || data.hosting);
       state.clientIpInfo = {
         country: data.countryCode,
@@ -11268,27 +10856,17 @@ async function checkClientVpn() {
 }
 
 function showVpnWarning(ipData) {
-  // FIX: Vorher konnte das Banner mehrfach eingefügt werden (z. B. bei React-artigen
-  // Re-Renders oder wenn checkClientVpn mehrmals feuert). Jetzt früh aussteigen, wenn
-  // das Banner schon existiert oder der User es aktiv dismissed hat.
-  if (document.getElementById('vpn-warning')) return;
-  if (state.vpnWarningDismissed) return;
-
-  // ISP/Country escapen, weil die Felder frei vom IP-Intel-Dienst kommen
-  // (XSS-Schutz, vorher wurden sie ungesichert eingefügt).
-  const isp = esc(ipData.isp || 'Unbekannter ISP');
-  const cc = esc(ipData.countryCode || '??');
-
+  // Warnung permanent im Dashboard anzeigen
   const warning = el(`
     <div class="vpn-warning-banner" id="vpn-warning">
       <div class="vpn-warning-content">
         <div class="vpn-warning-icon">🔒</div>
         <div class="vpn-warning-text">
           <strong>VPN/Proxy erkannt!</strong>
-          <span>${isp} (${cc}) — Deine IP wird überwacht.</span>
+          <span>${ipData.isp || 'Unbekannter ISP'} (${ipData.countryCode || '??'}) — Deine IP wird überwacht.</span>
         </div>
       </div>
-      <button class="vpn-warning-close" aria-label="Warnung schließen" onclick="dismissVpnWarning()">✕</button>
+      <button class="vpn-warning-close" onclick="dismissVpnWarning()">✕</button>
     </div>
   `);
 
@@ -11310,16 +10888,11 @@ function dismissVpnWarning() {
 // LOGIN SCREEN
 // ================================================================
 
-// Top-Level-Funktion, damit onclick="redirectToLogin()" im HTML-Markup
-// zuverlässig funktioniert. Vorher nur window.redirectToLogin, was bei
-// CSP-strict oder im Shadow-DOM nicht greift.
-function redirectToLogin() {
-  window.location.href = loginUrl();
-}
-// Zusätzlich auf window exposen, falls externe Skripte darauf zugreifen.
-window.redirectToLogin = redirectToLogin;
-
 function renderLoginScreen() {
+  window.redirectToLogin = () => {
+    window.location.href = loginUrl();
+  };
+
   // URL-Parameter für Login-Fehler checken
   const urlParams = new URLSearchParams(window.location.search);
   const loginError = urlParams.get('login_error');
@@ -11482,5 +11055,174 @@ function renderLoginScreen() {
 
 boot();
 </script>
+
+<script>
+/* ================================================================
+   POLIZEI SYSTEM — UX ENHANCEMENTS
+   ================================================================ */
+(function () {
+  'use strict';
+
+  function installMobileDrawer() {
+    const sidebar = document.getElementById('main-sidebar');
+    if (!sidebar || document.getElementById('mobile-sidebar-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'mobile-sidebar-overlay';
+    overlay.className = 'mobile-sidebar-overlay';
+    document.body.appendChild(overlay);
+    const toggle = (open) => {
+      sidebar.classList.toggle('open', open);
+      overlay.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    overlay.addEventListener('click', () => toggle(false));
+    window.__toggleMobileSidebar = toggle;
+    sidebar.querySelectorAll('.nav-item, #back-to-servers, #logout-sidebar').forEach(el => {
+      el.addEventListener('click', () => toggle(false));
+    });
+  }
+
+  const originalRenderTopbarFull = window.renderTopbarFull;
+  window.renderTopbarFull = function () {
+    const topbar = document.getElementById('main-topbar');
+    if (!topbar) return;
+    topbar.innerHTML = `
+      <div class="topbar-left">
+        <button class="icon-btn mobile-menu-btn" id="enhanced-mobile-menu" title="Menü" aria-label="Menü">☰</button>
+        <button class="topbar-server-switch" id="topbar-server-switch" title="Server wechseln">
+          <span>🛡️</span><span class="topbar-server-name">${esc(state.tier?.name || 'Server')}</span><span>⌄</span>
+        </button>
+        <div class="topbar-breadcrumb" style="margin-left:10px;">
+          <span class="separator">/</span><span>${esc(getViewTitle(state.activeView))}</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <span class="search-box-icon">🔍</span>
+          <input type="search" placeholder="Suchen..." class="form-input" id="global-search-enhanced" />
+        </div>
+        <button class="icon-btn" id="notifications-btn" title="Benachrichtigungen">🔔</button>
+        <button class="icon-btn" id="support-btn" title="Support">🎫</button>
+        ${state.isAdmin ? '<button class="icon-btn" id="admin-btn" title="Admin">🛡️</button>' : ''}
+      </div>`;
+
+    document.getElementById('enhanced-mobile-menu')?.addEventListener('click', () => window.__toggleMobileSidebar?.(true));
+    document.getElementById('topbar-server-switch')?.addEventListener('click', () => {
+      state.currentGuild = null;
+      renderGuildPicker();
+    });
+    document.getElementById('support-btn')?.addEventListener('click', openSupportModal);
+    document.getElementById('admin-btn')?.addEventListener('click', openAdminArea);
+    document.getElementById('notifications-btn')?.addEventListener('click', () => {
+      if (typeof showKeyboardShortcuts === 'function') showKeyboardShortcuts();
+    });
+    document.getElementById('global-search-enhanced')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) handleGlobalSearch(e.target.value.trim());
+    });
+  };
+
+  window.renderGuildPicker = async function () {
+    app.innerHTML = `
+      <div class="full-page-layout">
+        <div class="sidebar" id="guild-picker-sidebar">
+          <div class="sidebar-header">
+            <div class="sidebar-brand"><div class="sidebar-brand-icon">🛡️</div><div class="sidebar-brand-text">
+              <div class="sidebar-brand-title">Polizei System</div><div class="sidebar-brand-subtitle">Serverauswahl</div>
+            </div></div>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="nav-section-title">Übersicht</div>
+            <div class="nav-item active"><span class="nav-item-icon">🏠</span><span class="nav-item-text">Server</span></div>
+            ${state.isAdmin ? '<div class="nav-item" id="picker-admin"><span class="nav-item-icon">🛡️</span><span class="nav-item-text">Admin-Bereich</span></div>' : ''}
+            <div class="nav-item" id="picker-settings"><span class="nav-item-icon">⚙️</span><span class="nav-item-text">Einstellungen</span></div>
+          </nav>
+          <div class="sidebar-footer">
+            <div class="sidebar-user" id="picker-logout"><div class="avatar avatar-sm">${avatarUrl(state.user) ? `<img src="${avatarUrl(state.user)}" />` : '👤'}</div>
+              <div class="sidebar-user-info"><div class="sidebar-user-name">${esc(state.user?.name || 'Nutzer')}</div><div class="sidebar-user-role">${state.isAdmin ? 'Administrator' : 'Eingeloggt'}</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="main-content">
+          <div class="topbar" id="guild-picker-topbar">
+            <div class="topbar-left"><button class="icon-btn mobile-menu-btn" id="picker-mobile-menu">☰</button><div class="topbar-breadcrumb"><strong>Server-Auswahl</strong></div></div>
+            <div class="topbar-right"><button class="icon-btn" id="picker-support" title="Support">🎫</button><button class="btn btn-secondary btn-sm" id="picker-logout-top">Abmelden</button></div>
+          </div>
+          <main class="page-content">
+            <section class="guild-picker-hero">
+              <div class="guild-picker-hero-content">
+                <div class="guild-picker-eyebrow">Polizei System</div>
+                <h1 class="guild-picker-title">Wähle deine Dienststelle</h1>
+                <p class="guild-picker-subtitle">Verwalte deine Discord-Server zentral. Öffne ein Dashboard oder wechsle jederzeit zu einer anderen Dienststelle.</p>
+              </div>
+            </section>
+            <div class="guild-picker-toolbar">
+              <div class="guild-picker-search"><span>🔍</span><input id="guild-search-enhanced" class="form-input" type="search" placeholder="Server suchen..." autocomplete="off"></div>
+              <div class="guild-picker-count" id="guild-count-enhanced">Server werden geladen...</div>
+            </div>
+            <div id="guild-grid" class="guild-grid"><div class="loading-center"><div class="loading-spinner lg"></div><div class="loading-text">Lade Server...</div></div></div>
+            <div id="invite-section"></div>
+          </main>
+        </div>
+      </div>`;
+
+    const logout = async () => { await api('logout'); location.reload(); };
+    document.getElementById('picker-logout')?.addEventListener('click', logout);
+    document.getElementById('picker-logout-top')?.addEventListener('click', logout);
+    document.getElementById('picker-support')?.addEventListener('click', openSupportModal);
+    document.getElementById('picker-admin')?.addEventListener('click', openAdminArea);
+    document.getElementById('picker-settings')?.addEventListener('click', () => { state.activeView='settings'; renderAppWithLayout(); });
+    document.getElementById('picker-mobile-menu')?.addEventListener('click', () => document.getElementById('guild-picker-sidebar')?.classList.toggle('open'));
+    await loadGuilds();
+    enhanceGuildPicker();
+  };
+
+  const originalLoadGuilds = window.loadGuilds;
+  window.loadGuilds = async function () {
+    await originalLoadGuilds();
+    enhanceGuildPicker();
+  };
+
+  function enhanceGuildPicker() {
+    const grid = document.getElementById('guild-grid');
+    const input = document.getElementById('guild-search-enhanced');
+    const count = document.getElementById('guild-count-enhanced');
+    if (!grid) return;
+    const cards = [...grid.querySelectorAll('.guild-card')];
+    cards.forEach(card => {
+      if (!card.querySelector('.guild-card-open-hint')) {
+        const target = card.querySelector('.card-body > div:nth-child(2)');
+        if (target) target.insertAdjacentHTML('beforeend', '<div class="guild-card-open-hint">Dashboard öffnen →</div>');
+      }
+    });
+    const update = () => {
+      const q = (input?.value || '').trim().toLowerCase();
+      let visible = 0;
+      cards.forEach(card => {
+        const match = !q || card.textContent.toLowerCase().includes(q);
+        card.dataset.hidden = match ? 'false' : 'true';
+        if (match) visible++;
+      });
+      if (count) count.textContent = `${visible} ${visible === 1 ? 'Server' : 'Server'} verfügbar`;
+      const old = grid.querySelector('.guild-empty-search');
+      if (old) old.remove();
+      if (cards.length && visible === 0) grid.insertAdjacentHTML('beforeend', '<div class="empty-state guild-empty-search"><div class="empty-state-icon">🔎</div><div class="empty-state-title">Kein Server gefunden</div><div class="empty-state-description">Versuche einen anderen Servernamen.</div></div>');
+    };
+    input?.addEventListener('input', update);
+    update();
+  }
+
+  const originalRenderAppWithLayout = window.renderAppWithLayout;
+  window.renderAppWithLayout = function () {
+    originalRenderAppWithLayout();
+    installMobileDrawer();
+  };
+
+  /* Close the mobile drawer after navigation and keep body scroll sane. */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') window.__toggleMobileSidebar?.(false);
+  });
+})();
+</script>
+
 </body>
 </html>
