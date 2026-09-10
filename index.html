@@ -5068,162 +5068,20 @@ button:focus-visible,
     font-size: 11px;
   }
 }
-</style>
-<style>
 
 /* ================================================================
-   POLIZEI SYSTEM — UI/UX MASTER REDESIGN
-   Single-file enhancement layer
+   LIVE LOGIN STATS
    ================================================================ */
-:root {
-  --border-color: var(--border-primary);
-  --border-default: var(--border-primary);
-  --border-subtle: var(--border-secondary);
-  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
-  --font-size-xs: 11px;
-  --font-size-sm: 13px;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --orange: #f97316;
-  --text-faint: var(--text-muted);
+.login-stat-live { position: relative; }
+.login-stat-live .login-stat-value { transition: opacity .2s ease, transform .2s ease; }
+.login-stat-live.is-loading .login-stat-value { opacity: .55; }
+.login-stat-live .login-stat-live-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  margin-right: 7px; vertical-align: 2px; background: var(--success, #22c55e);
+  box-shadow: 0 0 0 4px rgba(34,197,94,.12);
 }
-
-/* Cleaner global surfaces */
-body { background:
-  radial-gradient(circle at 10% -10%, rgba(59,130,246,.08), transparent 32%),
-  radial-gradient(circle at 90% 0%, rgba(124,58,237,.06), transparent 28%),
-  var(--bg-primary);
-}
-.full-page-layout { background: transparent; }
-.card {
-  border-color: color-mix(in srgb, var(--border-primary) 88%, transparent);
-  box-shadow: 0 8px 30px rgba(0,0,0,.08);
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-}
-.card:hover { border-color: color-mix(in srgb, var(--primary) 38%, var(--border-primary)); }
-.card-clickable:hover { transform: translateY(-2px); box-shadow: 0 14px 38px rgba(0,0,0,.14); }
-.btn, .icon-btn, .nav-item, .guild-card { -webkit-tap-highlight-color: transparent; }
-.btn { min-height: 40px; }
-.icon-btn { min-width: 40px; min-height: 40px; }
-.form-input, .filter-select { min-height: 42px; }
-
-/* Premium topbar */
-.topbar {
-  backdrop-filter: blur(18px) saturate(150%);
-  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
-  border-bottom: 1px solid var(--border-secondary);
-  box-shadow: 0 8px 30px rgba(0,0,0,.08);
-}
-.topbar-breadcrumb a { color: var(--primary-text); font-weight: 650; }
-.topbar-breadcrumb a:hover { text-decoration: none; }
-.topbar-server-switch {
-  display:inline-flex; align-items:center; gap:7px; padding:7px 10px;
-  border:1px solid var(--border-primary); border-radius:10px;
-  background:var(--bg-card); color:var(--text-primary); cursor:pointer;
-}
-.topbar-server-switch:hover { border-color:var(--primary); background:var(--bg-hover); }
-
-/* Mobile drawer */
-.mobile-menu-btn { display:none; }
-.mobile-sidebar-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,.58); backdrop-filter:blur(3px);
-  z-index:998; opacity:0; pointer-events:none; transition:opacity .2s ease;
-}
-.mobile-sidebar-overlay.open { opacity:1; pointer-events:auto; }
-
-/* Server picker */
-.guild-picker-hero {
-  position:relative; overflow:hidden; padding:32px; border-radius:24px;
-  background:linear-gradient(135deg, color-mix(in srgb,var(--primary) 14%,var(--bg-card)), var(--bg-card));
-  border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border-primary));
-  margin-bottom:24px;
-}
-.guild-picker-hero::after { content:''; position:absolute; width:240px; height:240px; right:-80px; top:-120px;
-  border-radius:50%; background:var(--primary-glow); filter:blur(12px); opacity:.35; }
-.guild-picker-hero-content { position:relative; z-index:1; max-width:760px; }
-.guild-picker-eyebrow { font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--primary-text); margin-bottom:8px; }
-.guild-picker-title { font-size:clamp(26px,4vw,40px); line-height:1.08; letter-spacing:-.03em; margin-bottom:10px; }
-.guild-picker-subtitle { color:var(--text-secondary); max-width:650px; }
-.guild-picker-toolbar { display:flex; gap:12px; align-items:center; margin:0 0 20px; flex-wrap:wrap; }
-.guild-picker-search { position:relative; flex:1; min-width:220px; }
-.guild-picker-search input { width:100%; padding-left:42px; }
-.guild-picker-search span { position:absolute; left:14px; top:50%; transform:translateY(-50%); opacity:.7; }
-.guild-picker-count { color:var(--text-muted); font-size:13px; white-space:nowrap; }
-.guild-grid { grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
-.guild-card { position:relative; overflow:hidden; }
-.guild-card .card-body { min-height:126px; }
-.guild-card .avatar-lg { width:64px; height:64px; flex:0 0 64px; border-radius:18px; box-shadow:0 8px 22px rgba(0,0,0,.14); }
-.guild-card .favorite-btn { margin-left:auto; }
-.guild-card .favorite-star { color:#f5b301; }
-.guild-card[data-hidden="true"] { display:none !important; }
-.guild-card-open-hint { margin-top:8px; color:var(--primary-text); font-size:12px; font-weight:700; }
-.guild-empty-search { grid-column:1/-1; }
-
-/* Better sidebar */
-.sidebar { border-right:1px solid var(--border-secondary); box-shadow:10px 0 30px rgba(0,0,0,.06); }
-.sidebar-brand-icon { box-shadow:0 8px 24px var(--primary-glow); }
-.nav-item { margin:2px 10px; border-radius:10px; }
-.nav-item.active { box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 24%,transparent); }
-.sidebar-footer { border-top-color:var(--border-secondary); }
-#back-to-servers { cursor:pointer; }
-
-/* Dashboard */
-.page-header { margin-bottom:22px; }
-.page-title { letter-spacing:-.025em; }
-.kpi-card { position:relative; overflow:hidden; }
-.kpi-card::after { content:''; position:absolute; width:90px; height:90px; right:-35px; top:-35px; border-radius:50%; background:var(--primary-soft); pointer-events:none; }
-.quick-actions .btn, .quick-action { transition:transform .16s ease, box-shadow .16s ease; }
-.quick-actions .btn:hover, .quick-action:hover { transform:translateY(-1px); }
-
-/* Vehicles */
-.vehicle-card, .fahrzeug-card { overflow:hidden; }
-.vehicle-card img, .fahrzeug-card img { width:100%; object-fit:cover; }
-
-/* Tables on narrow screens */
-.table-container, .table-responsive { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.table { min-width:620px; }
-
-/* Modals */
-.modal-overlay { padding:16px; }
-.modal { box-shadow:0 30px 80px rgba(0,0,0,.35); border:1px solid var(--border-primary); }
-
-/* Better focus accessibility */
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline:3px solid color-mix(in srgb,var(--primary) 38%,transparent); outline-offset:2px;
-}
-
-@media (max-width: 992px) {
-  .topbar { padding-left:12px; padding-right:12px; }
-  .search-box { min-width:180px; }
-  .guild-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-}
-@media (max-width: 768px) {
-  .mobile-menu-btn { display:inline-flex !important; }
-  .topbar { height:auto; min-height:64px; }
-  .topbar-left { min-width:0; }
-  .topbar-breadcrumb .separator, .topbar-breadcrumb > span:not(:last-child) { display:none; }
-  .topbar-breadcrumb { max-width:48vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .topbar-right .search-box { display:none; }
-  .guild-picker-hero { padding:24px 20px; border-radius:18px; }
-  .guild-grid { grid-template-columns:1fr; }
-  .guild-picker-toolbar { align-items:stretch; }
-  .guild-picker-count { width:100%; }
-  .page-content { padding-left:14px; padding-right:14px; }
-  .sidebar { z-index:999; box-shadow:18px 0 60px rgba(0,0,0,.35); }
-}
-@media (max-width: 480px) {
-  .guild-picker-hero { padding:20px 16px; }
-  .guild-picker-title { font-size:27px; }
-  .guild-card .card-body { padding:16px; min-height:112px; }
-  .guild-card .avatar-lg { width:54px; height:54px; flex-basis:54px; border-radius:15px; }
-  .topbar-right { gap:5px; }
-  .topbar .icon-btn { min-width:38px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
-}
-
+.login-stat-live.offline .login-stat-live-dot { background: var(--danger, #ef4444); box-shadow: 0 0 0 4px rgba(239,68,68,.12); }
+.login-stat-live-meta { display:block; margin-top:4px; font-size:11px; opacity:.55; }
 </style>
 </head>
 <body>
@@ -10885,6 +10743,73 @@ function dismissVpnWarning() {
 }
 
 // ================================================================
+// LIVE LOGIN STATISTICS
+// ================================================================
+let liveLoginStatsTimer = null;
+
+function formatLoginUptime(seconds) {
+  const total = Math.max(0, Number(seconds) || 0);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (days > 0) return `${days}T ${hours}Std.`;
+  if (hours > 0) return `${hours}Std. ${minutes}Min.`;
+  return `${minutes}Min.`;
+}
+
+async function loadPublicLoginStats() {
+  const serversEl = document.getElementById('login-live-servers');
+  const membersEl = document.getElementById('login-live-members');
+  const statusEl = document.getElementById('login-live-status');
+  const uptimeEl = document.getElementById('login-live-uptime');
+  const updatedEl = document.getElementById('login-live-updated');
+  if (!serversEl || !membersEl || !statusEl || !uptimeEl) return;
+
+  const stats = document.querySelectorAll('.login-stat-live');
+  stats.forEach(el => el.classList.add('is-loading'));
+
+  try {
+    const response = await fetch('/api/bot?resource=public_stats', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    const online = data.status === 'online';
+
+    statusEl.innerHTML = `<span class="login-stat-live-dot"></span>${online ? 'Online' : 'Startet'}`;
+    serversEl.textContent = Number(data.servers || 0).toLocaleString('de-DE');
+    membersEl.textContent = Number(data.members || 0).toLocaleString('de-DE');
+    uptimeEl.textContent = formatLoginUptime(data.uptime_seconds);
+
+    stats.forEach(el => {
+      el.classList.remove('offline');
+      if (!online) el.classList.add('offline');
+    });
+
+    if (updatedEl) {
+      updatedEl.textContent = `Live · ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    }
+  } catch (error) {
+    console.warn('[LoginStats] Live-Statistiken konnten nicht geladen werden:', error);
+    statusEl.innerHTML = '<span class="login-stat-live-dot"></span>Offline';
+    stats.forEach(el => el.classList.add('offline'));
+    if (updatedEl) updatedEl.textContent = 'Live-Daten nicht erreichbar';
+  } finally {
+    stats.forEach(el => el.classList.remove('is-loading'));
+  }
+}
+
+function startLiveLoginStats() {
+  if (liveLoginStatsTimer) clearInterval(liveLoginStatsTimer);
+  loadPublicLoginStats();
+  liveLoginStatsTimer = setInterval(loadPublicLoginStats, 30000);
+}
+
+// ================================================================
 // LOGIN SCREEN
 // ================================================================
 
@@ -11003,21 +10928,22 @@ function renderLoginScreen() {
           <div id="login-error-container">${errorHtml}</div>
         </div>
         <div class="login-stats">
-          <div class="login-stat">
-            <div class="login-stat-value">24/7</div>
-            <div class="login-stat-label">Verfügbar</div>
+          <div class="login-stat login-stat-live">
+            <div class="login-stat-value" id="login-live-status"><span class="login-stat-live-dot"></span>Wird geladen</div>
+            <div class="login-stat-label">Systemstatus</div>
           </div>
-          <div class="login-stat">
-            <div class="login-stat-value">500+</div>
+          <div class="login-stat login-stat-live">
+            <div class="login-stat-value" id="login-live-servers">–</div>
             <div class="login-stat-label">Server</div>
           </div>
-          <div class="login-stat">
-            <div class="login-stat-value">99%</div>
-            <div class="login-stat-label">Uptime</div>
+          <div class="login-stat login-stat-live">
+            <div class="login-stat-value" id="login-live-members">–</div>
+            <div class="login-stat-label">Mitglieder</div>
           </div>
-          <div class="login-stat">
-            <div class="login-stat-value">∞</div>
-            <div class="login-stat-label">Möglichkeiten</div>
+          <div class="login-stat login-stat-live">
+            <div class="login-stat-value" id="login-live-uptime">–</div>
+            <div class="login-stat-label">Bot-Laufzeit</div>
+            <span class="login-stat-live-meta" id="login-live-updated">Live-Daten werden geladen …</span>
           </div>
         </div>
         <div class="login-modules">
@@ -11051,178 +10977,11 @@ function renderLoginScreen() {
       </div>
     </div>
   `;
+
+  startLiveLoginStats();
 }
 
 boot();
 </script>
-
-<script>
-/* ================================================================
-   POLIZEI SYSTEM — UX ENHANCEMENTS
-   ================================================================ */
-(function () {
-  'use strict';
-
-  function installMobileDrawer() {
-    const sidebar = document.getElementById('main-sidebar');
-    if (!sidebar || document.getElementById('mobile-sidebar-overlay')) return;
-    const overlay = document.createElement('div');
-    overlay.id = 'mobile-sidebar-overlay';
-    overlay.className = 'mobile-sidebar-overlay';
-    document.body.appendChild(overlay);
-    const toggle = (open) => {
-      sidebar.classList.toggle('open', open);
-      overlay.classList.toggle('open', open);
-      document.body.style.overflow = open ? 'hidden' : '';
-    };
-    overlay.addEventListener('click', () => toggle(false));
-    window.__toggleMobileSidebar = toggle;
-    sidebar.querySelectorAll('.nav-item, #back-to-servers, #logout-sidebar').forEach(el => {
-      el.addEventListener('click', () => toggle(false));
-    });
-  }
-
-  const originalRenderTopbarFull = window.renderTopbarFull;
-  window.renderTopbarFull = function () {
-    const topbar = document.getElementById('main-topbar');
-    if (!topbar) return;
-    topbar.innerHTML = `
-      <div class="topbar-left">
-        <button class="icon-btn mobile-menu-btn" id="enhanced-mobile-menu" title="Menü" aria-label="Menü">☰</button>
-        <button class="topbar-server-switch" id="topbar-server-switch" title="Server wechseln">
-          <span>🛡️</span><span class="topbar-server-name">${esc(state.tier?.name || 'Server')}</span><span>⌄</span>
-        </button>
-        <div class="topbar-breadcrumb" style="margin-left:10px;">
-          <span class="separator">/</span><span>${esc(getViewTitle(state.activeView))}</span>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <div class="search-box">
-          <span class="search-box-icon">🔍</span>
-          <input type="search" placeholder="Suchen..." class="form-input" id="global-search-enhanced" />
-        </div>
-        <button class="icon-btn" id="notifications-btn" title="Benachrichtigungen">🔔</button>
-        <button class="icon-btn" id="support-btn" title="Support">🎫</button>
-        ${state.isAdmin ? '<button class="icon-btn" id="admin-btn" title="Admin">🛡️</button>' : ''}
-      </div>`;
-
-    document.getElementById('enhanced-mobile-menu')?.addEventListener('click', () => window.__toggleMobileSidebar?.(true));
-    document.getElementById('topbar-server-switch')?.addEventListener('click', () => {
-      state.currentGuild = null;
-      renderGuildPicker();
-    });
-    document.getElementById('support-btn')?.addEventListener('click', openSupportModal);
-    document.getElementById('admin-btn')?.addEventListener('click', openAdminArea);
-    document.getElementById('notifications-btn')?.addEventListener('click', () => {
-      if (typeof showKeyboardShortcuts === 'function') showKeyboardShortcuts();
-    });
-    document.getElementById('global-search-enhanced')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.value.trim()) handleGlobalSearch(e.target.value.trim());
-    });
-  };
-
-  window.renderGuildPicker = async function () {
-    app.innerHTML = `
-      <div class="full-page-layout">
-        <div class="sidebar" id="guild-picker-sidebar">
-          <div class="sidebar-header">
-            <div class="sidebar-brand"><div class="sidebar-brand-icon">🛡️</div><div class="sidebar-brand-text">
-              <div class="sidebar-brand-title">Polizei System</div><div class="sidebar-brand-subtitle">Serverauswahl</div>
-            </div></div>
-          </div>
-          <nav class="sidebar-nav">
-            <div class="nav-section-title">Übersicht</div>
-            <div class="nav-item active"><span class="nav-item-icon">🏠</span><span class="nav-item-text">Server</span></div>
-            ${state.isAdmin ? '<div class="nav-item" id="picker-admin"><span class="nav-item-icon">🛡️</span><span class="nav-item-text">Admin-Bereich</span></div>' : ''}
-            <div class="nav-item" id="picker-settings"><span class="nav-item-icon">⚙️</span><span class="nav-item-text">Einstellungen</span></div>
-          </nav>
-          <div class="sidebar-footer">
-            <div class="sidebar-user" id="picker-logout"><div class="avatar avatar-sm">${avatarUrl(state.user) ? `<img src="${avatarUrl(state.user)}" />` : '👤'}</div>
-              <div class="sidebar-user-info"><div class="sidebar-user-name">${esc(state.user?.name || 'Nutzer')}</div><div class="sidebar-user-role">${state.isAdmin ? 'Administrator' : 'Eingeloggt'}</div></div>
-            </div>
-          </div>
-        </div>
-        <div class="main-content">
-          <div class="topbar" id="guild-picker-topbar">
-            <div class="topbar-left"><button class="icon-btn mobile-menu-btn" id="picker-mobile-menu">☰</button><div class="topbar-breadcrumb"><strong>Server-Auswahl</strong></div></div>
-            <div class="topbar-right"><button class="icon-btn" id="picker-support" title="Support">🎫</button><button class="btn btn-secondary btn-sm" id="picker-logout-top">Abmelden</button></div>
-          </div>
-          <main class="page-content">
-            <section class="guild-picker-hero">
-              <div class="guild-picker-hero-content">
-                <div class="guild-picker-eyebrow">Polizei System</div>
-                <h1 class="guild-picker-title">Wähle deine Dienststelle</h1>
-                <p class="guild-picker-subtitle">Verwalte deine Discord-Server zentral. Öffne ein Dashboard oder wechsle jederzeit zu einer anderen Dienststelle.</p>
-              </div>
-            </section>
-            <div class="guild-picker-toolbar">
-              <div class="guild-picker-search"><span>🔍</span><input id="guild-search-enhanced" class="form-input" type="search" placeholder="Server suchen..." autocomplete="off"></div>
-              <div class="guild-picker-count" id="guild-count-enhanced">Server werden geladen...</div>
-            </div>
-            <div id="guild-grid" class="guild-grid"><div class="loading-center"><div class="loading-spinner lg"></div><div class="loading-text">Lade Server...</div></div></div>
-            <div id="invite-section"></div>
-          </main>
-        </div>
-      </div>`;
-
-    const logout = async () => { await api('logout'); location.reload(); };
-    document.getElementById('picker-logout')?.addEventListener('click', logout);
-    document.getElementById('picker-logout-top')?.addEventListener('click', logout);
-    document.getElementById('picker-support')?.addEventListener('click', openSupportModal);
-    document.getElementById('picker-admin')?.addEventListener('click', openAdminArea);
-    document.getElementById('picker-settings')?.addEventListener('click', () => { state.activeView='settings'; renderAppWithLayout(); });
-    document.getElementById('picker-mobile-menu')?.addEventListener('click', () => document.getElementById('guild-picker-sidebar')?.classList.toggle('open'));
-    await loadGuilds();
-    enhanceGuildPicker();
-  };
-
-  const originalLoadGuilds = window.loadGuilds;
-  window.loadGuilds = async function () {
-    await originalLoadGuilds();
-    enhanceGuildPicker();
-  };
-
-  function enhanceGuildPicker() {
-    const grid = document.getElementById('guild-grid');
-    const input = document.getElementById('guild-search-enhanced');
-    const count = document.getElementById('guild-count-enhanced');
-    if (!grid) return;
-    const cards = [...grid.querySelectorAll('.guild-card')];
-    cards.forEach(card => {
-      if (!card.querySelector('.guild-card-open-hint')) {
-        const target = card.querySelector('.card-body > div:nth-child(2)');
-        if (target) target.insertAdjacentHTML('beforeend', '<div class="guild-card-open-hint">Dashboard öffnen →</div>');
-      }
-    });
-    const update = () => {
-      const q = (input?.value || '').trim().toLowerCase();
-      let visible = 0;
-      cards.forEach(card => {
-        const match = !q || card.textContent.toLowerCase().includes(q);
-        card.dataset.hidden = match ? 'false' : 'true';
-        if (match) visible++;
-      });
-      if (count) count.textContent = `${visible} ${visible === 1 ? 'Server' : 'Server'} verfügbar`;
-      const old = grid.querySelector('.guild-empty-search');
-      if (old) old.remove();
-      if (cards.length && visible === 0) grid.insertAdjacentHTML('beforeend', '<div class="empty-state guild-empty-search"><div class="empty-state-icon">🔎</div><div class="empty-state-title">Kein Server gefunden</div><div class="empty-state-description">Versuche einen anderen Servernamen.</div></div>');
-    };
-    input?.addEventListener('input', update);
-    update();
-  }
-
-  const originalRenderAppWithLayout = window.renderAppWithLayout;
-  window.renderAppWithLayout = function () {
-    originalRenderAppWithLayout();
-    installMobileDrawer();
-  };
-
-  /* Close the mobile drawer after navigation and keep body scroll sane. */
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') window.__toggleMobileSidebar?.(false);
-  });
-})();
-</script>
-
 </body>
 </html>
