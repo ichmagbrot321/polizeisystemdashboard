@@ -6,6 +6,9 @@
 <title>Polizei System — Dashboard</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta name="description" content="Professionelles Polizei-Dienststellen-Dashboard für Discord-Communities." />
+<meta name="theme-color" content="#0b1220" />
+<meta name="color-scheme" content="light dark" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Polizei System" />
@@ -5083,6 +5086,21 @@ button:focus-visible,
 .login-stat-live.offline .login-stat-live-dot { background: var(--danger, #ef4444); box-shadow: 0 0 0 4px rgba(239,68,68,.12); }
 .login-stat-live-meta { display:block; margin-top:4px; font-size:11px; opacity:.55; }
 </style>
+
+<style id="premium-hardening-layer">
+:root{--ui-radius-xs:8px;--ui-radius-sm:12px;--ui-radius-md:16px;--ui-radius-lg:20px;--ui-ease:cubic-bezier(.2,.75,.2,1);--ui-fast:140ms;--ui-base:220ms;--ui-slow:360ms;--ui-focus:0 0 0 3px rgba(37,99,235,.22)}
+html{scroll-behavior:smooth}body{text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button,a,[role=button]{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:none!important;box-shadow:var(--ui-focus)!important}
+.btn,.card,.kpi-card,.login-module-card,.quick-action,.nav-item,.sidebar-item,.server-card,.table-row,.toast,.modal,input,select,textarea{transition:transform var(--ui-base) var(--ui-ease),box-shadow var(--ui-base) var(--ui-ease),border-color var(--ui-base) var(--ui-ease),background-color var(--ui-base) var(--ui-ease),color var(--ui-base) var(--ui-ease),opacity var(--ui-base) var(--ui-ease)}
+.btn:not(:disabled):hover,.quick-action:hover,.login-module-card:hover,.server-card:hover{transform:translateY(-2px)}.btn:active:not(:disabled){transform:scale(.985)}button:disabled,.btn:disabled{cursor:not-allowed;opacity:.58;transform:none!important}
+.card,.kpi-card,.server-card,.login-module-card{border-radius:var(--ui-radius-md);overflow:clip}.page-content{min-width:0}.table-container,.table-wrapper,.data-table-wrapper{overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}img{max-width:100%}.loading-center{min-height:180px;padding:32px 20px;text-align:center}
+.page-enter{animation:uiPageIn var(--ui-slow) var(--ui-ease) both}@keyframes uiPageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.skeleton,.skeleton-line{background:linear-gradient(90deg,rgba(148,163,184,.12),rgba(148,163,184,.24),rgba(148,163,184,.12));background-size:200% 100%;animation:uiSkeleton 1.35s ease-in-out infinite}@keyframes uiSkeleton{to{background-position:-200% 0}}
+.toast-container{z-index:10000!important;pointer-events:none}.toast-container .toast{pointer-events:auto}
+.inline-error{display:grid;gap:8px;place-items:center;padding:32px;text-align:center;border:1px solid var(--border-secondary);border-radius:var(--ui-radius-md);background:var(--bg-card)}.inline-error-message{max-width:60ch;color:var(--text-secondary)}.inline-error-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+@media(max-width:900px){.page-header{gap:16px}.page-actions{flex-wrap:wrap}}@media(max-width:640px){.page-content{padding-inline:12px}.page-header{flex-direction:column;align-items:stretch}.page-actions{display:grid;grid-template-columns:1fr 1fr}.page-actions .btn{width:100%}.login-stats{grid-template-columns:1fr 1fr!important}.login-module-grid{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -5216,31 +5234,32 @@ function inviteUrl(guildId) {
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
-async function api(resource, { guild, target, search, method = 'GET', body, extraParams } = {}) {
-  const params = new URLSearchParams({ resource });
-  if (guild) params.set('guild', guild);
-  if (target) params.set('target', target);
-  if (search) params.set('search', search);
-  if (extraParams) {
-    for (const [k, v] of Object.entries(extraParams)) {
-      if (v !== undefined && v !== null) params.set(k, v);
+async function api(resource, { guild, target, search, method = 'GET', body, extraParams, signal, timeout = 15000 } = {}) {
+  if (!resource) throw new Error('API-Ressource fehlt.');
+  const params = new URLSearchParams({ resource: String(resource) });
+  if (guild) params.set('guild', String(guild));
+  if (target) params.set('target', String(target));
+  if (search) params.set('search', String(search));
+  Object.entries(extraParams || {}).forEach(([k,v]) => { if(v!==undefined && v!==null) params.set(k,String(v)); });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(3000, Number(timeout)||15000));
+  const forwardAbort = () => controller.abort();
+  if (signal) { if(signal.aborted) controller.abort(); else signal.addEventListener('abort',forwardAbort,{once:true}); }
+  const read = ['GET','HEAD'].includes(String(method).toUpperCase());
+  try {
+    for (let attempt=1; attempt <= (read ? 2 : 1); attempt++) {
+      try {
+        const res = await fetch(`/api/bot?${params.toString()}`, {method,credentials:'include',cache:read?'no-store':'default',headers:{Accept:'application/json',...(body!==undefined?{'Content-Type':'application/json'}:{})},body:body!==undefined?JSON.stringify(body):undefined,signal:controller.signal});
+        const raw = await res.text(); let data={};
+        try { data = raw ? JSON.parse(raw) : {}; } catch { data={error:raw.slice(0,1000)}; }
+        if(!res.ok){ const err=new Error(data.error||`Fehler (${res.status})`); err.status=res.status; err.botMissing=res.status===404 && /nicht \(mehr\) vorhanden/i.test(data.error||''); if(res.status===401 && state.user){state.user=null;if(!state._sessionExpiredNotice){state._sessionExpiredNotice=true;showWarning?.('Sitzung abgelaufen','Bitte melde dich erneut mit Discord an.')}} throw err; }
+        return data;
+      } catch(err) {
+        if(err?.name==='AbortError') throw new Error('Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.');
+        if(attempt < (read?2:1) && !signal?.aborted){await new Promise(r=>setTimeout(r,350));continue;} throw err;
+      }
     }
-  }
-  const res = await fetch(`/api/bot?${params.toString()}`, {
-    method,
-    credentials: 'include',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data.error || `Fehler (${res.status})`);
-    err.status = res.status;
-    // Der Bot antwortet mit 404 "... nicht (mehr) vorhanden", wenn er nicht auf dem Server ist.
-    err.botMissing = res.status === 404 && /nicht \(mehr\) vorhanden/.test(data.error || '');
-    throw err;
-  }
-  return data;
+  } finally { clearTimeout(timer); signal?.removeEventListener('abort',forwardAbort); }
 }
 
 async function robloxApi(action, params, signal) {
@@ -10675,51 +10694,30 @@ async function renderAdminUserLocks(container) {
 // ================================================================
 
 async function boot() {
-  app.innerHTML = '<div class="loading-center" style="min-height: 100vh;"><div class="loading-spinner lg"></div><div class="loading-text">Lade ...</div></div>';
-
+  app.innerHTML = '<div class="loading-center" style="min-height:100vh"><div class="loading-spinner lg"></div><div class="loading-text">Lade Dashboard …</div></div>';
+  app.setAttribute('aria-busy','true');
   try {
-    const me = await api('me');
+    const me = await api('me', { timeout: 10000 });
     state.user = me.user;
     state.isAdmin = !!me.isAdmin;
-
-    // Load favorites and recent activity from localStorage
+    state._sessionExpiredNotice = false;
     state.favorites = loadFavorites();
     state.recentActivity = loadRecentActivity();
     state.theme = getTheme();
     applyTheme();
-
-    // Initialize tooltips
     initTooltips();
-
     startNotificationPolling();
-
-    // Splash anzeigen
-    const splash = el(`
-      <div class="app-splash">
-        <div class="splash-logo-wrap">
-          <div class="splash-logo" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 800;">🛡️</div>
-        </div>
-        <div class="splash-text">Polizei System wird geladen ...</div>
-      </div>
-    `);
-    splash.style.cssText = 'position: fixed; inset: 0; z-index: 100; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity 0.35s ease;';
+    const splash = el('<div class="app-splash" role="status" aria-live="polite"><div class="splash-logo-wrap"><div class="splash-logo">🛡️</div></div><div class="splash-text">Polizei System wird geladen …</div></div>');
+    splash.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--bg-primary);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .28s ease';
     document.body.appendChild(splash);
-
-    setTimeout(() => {
-      splash.style.opacity = '0';
-      setTimeout(() => {
-        splash.remove();
-        if (state.user) {
-          state.activeView = 'servers';
-          renderGuildPicker();
-        } else {
-          renderLoginScreen();
-        }
-      }, 350);
-    }, 1500);
-
-  } catch (e) {
-    renderLoginScreen();
+    const finish=()=>{splash.style.opacity='0';setTimeout(()=>{splash.remove();state.activeView='servers';renderGuildPicker();app.removeAttribute('aria-busy')},280)};
+    setTimeout(finish,650);
+  } catch(e) {
+    app.removeAttribute('aria-busy');
+    if(e?.status===401 || e?.status===403){renderLoginScreen();return;}
+    app.innerHTML=`<div class="inline-error" style="min-height:100vh;border:0;border-radius:0"><div style="font-size:42px" aria-hidden="true">⚠️</div><div class="inline-error-title">Dashboard konnte nicht geladen werden</div><div class="inline-error-message">${esc(e?.message||'Der Server ist momentan nicht erreichbar.')}</div><div class="inline-error-actions"><button class="btn btn-primary" type="button" id="boot-retry">Erneut versuchen</button><button class="btn btn-secondary" type="button" id="boot-login">Zur Anmeldung</button></div></div>`;
+    document.getElementById('boot-retry')?.addEventListener('click',boot);
+    document.getElementById('boot-login')?.addEventListener('click',()=>{window.location.href=loginUrl()});
   }
 }
 
@@ -11018,6 +11016,16 @@ function renderLoginScreen() {
 
   startLiveLoginStats();
 }
+
+
+/* Runtime-Schutz: Fehler sichtbar behandeln, ohne interne Stacktraces zu zeigen. */
+window.addEventListener('error', event => {
+  console.error('[Dashboard] Unhandled error:', event.error || event.message);
+  if (typeof showError === 'function' && event.error) showError('Unerwarteter Fehler','Die Aktion konnte nicht vollständig ausgeführt werden.');
+});
+window.addEventListener('unhandledrejection', event => console.error('[Dashboard] Unhandled promise rejection:', event.reason));
+window.addEventListener('offline', () => typeof showWarning === 'function' && showWarning('Keine Internetverbindung','Änderungen können erst wieder übertragen werden, wenn die Verbindung zurück ist.'));
+window.addEventListener('online', () => typeof showSuccess === 'function' && showSuccess('Verbindung wiederhergestellt','Das Dashboard ist wieder online.'));
 
 boot();
 </script>
