@@ -35,6 +35,7 @@
 //   SESSION_SECRET, BOT_API_URL, BOT_API_KEY
 
 const crypto = require('crypto');
+const { URL } = require('url');
 
 // Muss mit BOT_ENTWICKLER_ID / BOT_OWNER_ID / admin_lock.ADMIN_USER_ID im Bot übereinstimmen.
 const ADMIN_USER_ID = '1523178659182284954';
@@ -118,33 +119,33 @@ const RESOURCE_MAP = {
 
 
   // -- Pro-Server-Ressourcen (dashboard_api.py, DashboardAPI-Cog) --
-  schema: { method: 'GET', path: (g) => `/api/guilds/${g}/schema` },
-  config: { path: (g) => `/api/guilds/${g}/config` },
-  channels: { method: 'GET', path: (g) => `/api/guilds/${g}/channels` },
-  roles: { method: 'GET', path: (g) => `/api/guilds/${g}/roles` },
-  stats: { method: 'GET', path: (g) => `/api/guilds/${g}/stats` },
-  bewerbungsfragen: { path: (g) => `/api/guilds/${g}/bewerbungsfragen` },
-  officer_permission: { path: (g) => `/api/guilds/${g}/officer-permission` },
-  modules: { path: (g) => `/api/guilds/${g}/modules` },
-  personalakten: { method: 'GET', path: (g) => `/api/guilds/${g}/personalakten` },
-  personalakte: { method: 'GET', path: (g, t) => `/api/guilds/${g}/personalakte/${t}` },
-  personalakte_kuendigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/kuendigen` },
-  personalakte_verwarnen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/verwarnen` },
-  personalakte_suspendieren: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/suspendieren` },
+  schema: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/schema` },
+  config: { path: (g) => `/api/guilds/${encodeURIComponent(g)}/config` },
+  channels: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/channels` },
+  roles: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/roles` },
+  stats: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/stats` },
+  bewerbungsfragen: { path: (g) => `/api/guilds/${encodeURIComponent(g)}/bewerbungsfragen` },
+  officer_permission: { path: (g) => `/api/guilds/${encodeURIComponent(g)}/officer-permission` },
+  modules: { path: (g) => `/api/guilds/${encodeURIComponent(g)}/modules` },
+  personalakten: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/personalakten` },
+  personalakte: { method: 'GET', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${t}` },
+  personalakte_kuendigen: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${encodeURIComponent(t)}/kuendigen` },
+  personalakte_verwarnen: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${encodeURIComponent(t)}/verwarnen` },
+  personalakte_suspendieren: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${encodeURIComponent(t)}/suspendieren` },
   personalakte_suspendierung_aufheben: {
     method: 'POST',
-    path: (g, t) => `/api/guilds/${g}/personalakte/${t}/suspendierung-aufheben`,
+    path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${encodeURIComponent(t)}/suspendierung-aufheben`,
   },
-  personalakte_widerruf: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/widerruf` },
-  personalakte_loeschen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/personalakte/${t}/loeschen` },
-  buergerakten: { path: (g) => `/api/guilds/${g}/buergerakten` },
-  buergerakte: { method: 'GET', path: (g, _t, q) => `/api/guilds/${g}/buergerakte/${q.roblox_id}` },
+  personalakte_widerruf: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${encodeURIComponent(t)}/widerruf` },
+  personalakte_loeschen: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/personalakte/${encodeURIComponent(t)}/loeschen` },
+  buergerakten: { path: (g) => `/api/guilds/${encodeURIComponent(g)}/buergerakten` },
+  buergerakte: { method: 'GET', path: (g, _t, q) => `/api/guilds/${encodeURIComponent(g)}/buergerakte/${q.roblox_id}` },
 
   // -- Globale, nur für ADMIN_USER_ID sichtbare Ressourcen --
   admin_guilds: { method: 'GET', global: true, path: () => `/api/admin/guilds` },
-  admin_lock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/lock` },
-  admin_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${t}/unlock` },
-  admin_unlock_owner: { method: 'POST', global: true, path: (_g, t) => `/api/admin/owners/${t}/unlock` },
+  admin_lock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${encodeURIComponent(t)}/lock` },
+  admin_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/admin/guilds/${encodeURIComponent(t)}/unlock` },
+  admin_unlock_owner: { method: 'POST', global: true, path: (_g, t) => `/api/admin/owners/${encodeURIComponent(t)}/unlock` },
 
   // -- NEU: dauerhaftes Support-Ticket-System (ersetzt die alten support_case_*
   //    "Einweg-Fälle") --
@@ -155,22 +156,22 @@ const RESOURCE_MAP = {
   support_ticket_mine: { method: 'GET', anyUser: true, path: () => `/api/support/tickets/mine` },
   support_ticket_unread: { method: 'GET', anyUser: true, path: () => `/api/support/tickets/unread` },
   support_ticket_create: { method: 'POST', anyUser: true, path: () => `/api/support/tickets` },
-  support_ticket_message: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${t}/messages` },
-  support_ticket_close: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${t}/close` },
+  support_ticket_message: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${encodeURIComponent(t)}/messages` },
+  support_ticket_close: { method: 'POST', anyUser: true, path: (_g, t) => `/api/support/tickets/${encodeURIComponent(t)}/close` },
 
   // Nur für ADMIN_USER_ID (den Bot-Entwickler): alle Tickets serverübergreifend
   // einsehen, beantworten und wieder öffnen.
   support_tickets_all: { method: 'GET', global: true, path: () => `/api/support/tickets` },
   support_tickets_unread_count: { method: 'GET', global: true, path: () => `/api/support/tickets/unread-count` },
-  support_ticket_reply: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${t}/reply` },
-  support_ticket_reopen: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${t}/reopen` },
+  support_ticket_reply: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${encodeURIComponent(t)}/reply` },
+  support_ticket_reopen: { method: 'POST', global: true, path: (_g, t) => `/api/support/tickets/${encodeURIComponent(t)}/reopen` },
 
   // -- User-/IP-Sperrsystem --
   security_locks: { method: 'GET', global: true, path: () => `/api/security/locks` },
-  security_lock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${t}/lock` },
-  security_unlock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${t}/unlock` },
+  security_lock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${encodeURIComponent(t)}/lock` },
+  security_unlock_user: { method: 'POST', global: true, path: (_g, t) => `/api/security/users/${encodeURIComponent(t)}/unlock` },
   security_lock_ip: { method: 'POST', global: true, path: () => `/api/security/ip/lock` },
-  security_unlock_ip: { method: 'POST', global: true, path: (_g, t) => `/api/security/ip/${t}/unlock` },
+  security_unlock_ip: { method: 'POST', global: true, path: (_g, t) => `/api/security/ip/${encodeURIComponent(t)}/unlock` },
   security_seen: { method: 'GET', global: true, path: (_g, t) => `/api/security/seen/${t}` },
 
   // -- NEU: SENTINEL — Advanced Threat Detection System --
@@ -179,9 +180,9 @@ const RESOURCE_MAP = {
   sentinel_users: { method: 'GET', global: true, path: () => `/api/sentinel/users` },
   sentinel_ips: { method: 'GET', global: true, path: () => `/api/sentinel/ips` },
   sentinel_user_detail: { method: 'GET', global: true, path: (_g, t) => `/api/sentinel/user/${t}` },
-  sentinel_add_flag: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/user/${t}/flag` },
-  sentinel_user_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/user/${t}/unlock` },
-  sentinel_ip_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/ip/${t}/unlock` },
+  sentinel_add_flag: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/user/${encodeURIComponent(t)}/flag` },
+  sentinel_user_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/user/${encodeURIComponent(t)}/unlock` },
+  sentinel_ip_unlock: { method: 'POST', global: true, path: (_g, t) => `/api/sentinel/ip/${encodeURIComponent(t)}/unlock` },
   sentinel_get_captcha: { method: 'GET', global: true, path: (_g, t) => `/api/sentinel/captcha/${t}` },
   sentinel_verify_captcha: { method: 'POST', global: true, path: () => `/api/sentinel/captcha/verify` },
   sentinel_blacklist: { method: 'GET', global: true, path: () => `/api/sentinel/blacklist` },
@@ -194,34 +195,34 @@ const RESOURCE_MAP = {
   admin_vehicle_update: { method: 'PUT', global: true, path: (_g, t) => `/api/admin/vehicles/${encodeURIComponent(t || '')}` },
 
   // -- NEU: Dienstanweisungen --
-  dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
-  dienstanweisung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/dienstanweisungen` },
-  dienstanweisung_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${g}/dienstanweisungen/${t}` },
-  dienstanweisung_bestaetigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/dienstanweisungen/${t}/bestaetigen` },
-  dienstanweisung_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${g}/dienstanweisungen/${t}` },
+  dienstanweisungen: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/dienstanweisungen` },
+  dienstanweisung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${encodeURIComponent(g)}/dienstanweisungen` },
+  dienstanweisung_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/dienstanweisungen/${t}` },
+  dienstanweisung_bestaetigen: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/dienstanweisungen/${encodeURIComponent(t)}/bestaetigen` },
+  dienstanweisung_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/dienstanweisungen/${t}` },
 
   // -- NEU: Fahrzeuge --
-  fahrzeuge: { method: 'GET', path: (g) => `/api/guilds/${g}/fahrzeuge` },
-  fahrzeug_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/fahrzeuge` },
-  fahrzeug_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
-  fahrzeug_aktualisieren: { method: 'PUT', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
-  fahrzeug_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${g}/fahrzeuge/${t}` },
+  fahrzeuge: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/fahrzeuge` },
+  fahrzeug_erstellen: { method: 'POST', path: (g) => `/api/guilds/${encodeURIComponent(g)}/fahrzeuge` },
+  fahrzeug_abrufen: { method: 'GET', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/fahrzeuge/${t}` },
+  fahrzeug_aktualisieren: { method: 'PUT', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/fahrzeuge/${t}` },
+  fahrzeug_loeschen: { method: 'DELETE', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/fahrzeuge/${t}` },
 
   // -- NEU: Audit-Log --
-  audit_logs: { method: 'GET', path: (g) => `/api/guilds/${g}/audit-logs` },
+  audit_logs: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/audit-logs` },
 
   // -- NEU: Krankmeldungen --
-  krankenmeldungen: { method: 'GET', path: (g) => `/api/guilds/${g}/krankenmeldungen` },
-  krankenmeldungen_meine: { method: 'GET', path: (g) => `/api/guilds/${g}/krankenmeldungen/meine` },
-  krankenmeldung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/krankenmeldungen` },
-  krankenmeldung_genehmigen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/krankenmeldungen/${t}/genehmigen` },
-  krankenmeldung_ablehnen: { method: 'POST', path: (g, t) => `/api/guilds/${g}/krankenmeldungen/${t}/ablehnen` },
+  krankenmeldungen: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/krankenmeldungen` },
+  krankenmeldungen_meine: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/krankenmeldungen/meine` },
+  krankenmeldung_erstellen: { method: 'POST', path: (g) => `/api/guilds/${encodeURIComponent(g)}/krankenmeldungen` },
+  krankenmeldung_genehmigen: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/krankenmeldungen/${encodeURIComponent(t)}/genehmigen` },
+  krankenmeldung_ablehnen: { method: 'POST', path: (g, t) => `/api/guilds/${encodeURIComponent(g)}/krankenmeldungen/${encodeURIComponent(t)}/ablehnen` },
 
   // -- NEU: Messenger --
-  messenger_channels: { method: 'GET', path: (g) => `/api/guilds/${g}/messenger/channels` },
-  messenger_channel_erstellen: { method: 'POST', path: (g) => `/api/guilds/${g}/messenger/channels` },
-  messenger_nachrichten: { method: 'GET', anyUser: true, path: (_g, t) => `/api/messenger/channels/${t}/nachrichten` },
-  messenger_nachricht_senden: { method: 'POST', anyUser: true, path: (_g, t) => `/api/messenger/channels/${t}/nachrichten` },
+  messenger_channels: { method: 'GET', path: (g) => `/api/guilds/${encodeURIComponent(g)}/messenger/channels` },
+  messenger_channel_erstellen: { method: 'POST', path: (g) => `/api/guilds/${encodeURIComponent(g)}/messenger/channels` },
+  messenger_nachrichten: { method: 'GET', anyUser: true, path: (_g, t) => `/api/messenger/channels/${encodeURIComponent(t)}/nachrichten` },
+  messenger_nachricht_senden: { method: 'POST', anyUser: true, path: (_g, t) => `/api/messenger/channels/${encodeURIComponent(t)}/nachrichten` },
 };
 
 // ---------------------------------------------------------------------------
@@ -240,8 +241,16 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally { clearTimeout(timer); }
+}
+
 module.exports = async (req, res) => {
-  const url = new URL(req.url, `https://${req.headers.host}`);
+  const url = new URL(req.url, `https://${req.headers.host || 'localhost'}`);
   const resource = url.searchParams.get('resource');
   const cookies = parseCookies(req.headers.cookie);
   const session = verifySession(cookies.dash_session);
@@ -253,7 +262,7 @@ module.exports = async (req, res) => {
       return sendJson(res, 500, { error: 'BOT_API_URL ist auf dem Server nicht gesetzt.' });
     }
     try {
-      const botRes = await fetch(`${getBotApiUrl()}${mapping.path()}`, {
+      const botRes = await fetchWithTimeout(`${getBotApiUrl()}${mapping.path()}`, {
         method: 'GET',
         headers: {
           'X-API-Key': process.env.BOT_API_KEY || '',
@@ -383,7 +392,7 @@ module.exports = async (req, res) => {
 
   let botRes;
   try {
-    botRes = await fetch(`${getBotApiUrl()}${fullPath}`, {
+    botRes = await fetchWithTimeout(`${getBotApiUrl()}${fullPath}`, {
       method,
       headers: {
         'X-API-Key': process.env.BOT_API_KEY || '',
